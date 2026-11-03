@@ -1,0 +1,35 @@
+# Testing: what runs where
+
+Tests come in two layers, and they run in different places, because waiting on slow tests is where agents lose the most time.
+
+| Layer | What it touches | Speed | Runs locally | Runs in CI |
+| --- | --- | --- | --- | --- |
+| **Fast** | Components, state and logic, with a fake API client | seconds for the whole layer | **all of it**, as often as you like | all of it |
+| **Slow** | A real browser against a running API (end-to-end) | seconds to minutes per test | **no** (see below) | all of it, every pipeline; nobody waits for it |
+
+<!-- FILL: the commands for each layer, once the stack is chosen: run the fast layer, run one slow test by name, run everything. -->
+
+## Overrides
+
+- **This overrides `implement`'s "the full test suite once at the end".** Locally, "the full suite" means the whole fast layer. The slow layer runs only in CI, and **nobody waits for it**: a pull request can be merged before its pipeline finishes. When the user reports a red pipeline, the fix comes back as work (`template-context`'s `docs/workflow.md`).
+- You still **write** slow tests where only the real dependency can show the behaviour (below); you just don't wait for them. Write them so they pass first time on a clean environment: unique data, no ordering assumptions.
+- **Until CI exists, nothing runs the slow layer.** In that case, run the end-to-end tests this change touched once before opening the pull request, and say in it that you did. If they can't run here (no API to run against), say that instead.
+
+## Keep the fakes honest
+
+A fast layer is only as good as its fakes. A fake more permissive than the real dependency hides exactly the defects a real one would catch (a missing uniqueness or concurrency guard, an ordering that only holds by accident).
+
+- **The fake API client is built from the generated client's types** and returns only what the real API can return: real empty lists, real paging, real error codes from the published list. A fake that never fails tests nothing.
+- Behaviour that only the real API can show (an error the server actually sends, a race between two requests) gets an end-to-end test.
+
+## Keep the slow layer cheap
+
+- **Few end-to-end tests**, one per user journey the record names, not one per rule. Rules are covered in the fast layer.
+- **Start the app and its API once** per run, not once per test.
+- **Unique data per test** (generated names, keys), so tests never collide on a shared backend.
+
+## Running long tests as an agent
+
+- Start a test run expected to exceed a minute in the background, and read its result when it finishes, rather than polling it in a loop.
+- Set the command timeout above the slowest test file; a run killed by a timeout proves nothing and has to be repeated.
+- At most two test runs at once on one machine: they finish sooner one after another than all together.
