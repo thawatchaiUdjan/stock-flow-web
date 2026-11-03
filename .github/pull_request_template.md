@@ -4,11 +4,11 @@ Closes #<!-- ticket number -->
 
 ## Record
 
-<!-- The rules and decisions this implements, from template-context: `<module> R3`, `context ADR 0007`. "None" for a purely technical change. -->
+<!-- The rules and decisions this implements, from stock-flow-context: `<module> R3`, `context ADR 0007`. "None" for a purely technical change. -->
 
 ## API dependency
 
-<!-- The template-api ticket or pull request this needs, and whether it is merged. Otherwise: "none". -->
+<!-- The stock-flow-api ticket or pull request this needs, and whether it is merged. Otherwise: "none". -->
 
 ## Review
 
