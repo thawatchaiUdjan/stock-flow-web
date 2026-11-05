@@ -32,7 +32,7 @@ Light theme only. Dark mode would be a change of direction. Values live in `src/
 | White | `#FFFFFF` | `card`, `popover`, `sidebar` | Surfaces, and text on Forest |
 | Hover | `#EEF0EA` | `muted` | Hover on rows and quiet controls |
 | Line | `#E2E5DD` | `border` | Rules between surfaces and rows; the empty part of a level bar |
-| Control | `#8E9688` | `input` | Borders of inputs, selects and quiet buttons |
+| Control | `#899183` | `input` | Borders of inputs, selects and quiet buttons |
 
 State colors appear only where stock or an action needs attention, and always beside a word, never alone.
 
@@ -56,9 +56,9 @@ Numbers are always tabular (`font-variant-numeric: tabular-nums`, set on `body`)
 | Page title | 24 / 30 px | 650 |
 | Key figure (dashboard) | 30 / 38 px | 650 |
 | Stock count in a table | 16 / 24 px | 650 |
-| Section heading | 15 / 22 px | 600 |
-| Body, table cells | 15 / 22 px | 400 |
-| Names, navigation, buttons | 15 / 22 px | 500 or 600 |
+| Section heading | 15 / 22.5 px | 600 |
+| Body, table cells | 15 / 22.5 px | 400 |
+| Names, navigation, buttons | 15 / 22.5 px | 500 or 600 |
 | Small: SKUs, table headers, badges, chart axes | 13 / 18 px | 400 to 600 |
 
 Inputs are 16 px on a phone, so the browser doesn't zoom on focus. Nothing is smaller than 12 px. Headings get `-0.015em` tracking; nothing is set in capitals.
@@ -90,6 +90,8 @@ Desktop                                  Phone (below 800 px)
 - **Radius by size:** surfaces and buttons 8 px, inputs and selects 6 px, badges fully round.
 - **Tables:** 42 px rows at most for one line of text. A product row carries its SKU under the name. On a phone, drop secondary columns; stock and its state stay.
 - **Controls:** 38 px tall on a desktop, 44 px on a phone. shadcn's sizes are smaller, so set them when a screen first uses the component.
+- **Forms:** one column, up to 640 px wide, on a surface. Labels sit above their fields, and errors below them.
+- **Login:** the one screen without a sidebar: a single 400 px surface, centered on Page.
 - **Breakpoints:** 800 px switches the sidebar and stacks two-column sections. Check at 375, 768, 1024 and 1440 px; no page scrolls sideways.
 - **Focus:** a 2 px Forest outline, offset 2 px, on everything that takes focus. shadcn's default `ring/50` alone falls below 3:1 on Page, so it needs the solid border beside it.
 - **Motion:** 150 ms on hover and focus, nothing that plays by itself, and none under `prefers-reduced-motion`.
@@ -97,7 +99,7 @@ Desktop                                  Phone (below 800 px)
 
 ## Principles
 
-- **Stock is the one bold thing.** The count is the heaviest figure in its row, and beside it the level bar shows where stock stands against its minimum. The rest of the screen stays quiet.
+- **Stock is the one bold thing.** The count is the heaviest figure in its row, and beside it a level bar shows where stock stands against its threshold, once the record defines one. The rest of the screen stays quiet.
 - **One accent.** Forest marks what can be acted on or what is selected. Amber and red appear only for stock or actions that need attention.
 - **Say it in words too.** Every state has text, so it survives color blindness, a bad screen and a phone.
 - **Rules, not boxes.** Prefer a line between rows to another card around them. Nothing is decorated: no shadows, gradients, capitals, numbered markers or eyebrow labels.
@@ -106,6 +108,8 @@ Desktop                                  Phone (below 800 px)
 ## Voice
 
 Plain and direct, like a good colleague at the stock desk. English only (ADR 0009).
+
+Every example below shows wording only. None of them says what the product does: which actions, states and limits exist is the record's to decide, and a screen uses these patterns for whatever the record states.
 
 - **Naming:** use the glossary's terms once `stock-flow-context` has them, and until then the words people use at work: products, stock, orders. Roles are Owner and Staff.
 - **Case:** sentence case everywhere, including buttons and table headers.

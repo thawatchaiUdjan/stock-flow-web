@@ -71,7 +71,7 @@
   --warning-soft: #fbf1dc;
   --warning-fill: #a66e00;
   --border: #e2e5dd;
-  --input: #8e9688;
+  --input: #899183;
   --ring: #3a6b4f;
   --chart-1: #3a6b4f;
   --chart-2: #20261f;
@@ -97,5 +97,9 @@
   }
   html {
     @apply font-sans;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 }
