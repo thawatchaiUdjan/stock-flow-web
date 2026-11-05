@@ -67,7 +67,7 @@ Tickets arrive from `stock-flow-context` (see `docs/agents/issue-tracker.md`). A
 `stock-flow-api` owns the contract; this repo consumes it.
 
 - **The API client is generated from the published contract, never written by hand.** CI must regenerate it and fail if the result differs from what is committed. The contract is `openapi/openapi.yaml`, a copy of `stock-flow-api`'s, and Orval generates the client from it into `src/api/generated/` (ADR 0004).
-- **Error messages map from the API's published error-code list.** CI must fail when a code the UI handles is not in that list, or a listed code has no message. For now the list is the per-operation statuses in `openapi.yaml`, and the UI handles none yet, so that check arrives with the first one (ADR 0018).
+- **Error messages map from the API's published error-code list.** CI must fail when a code the UI handles is not in that list, or a listed code has no message.
 - **Client-side validation repeats a recorded rule and cites it; it is never stricter than the server.** A client stricter than its server hides the server's defects.
 - **Mocks and fixtures never return more than the real API would**: real empty responses, real paging, real errors. A generous mock makes the screen pass and production fail.
 

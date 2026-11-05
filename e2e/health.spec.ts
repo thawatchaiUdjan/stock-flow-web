@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("the app reads the API's status through the generated client", async ({ page }) => {
+test("the app shows the status the API reports", async ({ page }) => {
   const request = page.waitForRequest("**/api/health");
 
   await page.goto("/");

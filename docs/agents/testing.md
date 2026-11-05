@@ -18,7 +18,7 @@ The first slow run on a machine needs `bunx playwright install chromium`.
 ## Overrides
 
 - **This overrides `implement`'s "the full test suite once at the end".** Locally, "the full suite" means the whole fast layer. The slow layer runs only in CI, and **nobody waits for it**: a pull request can be merged before its pipeline finishes. When the user reports a red pipeline, the fix comes back as work (`stock-flow-context`'s `docs/workflow.md`).
-- You still **write** slow tests where only the real dependency can show the behaviour (below); you just don't wait for them. Write them so they pass first time on a clean environment: unique data, no ordering assumptions.
+- You still **write** slow tests, one per user journey the record names (below); you just don't wait for them. Write them so they pass first time on a clean environment: unique data, no ordering assumptions.
 - **Until CI exists, nothing runs the slow layer.** In that case, run the end-to-end tests this change touched once before opening the pull request, and say in it that you did.
 
 ## Keep the fakes honest
@@ -26,7 +26,7 @@ The first slow run on a machine needs `bunx playwright install chromium`.
 A fast layer is only as good as its fakes. A fake more permissive than the real dependency hides exactly the defects a real one would catch (a missing uniqueness or concurrency guard, an ordering that only holds by accident).
 
 - **The fakes are Orval's generated MSW handlers**, with responses pinned to what the real API can return: real empty lists, real paging, real error codes from the published list. Orval's defaults are random, so never leave one unpinned. A fake that never fails tests nothing.
-- Nothing automated runs against the real API (ADR 0011): the Orval diff guards the contract. Behaviour only the real API can show (an error the server actually sends, a race between two requests) is checked by hand on a Vercel preview, and said so in the pull request.
+- Nothing automated runs against the real API (ADR 0011): the Orval diff guards the contract.
 
 ## Keep the slow layer cheap
 

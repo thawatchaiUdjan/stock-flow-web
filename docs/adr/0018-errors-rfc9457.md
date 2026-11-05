@@ -11,7 +11,7 @@ API errors are `application/problem+json` (Huma's default), with `errors[].locat
 
 A shared decision, restated here because forms depend on it (ADR 0005).
 
-`AGENTS.md` requires error messages to map from a published error-code list, with a CI check. Problem Details as decided carries no code beyond the HTTP status, so for now the list is the per-operation statuses in `openapi.yaml`, and the UI handles none yet. That check is written with the first handled code, once `stock-flow-context` settles whether domain errors get their own codes (`stock-flow-api` ADR 0014).
+`AGENTS.md` requires error messages to map from a published error-code list, with a CI check. Problem Details as decided carries no code beyond the HTTP status, so for now the list is the per-operation statuses in `openapi.yaml`. Neither the mapping nor its CI check exists yet: the `/` route shows one fixed message for any failure, and never the server's text. Whether domain errors get their own codes is an open question for `stock-flow-context` (`stock-flow-api` ADR 0014), and the mapping waits on it.
 
 ## What was not chosen and why
 

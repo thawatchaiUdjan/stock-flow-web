@@ -5,7 +5,7 @@ Date: 2026-11-05
 
 ## What it is for
 
-The web project deploys through Vercel's Git integration, region `sin1`: production from `main`, a preview per pull request. `vercel.json` holds the SPA fallback to `/index.html` and the `/api/:path*` rewrite to the api's production URL, `https://stock-flow-api-ten.vercel.app` (`stock-flow-api` PR #3 corrected its ADR 0017's example).
+The web project deploys through Vercel's Git integration, region `sin1`: production from `main`, a preview per pull request. `vercel.json` holds the SPA fallback to `/index.html` and the `/api/:path*` rewrite to the api's production URL, `https://stock-flow-api-ten.vercel.app` (`stock-flow-api`'s `keepalive.yml` has the real domain; its ADR 0017 still shows an older example).
 
 ## Why it was chosen
 

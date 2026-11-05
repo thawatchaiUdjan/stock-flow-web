@@ -1,4 +1,3 @@
-// Refreshes openapi/openapi.yaml from stock-flow-api's main (ADR 0004).
 import { writeFile } from "node:fs/promises";
 
 const url = "https://raw.githubusercontent.com/thawatchaiUdjan/stock-flow-api/main/openapi.yaml";
