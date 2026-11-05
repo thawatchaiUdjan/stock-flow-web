@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "sortImports": {},
+  "sortTailwindcss": {
+    "stylesheet": "src/index.css",
+    "functions": ["cn", "cva"]
+  },
+  "ignorePatterns": [
+    "**/*.md",
+    "skills-lock.json",
+    "src/api/generated/**",
+    "src/routeTree.gen.ts",
+    "openapi/**",
+    "e2e/public/**",
+    ".agents/**",
+    ".claude/skills/**",
+    "bun.lock"
+  ]
+}

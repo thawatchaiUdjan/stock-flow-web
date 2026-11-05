@@ -11,3 +11,12 @@
 .env
 .env.*
 !.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+dist-e2e/
+
+# Playwright
+test-results/
+playwright-report/

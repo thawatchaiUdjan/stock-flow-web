@@ -39,13 +39,16 @@ From [mattpocock/skills](https://github.com/mattpocock/skills), installed by `sc
 | `prototype` | Several radically different UI variations on one route, to choose a design before building it |
 | `frontend-design` | From `anthropics/skills`: the words on every screen, marketing pages, and a review of the design direction against generic defaults |
 | `ui-ux-pro-max` | From `nextlevelbuilder/ui-ux-pro-max-skill`: an offline search (Python 3, no network) over UX rules, palettes, font pairings and per-stack UI guidelines, with a pre-delivery checklist. Drafts `docs/design.md`'s tokens; who does what: `AGENTS.md`, *Design* |
+| `shadcn` | From `shadcn-ui/ui`: current shadcn/ui components and CLI, newer than the agents' training. Theme commands are off limits: `AGENTS.md`, *Stack skills* |
+| TanStack Intent | Not a skill file: a guidance block in `AGENTS.md` that loads the skills shipped inside TanStack Router and Table, at the installed version (ADR 0014). `intent hooks` is left out: it would write `.claude/settings.json` and gate every edit |
 | `setup-matt-pocock-skills` | Re-runs tracker setup if it ever changes. User-invoked only, so it costs no context until called |
 
 Left out on purpose:
 
 - `domain-modeling`, `grill-with-docs`: the glossary and business decisions belong to `stock-flow-context`. Installed here, `domain-modeling` would create a second glossary. Technical ADRs are written by hand, per `docs/agents/domain.md`.
 - `to-spec`, `to-tickets`: specs and tickets come from `stock-flow-context`.
-- Stack-specific skills (a framework's best practices, end-to-end tooling): add them once the stack is chosen, and only where the agent keeps making the same mistake. Read a skill's `SKILL.md` and scripts before installing it. Install one with `npx skills add <source> --skill <name> --agent claude-code --agent universal`, then add its name to `OTHER_SKILLS` in `scripts/install-skills.sh`, or the script's check rejects it. The script refreshes only the mattpocock set; refresh the others by name with `npx skills@1.7.4 update -p <name>`.
+- `vercel-react-best-practices`: many of its rules are Next.js-only, and this is a Vite single-page app.
+- Other stack-specific skills (a framework's best practices, end-to-end tooling): add them once the stack is chosen, and only where the agent keeps making the same mistake. Read a skill's `SKILL.md` and scripts before installing it. Install one with `npx skills add <source> --skill <name> --agent claude-code --agent universal`, then add its name to `OTHER_SKILLS` in `scripts/install-skills.sh`, or the script's check rejects it. The script refreshes only the mattpocock set; refresh the others by name with `npx skills@1.7.4 update -p <name>`.
 
 ### Updating
 

@@ -4,29 +4,35 @@ Tests come in two layers, and they run in different places, because waiting on s
 
 | Layer | What it touches | Speed | Runs locally | Runs in CI |
 | --- | --- | --- | --- | --- |
-| **Fast** | Components, state and logic, with a fake API client | seconds for the whole layer | **all of it**, as often as you like | all of it |
-| **Slow** | A real browser against a running API (end-to-end) | seconds to minutes per test | **no** (see below) | all of it, every pipeline; nobody waits for it |
+| **Fast** | Components, state and logic, with MSW handlers generated from the contract | seconds for the whole layer | **all of it**, as often as you like | all of it |
+| **Slow** | A real browser against the built app, with the same MSW handlers and no backend (ADR 0011) | seconds to minutes per test | **no** (see below) | all of it, every pipeline; nobody waits for it |
 
-<!-- FILL: the commands for each layer, once the stack is chosen: run the fast layer, run one slow test by name, run everything. -->
+| | Command |
+| --- | --- |
+| Run the fast layer | `bun run test` |
+| Run one slow test by name | `bun run e2e -g "<name>"` |
+| Run everything (what CI runs) | `bun run ci` |
+
+The first slow run on a machine needs `bunx playwright install chromium`.
 
 ## Overrides
 
-- **This overrides `implement`'s "the full test suite once at the end".** Locally, "the full suite" means the whole fast layer. The slow layer runs only in CI, and **nobody waits for it**: a pull request can be merged before its pipeline finishes. When the user reports a red pipeline, the fix comes back as work (`stock-flow-context`'s `docs/workflow.md`).
-- You still **write** slow tests where only the real dependency can show the behaviour (below); you just don't wait for them. Write them so they pass first time on a clean environment: unique data, no ordering assumptions.
-- **Until CI exists, nothing runs the slow layer.** In that case, run the end-to-end tests this change touched once before opening the pull request, and say in it that you did. If they can't run here (no API to run against), say that instead.
+- **This overrides `implement`'s "the full test suite once at the end".** Locally, "the full suite" means the whole fast layer. The slow layer runs only in CI, and **no agent waits for it**: open the pull request and move on. `e2e` is a required check on `main` (ADR 0015), so GitHub holds the merge until it passes. When the user reports a red pipeline, the fix comes back as work (`stock-flow-context`'s `docs/workflow.md`).
+- You still **write** slow tests, one per user journey the record names (below); you just don't wait for them. Write them so they pass first time on a clean environment: unique data, no ordering assumptions.
+- **Until CI exists, nothing runs the slow layer.** In that case, run the end-to-end tests this change touched once before opening the pull request, and say in it that you did.
 
 ## Keep the fakes honest
 
 A fast layer is only as good as its fakes. A fake more permissive than the real dependency hides exactly the defects a real one would catch (a missing uniqueness or concurrency guard, an ordering that only holds by accident).
 
-- **The fake API client is built from the generated client's types** and returns only what the real API can return: real empty lists, real paging, real error codes from the published list. A fake that never fails tests nothing.
-- Behaviour that only the real API can show (an error the server actually sends, a race between two requests) gets an end-to-end test.
+- **The fakes are Orval's generated MSW handlers**, with responses pinned to what the real API can return: real empty lists, real paging, real error codes from the published list. Orval's defaults are random, so never leave one unpinned. A fake that never fails tests nothing.
+- Nothing automated runs against the real API (ADR 0011): the Orval diff guards the contract.
 
 ## Keep the slow layer cheap
 
 - **Few end-to-end tests**, one per user journey the record names, not one per rule. Rules are covered in the fast layer.
-- **Start the app and its API once** per run, not once per test.
-- **Unique data per test** (generated names, keys), so tests never collide on a shared backend.
+- **Build and start the app once** per run, not once per test.
+- **Unique data per test** (generated names, keys), so tests never collide on shared mock state.
 
 ## Running long tests as an agent
 

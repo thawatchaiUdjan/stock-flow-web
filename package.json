@@ -1,0 +1,81 @@
+{
+  "name": "stock-flow-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:serve": "vite build --mode e2e && vite preview --mode e2e --port 4173 --strictPort",
+    "lint": "oxlint --type-aware --deny-warnings",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "api:sync": "bun scripts/api-sync.mjs",
+    "api:generate": "orval",
+    "api:check": "orval && git add --intent-to-add src/api/generated && git diff --exit-code -- src/api/generated",
+    "ci": "bun run lint && bun run format:check && bun run typecheck && bun run test && bun run api:check && bun run build && bun run e2e"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@tanstack/react-form": "^1.33.5",
+    "@tanstack/react-query": "^5.106.0",
+    "@tanstack/react-router": "^1.170.46",
+    "@tanstack/react-table": "^9.3.1",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.5.2",
+    "lucide-react": "^1.68.0",
+    "radix-ui": "^1.8.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tw-animate-css": "^1.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^10.6.0",
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/vite": "^4.3.4",
+    "@tanstack/eslint-plugin-query": "^5.106.0",
+    "@tanstack/eslint-plugin-router": "^1.162.0",
+    "@tanstack/intent": "^0.5.6",
+    "@tanstack/router-plugin": "^1.168.48",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "jsdom": "^30.1.3",
+    "msw": "^3.0.3",
+    "orval": "^8.46.0",
+    "oxfmt": "^0.76.0",
+    "oxlint": "^1.91.0",
+    "oxlint-tsgolint": "^7.0.2005",
+    "shadcn": "^4.23.0",
+    "tailwindcss": "^4.3.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0"
+  },
+  "packageManager": "bun@1.4.4",
+  "intent": {
+    "skills": [
+      "@tanstack/react-router",
+      "@tanstack/router-core",
+      "@tanstack/router-plugin",
+      "@tanstack/virtual-file-routes",
+      "@tanstack/react-table",
+      "@tanstack/table-core"
+    ]
+  },
+  "msw": {
+    "workerDirectory": [
+      "e2e/public"
+    ]
+  }
+}

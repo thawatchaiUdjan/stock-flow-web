@@ -28,10 +28,9 @@ Write one only when the decision is hard to reverse, surprising without context,
 Status: Proposed | Accepted | Superseded by ADR NNNN
 Date: YYYY-MM-DD
 
-## Context
-## Decision
-## Consequences
-## Alternatives considered
+## What it is for
+## Why it was chosen
+## What was not chosen and why
 ```
 
 An Accepted, merged ADR is never edited: changing course is a new ADR that supersedes it.
