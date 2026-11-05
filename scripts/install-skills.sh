@@ -21,7 +21,7 @@ SKILLS=(
 
 # Skills not from SOURCE: written in this repo, or installed from another source
 # (refresh those by name with `npx skills@1.7.4 update -p <name>`). The extra-skill check below allows them.
-OTHER_SKILLS=(frontend-design ui-ux-pro-max)
+OTHER_SKILLS=(frontend-design ui-ux-pro-max shadcn)
 
 SOURCE="mattpocock/skills"
 CLI="skills@1.7.4" # pinned: the installer runs with your credentials, so it is upgraded on purpose, not silently
