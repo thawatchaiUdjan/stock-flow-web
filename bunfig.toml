@@ -1,0 +1,3 @@
+[install]
+# Hoisted, eslint's ajv 6 shadows the ajv 8 Orval needs, and Orval crashes (ADR 0012).
+linker = "isolated"
