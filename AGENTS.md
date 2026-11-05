@@ -1,3 +1,15 @@
+<!-- intent-skills:start -->
+## Skill Loading
+
+Use the repository’s installed Intent. If it is unavailable, report the missing dependency instead of downloading a replacement.
+Before editing files for a substantial task:
+- Run `bunx --no-install --package @tanstack/intent intent list` from the workspace root to see available local skills.
+- If a listed skill matches the task, run `bunx --no-install --package @tanstack/intent intent load <package>#<skill>` before changing files.
+- Use the loaded `SKILL.md` guidance while making the change.
+- Monorepos: when working across packages, run the skill check from the workspace root and prefer the local skill for the package being changed.
+- Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.
+<!-- intent-skills:end -->
+
 # AGENTS.md
 
 ## What this repo is
@@ -14,22 +26,28 @@ Start sessions with `--add-dir ../stock-flow-context` so the record is readable;
 
 ## Stack and commands
 
-<!-- FILL: fill this table when the stack is chosen. `/implement` runs typechecking and tests (which ones: `docs/agents/testing.md`); it needs these commands, and an agent must never guess them. -->
+Project goal: a practice project for frontend development ([`stock-flow-context` README, *Project goal*](https://github.com/thawatchaiUdjan/stock-flow-context#project-goal)). Here that means: pick the best current tool, new ones welcome; job-market share is not a criterion.
+
+`/implement` runs typechecking and tests (which ones: `docs/agents/testing.md`) with these commands; never guess others. All of them run from the repo root, in bash and in PowerShell.
 
 | | |
 | --- | --- |
-| Framework / build tool | <!-- FILL --> |
-| UI component library | <!-- FILL --> |
-| Install dependencies | <!-- FILL --> |
-| Run locally | <!-- FILL --> |
-| Typecheck / build | <!-- FILL --> |
-| Run the fast layer | <!-- FILL --> |
-| Run one end-to-end test by name | <!-- FILL --> |
-| Run everything (CI) | <!-- FILL --> |
-| Lint / format | <!-- FILL --> |
-| Regenerate the API client | <!-- FILL --> |
+| Framework / build tool | React 19 + TypeScript 7 (strict) + Vite 8, a single-page app (ADR 0001); TanStack Router, file-based (ADR 0002) |
+| UI component library | Tailwind CSS v4 + shadcn/ui on Radix (ADR 0006) |
+| Install dependencies | `bun install` |
+| Run locally | Copy `.env.example` to `.env`, then `bun run dev` (`/api` proxies to the local `stock-flow-api`) |
+| Typecheck / build | `bun run typecheck`; `bun run build` |
+| Run the fast layer | `bun run test`, never `bun test` (ADR 0012) |
+| Run one end-to-end test by name | `bun run e2e -g "<name>"` (once per machine: `bunx playwright install chromium`) |
+| Run everything (CI) | `bun run ci` |
+| Lint / format | `bun run lint`; `bun run format` fixes, `bun run format:check` only checks |
+| Regenerate the API client | `bun run api:sync` refreshes the contract, `bun run api:generate` regenerates; commit both (`bun run api:check` is CI's diff) |
 
-UI language: <!-- FILL: the language(s) of on-screen copy. --> Coding standards: `CODING_STANDARDS.md`. Technical decisions: `docs/adr/`.
+UI language: English only; i18n is a later feature (ADR 0009). Coding standards: `CODING_STANDARDS.md`. Technical decisions: `docs/adr/`.
+
+## Teaching
+
+In an interactive session, explain each hard technical term as it comes up: its name, what it does, why it is needed. "explain PR #n" walks through the terms and reasons in that pull request.
 
 ## Where the rules come from
 
@@ -48,8 +66,8 @@ Tickets arrive from `stock-flow-context` (see `docs/agents/issue-tracker.md`). A
 
 `stock-flow-api` owns the contract; this repo consumes it.
 
-- **The API client is generated from the published contract, never written by hand.** CI must regenerate it and fail if the result differs from what is committed. <!-- FILL: the contract's published location and the generator. -->
-- **Error messages map from the API's published error-code list.** CI must fail when a code the UI handles is not in that list, or a listed code has no message.
+- **The API client is generated from the published contract, never written by hand.** CI must regenerate it and fail if the result differs from what is committed. The contract is `openapi/openapi.yaml`, a copy of `stock-flow-api`'s, and Orval generates the client from it into `src/api/generated/` (ADR 0004).
+- **Error messages map from the API's published error-code list.** CI must fail when a code the UI handles is not in that list, or a listed code has no message. For now the list is the per-operation statuses in `openapi.yaml`, and the UI handles none yet, so that check arrives with the first one (ADR 0018).
 - **Client-side validation repeats a recorded rule and cites it; it is never stricter than the server.** A client stricter than its server hides the server's defects.
 - **Mocks and fixtures never return more than the real API would**: real empty responses, real paging, real errors. A generous mock makes the screen pass and production fail.
 
@@ -115,6 +133,13 @@ Then:
 - `code-review` has run on the branch, and its findings are fixed or listed in the pull request.
 
 ## Agent skills
+
+### Stack skills
+
+These APIs are newer than the agents' training (ADR 0014).
+
+- **`shadcn`**: when adding or composing a shadcn/ui component. Run its commands as `bunx shadcn`, not `npx shadcn@latest`. Its theme commands (`apply`, presets) are off limits: the direction lives in `docs/design.md`.
+- **TanStack Intent** (the *Skill Loading* block in this file): before working on routing or tables. `intent hooks` is left out on purpose.
 
 ### Issue tracker
 

@@ -2,11 +2,9 @@
 
 `code-review` checks every change against this file (its Standards axis), on top of a fixed baseline of code smells. A rule written here overrides that baseline. Skip anything a tool already enforces; name the tool instead.
 
-<!-- FILL: complete the sections below when the stack is chosen. Leave a section out rather than writing a rule nobody follows. -->
-
 ## Formatting and linting
 
-<!-- FILL: the formatter and linter, and the command that runs them. -->
+oxfmt formats and oxlint lints (ADR 0010): `bun run format` and `bun run lint`. CI fails on either, so don't restate their rules here.
 
 ## Naming
 
@@ -14,7 +12,12 @@
 
 ## Structure
 
-<!-- FILL: how pages, components and state are laid out, and where API calls are allowed to happen. -->
+- Each page is a route file in `src/routes/`, with its test beside it as `<route>.test.tsx`.
+- `src/components/ui/` is shadcn's; other shared components sit in `src/components/`.
+- `src/api/generated/` and `src/routeTree.gen.ts` are generated: never edit them.
+- Components call the API only through generated hooks, in routes or components.
+- Server state stays in Query, filters in URL search params, the rest in local state (ADR 0008).
+- Handlers in `src/mocks/` pin what the real API sends; never leave Orval's random mock data in one.
 
 ## Design tokens
 
@@ -27,7 +30,7 @@
 
 ## Comments
 
-- A comment states *why*, or the constraint the code obeys, never *what* the next line does.
+- One short line, only where the reason isn't obvious from the code; never narrate what the code does.
 - Code that enforces a recorded rule cites it: `<module> R3` or `context ADR 0007`.
 
 ## Tests
