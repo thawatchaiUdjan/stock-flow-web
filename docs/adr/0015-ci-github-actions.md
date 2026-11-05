@@ -11,7 +11,7 @@ Date: 2026-11-05
 
 Two jobs let the fast feedback finish without waiting for a browser install. Both run on Node LTS beside Bun, because Vitest and Playwright do.
 
-Proposed until branch protection is on, which needs both checks to have run once. Requiring `e2e` conflicts with `docs/agents/testing.md`, where a pull request "can be merged before its pipeline finishes": that is raised on ticket #1.
+Proposed until branch protection is on, which needs both checks to have run once. `e2e` is required on purpose: the owner chose a merge gate over `docs/agents/testing.md`'s earlier "can be merged before its pipeline finishes", and that file now says so. The job takes under a minute.
 
 ## What was not chosen and why
 

@@ -17,7 +17,7 @@ The first slow run on a machine needs `bunx playwright install chromium`.
 
 ## Overrides
 
-- **This overrides `implement`'s "the full test suite once at the end".** Locally, "the full suite" means the whole fast layer. The slow layer runs only in CI, and **nobody waits for it**: a pull request can be merged before its pipeline finishes. When the user reports a red pipeline, the fix comes back as work (`stock-flow-context`'s `docs/workflow.md`).
+- **This overrides `implement`'s "the full test suite once at the end".** Locally, "the full suite" means the whole fast layer. The slow layer runs only in CI, and **no agent waits for it**: open the pull request and move on. `e2e` is a required check on `main` (ADR 0015), so GitHub holds the merge until it passes. When the user reports a red pipeline, the fix comes back as work (`stock-flow-context`'s `docs/workflow.md`).
 - You still **write** slow tests, one per user journey the record names (below); you just don't wait for them. Write them so they pass first time on a clean environment: unique data, no ordering assumptions.
 - **Until CI exists, nothing runs the slow layer.** In that case, run the end-to-end tests this change touched once before opening the pull request, and say in it that you did.
 

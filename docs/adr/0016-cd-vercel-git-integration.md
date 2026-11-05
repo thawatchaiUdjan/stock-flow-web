@@ -1,6 +1,6 @@
 # 0016: CD: Vercel Git integration
 
-Status: Proposed
+Status: Accepted
 Date: 2026-11-05
 
 ## What it is for
@@ -11,7 +11,7 @@ The web project deploys through Vercel's Git integration, region `sin1`: product
 
 A preview per pull request costs nothing to run. The rewrite keeps the browser on one origin (ADR 0019). A rewrite doesn't expand variables, so the URL is a literal.
 
-Proposed until a Vercel preview shows `/api/health` reaching the api and a `Set-Cookie` reaching the browser. If it doesn't, the fallback is one custom domain for both.
+The owner checked `/api/health` through the rewrite on the preview of pull request #3. The `Set-Cookie` check waits for the first auth feature, because the API sets no cookie yet (ADR 0019). If it fails then, the fallback is one custom domain for both.
 
 ## What was not chosen and why
 

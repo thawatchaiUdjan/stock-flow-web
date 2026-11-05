@@ -11,7 +11,7 @@ Sessions are owned by the Go API, in a cookie that is `HttpOnly`, `Secure` and `
 
 A shared decision, restated here because the rewrite exists for it. `HttpOnly` keeps the session away from any script on the page.
 
-Proposed until a Vercel preview shows a `Set-Cookie` from the API reaching the browser.
+Proposed until a Vercel preview shows a `Set-Cookie` from the API reaching the browser. The API sets no cookie yet, so the owner deferred that check to the first auth feature.
 
 ## What was not chosen and why
 
