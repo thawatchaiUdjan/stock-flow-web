@@ -7,6 +7,10 @@ const messages = {
   // users-and-access R5: vague on purpose, or it would reveal which emails have a User.
   "login-failed": "Email or password is incorrect.",
   "session-ended": "Your session has ended. Log in again.",
+  // users-and-access R3
+  "email-taken": "A User with this email already exists.",
+  "target-is-owner": "The Owner can't be changed here.",
+  "user-inactive": "This User is Inactive. Set them Active before issuing a Setup link.",
   "setup-link-invalid":
     "This Setup link has been used, has expired or was replaced. Ask the Owner for a new one.",
 } satisfies Record<ErrorModelType, string>;

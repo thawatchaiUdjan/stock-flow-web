@@ -8,7 +8,7 @@ import * as zod from 'zod';
 
 
 /**
- * Uses up the Setup link. It starts no session: the person logs in next. Answers 410 `setup-link-invalid` when the Setup link is used, expired or replaced.
+ * Uses up the Setup link. It starts no session: the person logs in next. When the person is the Owner, all of the Owner's sessions end at once, on every device, and a request with one of those cookies is answered 401 `session-ended`. Answers 410 `setup-link-invalid` when the Setup link is used, expired or replaced.
  * @summary Set a password through a Setup link
  */
 export const setPasswordBodyPasswordMin = 6;

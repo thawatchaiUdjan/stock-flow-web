@@ -1,6 +1,6 @@
 import { HttpResponse } from "msw";
 
-import type { ErrorModel } from "@/api/generated/model";
+import type { ErrorModel, User } from "@/api/generated/model";
 import {
   getCreateSessionMockHandler200,
   getEndSessionMockHandler204,
@@ -10,21 +10,31 @@ import {
   getReadSetupLinkMockHandler200,
   getSetPasswordMockHandler204,
 } from "@/api/generated/setup-links/setup-links.msw";
+import {
+  getCreateUserMockHandler201,
+  getListUsersMockHandler200,
+} from "@/api/generated/users/users.msw";
 
 export const owner = { name: "Nok Srisuk", email: "nok@example.com", role: "owner" } as const;
 export const setupToken = "mock-setup-link-token";
 
-const freshInstall = {
-  session: "none" as "none" | "live" | "ended",
-  password: undefined as string | undefined,
-  setupLinkUsed: false,
-};
+const ownerUser: User = { id: 1, ...owner, status: "active", passwordSet: true };
+
+function freshInstall() {
+  return {
+    session: "none" as "none" | "live" | "ended",
+    password: undefined as string | undefined,
+    setupLinkUsed: false,
+    // A real install lists its Owner, so the list is never empty (users-and-access R9).
+    users: [ownerUser] as User[],
+  };
+}
 
 // "ended" is a cookie matching no live session: the API keeps it, so each request hears so again.
-export const mockApi = { ...freshInstall };
+export const mockApi = freshInstall();
 
 export function resetMockApi() {
-  Object.assign(mockApi, freshInstall);
+  Object.assign(mockApi, freshInstall());
 }
 
 export const serverFailure = {
@@ -66,8 +76,70 @@ function requireSetupLink(token: string) {
   }
 }
 
+const day = 24 * 60 * 60 * 1000;
+
 // Orval's default mocks return random strings; each handler here pins what the real API sends.
 export const handlers = [
+  getListUsersMockHandler200(() => {
+    requireSession();
+    return { users: mockApi.users };
+  }),
+  getCreateUserMockHandler201(async ({ request }) => {
+    requireSession();
+    const { name, email, role } = await request.json();
+    // users-and-access R14: the name is required; the API refuses a blank one.
+    const nameOk = /\S/.test(name);
+    const emailOk = email.includes("@");
+    if (!nameOk || !emailOk) {
+      throw problem({
+        status: 422,
+        title: "Unprocessable Entity",
+        detail: "validation failed",
+        errors: [
+          ...(nameOk
+            ? []
+            : [
+                { location: "body.name", message: "expected string to match pattern", value: name },
+              ]),
+          ...(emailOk
+            ? []
+            : [
+                {
+                  location: "body.email",
+                  message: "expected string to be RFC 5322 email",
+                  value: email,
+                },
+              ]),
+        ],
+      });
+    }
+    // users-and-access R3: compared without regard to letter case.
+    if (mockApi.users.some((user) => user.email.toLowerCase() === email.toLowerCase())) {
+      throw problem({
+        type: "email-taken",
+        status: 409,
+        title: "Conflict",
+        detail: "A User has this email already.",
+      });
+    }
+    const user: User = {
+      id: Math.max(...mockApi.users.map(({ id }) => id)) + 1,
+      name,
+      email,
+      role,
+      status: "active",
+      passwordSet: false,
+    };
+    mockApi.users.push(user);
+    // users-and-access R27: 24 hours.
+    return {
+      user,
+      setupLink: {
+        token: `mock-token-for-user-${user.id}`,
+        expiresAt: new Date(Date.now() + day).toISOString(),
+      },
+    };
+  }),
   getGetCurrentUserMockHandler200(() => {
     requireSession();
     return owner;

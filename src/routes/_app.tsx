@@ -8,10 +8,10 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { LayoutDashboard, LogOut } from "lucide-react";
+import { LayoutDashboard, LogOut, Users } from "lucide-react";
 
 import { errorMessage } from "@/api/errors";
-import type { CurrentUser, CurrentUserRole } from "@/api/generated/model";
+import type { CurrentUser } from "@/api/generated/model";
 import {
   getGetCurrentUserQueryOptions,
   useEndSession,
@@ -19,6 +19,7 @@ import {
 } from "@/api/generated/sessions/sessions";
 import { CenteredSurface } from "@/components/centered-surface";
 import { Button } from "@/components/ui/button";
+import { roleNames } from "@/lib/roles";
 import { isSessionLost } from "@/lib/session";
 
 export const Route = createFileRoute("/_app")({
@@ -39,11 +40,9 @@ export const Route = createFileRoute("/_app")({
   component: AppShell,
 });
 
-const roleNames: Record<CurrentUserRole, string> = {
-  owner: "Owner",
-  admin: "Admin",
-  staff: "Staff",
-};
+const navLinkClass =
+  "flex min-h-11 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-small font-medium transition-colors hover:bg-muted shell:h-9.5 shell:min-h-0 shell:flex-none shell:flex-row shell:justify-start shell:gap-2 shell:px-3 shell:text-body";
+const activeNavLink = { className: "bg-accent text-accent-foreground hover:bg-accent" };
 
 // One markup for both layouts: on a phone the sidebar dissolves into a top strip and a bottom bar.
 function AppShell() {
@@ -59,14 +58,17 @@ function AppShell() {
           aria-label="Main"
           className="sticky bottom-0 order-last flex border-t bg-sidebar p-1 shell:static shell:order-none shell:flex-1 shell:flex-col shell:border-t-0 shell:p-0"
         >
-          <Link
-            to="/dashboard"
-            className="flex min-h-11 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-small font-medium transition-colors hover:bg-muted shell:h-9.5 shell:min-h-0 shell:flex-none shell:flex-row shell:justify-start shell:gap-2 shell:px-3 shell:text-body"
-            activeProps={{ className: "bg-accent text-accent-foreground hover:bg-accent" }}
-          >
+          <Link to="/dashboard" className={navLinkClass} activeProps={activeNavLink}>
             <LayoutDashboard aria-hidden size={18} />
             Dashboard
           </Link>
+          {/* users-and-access R11, R22: the Users pages are the Owner's alone. */}
+          {user.role === "owner" && (
+            <Link to="/users" className={navLinkClass} activeProps={activeNavLink}>
+              <Users aria-hidden size={18} />
+              Users
+            </Link>
+          )}
         </nav>
         <UserPanel user={user} />
       </aside>

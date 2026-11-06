@@ -10,6 +10,9 @@
  * login-failed: The email and password did not log anyone in. Identical for every cause.
  * session-ended: The request carried a session cookie that matches no live session.
  * setup-link-invalid: The Setup link is used, expired, replaced or was never issued.
+ * email-taken: A User has this email already, in any letter case.
+ * target-is-owner: The operation acts on a User, and that User is the Owner, who cannot be changed here.
+ * user-inactive: No Setup link can be issued for an Inactive User.
  */
 export type ErrorModelType = typeof ErrorModelType[keyof typeof ErrorModelType];
 
@@ -19,4 +22,7 @@ export const ErrorModelType = {
   'login-failed': 'login-failed',
   'session-ended': 'session-ended',
   'setup-link-invalid': 'setup-link-invalid',
+  'email-taken': 'email-taken',
+  'target-is-owner': 'target-is-owner',
+  'user-inactive': 'user-inactive',
 } as const;
