@@ -171,9 +171,10 @@ describe("the Users list", () => {
   });
 
   // users-and-access R23: the API refuses, and the page says so rather than showing an empty list.
+  // The app still thinks this User is the Owner, as it does for a moment after a Role change (R35).
   it("does not show an empty list to someone the API refuses", async () => {
     server.use(
-      getGetCurrentUserMockHandler200({ name: "Mali", email: "mali@example.com", role: "admin" }),
+      getGetCurrentUserMockHandler200({ name: "Mali", email: "mali@example.com", role: "owner" }),
       getListUsersMockHandler403({ status: 403, title: "Forbidden" }),
     );
     renderApp("/users");

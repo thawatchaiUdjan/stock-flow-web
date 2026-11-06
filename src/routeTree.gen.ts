@@ -15,6 +15,13 @@ import { Route as SetPasswordRouteImport } from './routes/set-password'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppSplatRouteImport } from './routes/_app/$'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppLoginLogRouteImport } from './routes/_app/login-log'
+import { Route as AppReportsRouteImport } from './routes/_app/reports'
+import { Route as AppStockMovementsRouteImport } from './routes/_app/stock-movements'
+import { Route as AppOrdersIndexRouteImport } from './routes/_app/orders.index'
+import { Route as AppOrdersNewRouteImport } from './routes/_app/orders.new'
+import { Route as AppProductsIndexRouteImport } from './routes/_app/products.index'
+import { Route as AppProductsNewRouteImport } from './routes/_app/products.new'
 import { Route as AppUsersIndexRouteImport } from './routes/_app/users.index'
 import { Route as AppUsersNewRouteImport } from './routes/_app/users.new'
 
@@ -47,6 +54,41 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLoginLogRoute = AppLoginLogRouteImport.update({
+  id: '/login-log',
+  path: '/login-log',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStockMovementsRoute = AppStockMovementsRouteImport.update({
+  id: '/stock-movements',
+  path: '/stock-movements',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrdersIndexRoute = AppOrdersIndexRouteImport.update({
+  id: '/orders/',
+  path: '/orders/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrdersNewRoute = AppOrdersNewRouteImport.update({
+  id: '/orders/new',
+  path: '/orders/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProductsIndexRoute = AppProductsIndexRouteImport.update({
+  id: '/products/',
+  path: '/products/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProductsNewRoute = AppProductsNewRouteImport.update({
+  id: '/products/new',
+  path: '/products/new',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppUsersIndexRoute = AppUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -64,7 +106,14 @@ export interface FileRoutesByFullPath {
   '/set-password': typeof SetPasswordRoute
   '/$': typeof AppSplatRoute
   '/dashboard': typeof AppDashboardRoute
+  '/login-log': typeof AppLoginLogRoute
+  '/reports': typeof AppReportsRoute
+  '/stock-movements': typeof AppStockMovementsRoute
+  '/orders/new': typeof AppOrdersNewRoute
+  '/products/new': typeof AppProductsNewRoute
   '/users/new': typeof AppUsersNewRoute
+  '/orders/': typeof AppOrdersIndexRoute
+  '/products/': typeof AppProductsIndexRoute
   '/users/': typeof AppUsersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -72,8 +121,15 @@ export interface FileRoutesByTo {
   '/set-password': typeof SetPasswordRoute
   '/$': typeof AppSplatRoute
   '/dashboard': typeof AppDashboardRoute
+  '/login-log': typeof AppLoginLogRoute
+  '/reports': typeof AppReportsRoute
+  '/stock-movements': typeof AppStockMovementsRoute
   '/': typeof AppIndexRoute
+  '/orders/new': typeof AppOrdersNewRoute
+  '/products/new': typeof AppProductsNewRoute
   '/users/new': typeof AppUsersNewRoute
+  '/orders': typeof AppOrdersIndexRoute
+  '/products': typeof AppProductsIndexRoute
   '/users': typeof AppUsersIndexRoute
 }
 export interface FileRoutesById {
@@ -83,8 +139,15 @@ export interface FileRoutesById {
   '/set-password': typeof SetPasswordRoute
   '/_app/$': typeof AppSplatRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/login-log': typeof AppLoginLogRoute
+  '/_app/reports': typeof AppReportsRoute
+  '/_app/stock-movements': typeof AppStockMovementsRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/orders/new': typeof AppOrdersNewRoute
+  '/_app/products/new': typeof AppProductsNewRoute
   '/_app/users/new': typeof AppUsersNewRoute
+  '/_app/orders/': typeof AppOrdersIndexRoute
+  '/_app/products/': typeof AppProductsIndexRoute
   '/_app/users/': typeof AppUsersIndexRoute
 }
 export interface FileRouteTypes {
@@ -95,7 +158,14 @@ export interface FileRouteTypes {
     | '/set-password'
     | '/$'
     | '/dashboard'
+    | '/login-log'
+    | '/reports'
+    | '/stock-movements'
+    | '/orders/new'
+    | '/products/new'
     | '/users/new'
+    | '/orders/'
+    | '/products/'
     | '/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -103,8 +173,15 @@ export interface FileRouteTypes {
     | '/set-password'
     | '/$'
     | '/dashboard'
+    | '/login-log'
+    | '/reports'
+    | '/stock-movements'
     | '/'
+    | '/orders/new'
+    | '/products/new'
     | '/users/new'
+    | '/orders'
+    | '/products'
     | '/users'
   id:
     | '__root__'
@@ -113,8 +190,15 @@ export interface FileRouteTypes {
     | '/set-password'
     | '/_app/$'
     | '/_app/dashboard'
+    | '/_app/login-log'
+    | '/_app/reports'
+    | '/_app/stock-movements'
     | '/_app/'
+    | '/_app/orders/new'
+    | '/_app/products/new'
     | '/_app/users/new'
+    | '/_app/orders/'
+    | '/_app/products/'
     | '/_app/users/'
   fileRoutesById: FileRoutesById
 }
@@ -168,6 +252,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/login-log': {
+      id: '/_app/login-log'
+      path: '/login-log'
+      fullPath: '/login-log'
+      preLoaderRoute: typeof AppLoginLogRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reports': {
+      id: '/_app/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/stock-movements': {
+      id: '/_app/stock-movements'
+      path: '/stock-movements'
+      fullPath: '/stock-movements'
+      preLoaderRoute: typeof AppStockMovementsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orders/': {
+      id: '/_app/orders/'
+      path: '/orders'
+      fullPath: '/orders/'
+      preLoaderRoute: typeof AppOrdersIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orders/new': {
+      id: '/_app/orders/new'
+      path: '/orders/new'
+      fullPath: '/orders/new'
+      preLoaderRoute: typeof AppOrdersNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/products/': {
+      id: '/_app/products/'
+      path: '/products'
+      fullPath: '/products/'
+      preLoaderRoute: typeof AppProductsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/products/new': {
+      id: '/_app/products/new'
+      path: '/products/new'
+      fullPath: '/products/new'
+      preLoaderRoute: typeof AppProductsNewRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/users/': {
       id: '/_app/users/'
       path: '/users'
@@ -188,16 +321,30 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppSplatRoute: typeof AppSplatRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppLoginLogRoute: typeof AppLoginLogRoute
+  AppReportsRoute: typeof AppReportsRoute
+  AppStockMovementsRoute: typeof AppStockMovementsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppOrdersNewRoute: typeof AppOrdersNewRoute
+  AppProductsNewRoute: typeof AppProductsNewRoute
   AppUsersNewRoute: typeof AppUsersNewRoute
+  AppOrdersIndexRoute: typeof AppOrdersIndexRoute
+  AppProductsIndexRoute: typeof AppProductsIndexRoute
   AppUsersIndexRoute: typeof AppUsersIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppSplatRoute: AppSplatRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppLoginLogRoute: AppLoginLogRoute,
+  AppReportsRoute: AppReportsRoute,
+  AppStockMovementsRoute: AppStockMovementsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppOrdersNewRoute: AppOrdersNewRoute,
+  AppProductsNewRoute: AppProductsNewRoute,
   AppUsersNewRoute: AppUsersNewRoute,
+  AppOrdersIndexRoute: AppOrdersIndexRoute,
+  AppProductsIndexRoute: AppProductsIndexRoute,
   AppUsersIndexRoute: AppUsersIndexRoute,
 }
 

@@ -12,7 +12,7 @@ describe("an address that is no page", () => {
     expect(await screen.findByRole("heading", { name: "Page not found" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("link", { name: "Go to the Dashboard" }));
+    await user.click(screen.getByRole("link", { name: "Go to Dashboard" }));
 
     expect(await screen.findByRole("heading", { name: "Dashboard" })).toBeInTheDocument();
   });

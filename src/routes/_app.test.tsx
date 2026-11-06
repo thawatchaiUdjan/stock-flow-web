@@ -151,7 +151,7 @@ describe("the app shell", () => {
 
       await screen.findByRole("heading", { name: "Page not found" });
       mockApi.session = "ended";
-      await user.click(screen.getByRole("link", { name: "Go to the Dashboard" }));
+      await user.click(screen.getByRole("link", { name: "Go to Dashboard" }));
 
       expect(await screen.findByRole("alert")).toHaveTextContent(
         /^Your session has ended\. Log in again\.$/,
@@ -164,7 +164,7 @@ describe("the app shell", () => {
 
       await screen.findByRole("heading", { name: "Page not found" });
       mockApi.session = "none";
-      await user.click(screen.getByRole("link", { name: "Go to the Dashboard" }));
+      await user.click(screen.getByRole("link", { name: "Go to Dashboard" }));
 
       expect(await screen.findByRole("heading", { name: "Log in" })).toBeInTheDocument();
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();

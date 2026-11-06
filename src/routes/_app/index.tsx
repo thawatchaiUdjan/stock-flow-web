@@ -1,9 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-import { landingPage } from "@/lib/session";
+import { landingPageOf } from "@/lib/access";
 
 export const Route = createFileRoute("/_app/")({
-  beforeLoad: () => {
-    throw redirect({ to: landingPage });
+  beforeLoad: ({ context }) => {
+    throw redirect({ to: landingPageOf(context.user.role).path });
   },
 });

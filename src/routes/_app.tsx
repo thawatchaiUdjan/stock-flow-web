@@ -4,11 +4,12 @@ import {
   Link,
   Outlet,
   redirect,
+  useLocation,
   useNavigate,
   useRouter,
 } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { LayoutDashboard, LogOut, Users } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import { errorMessage } from "@/api/errors";
 import type { CurrentUser } from "@/api/generated/model";
@@ -18,9 +19,12 @@ import {
   useGetCurrentUser,
 } from "@/api/generated/sessions/sessions";
 import { CenteredSurface } from "@/components/centered-surface";
+import { NoAccess } from "@/components/no-access";
 import { Button } from "@/components/ui/button";
+import { canReach, landingPageOf, pageAt, pagesOf } from "@/lib/access";
 import { roleNames } from "@/lib/roles";
 import { isSessionLost } from "@/lib/session";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async ({ context, location }) => {
@@ -41,14 +45,16 @@ export const Route = createFileRoute("/_app")({
 });
 
 const navLinkClass =
-  "flex min-h-11 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-small font-medium transition-colors hover:bg-muted shell:h-9.5 shell:min-h-0 shell:flex-none shell:flex-row shell:justify-start shell:gap-2 shell:px-3 shell:text-body";
-const activeNavLink = { className: "bg-accent text-accent-foreground hover:bg-accent" };
+  "flex min-h-11 min-w-18 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-small font-medium transition-colors hover:bg-muted shell:h-9.5 shell:min-h-0 shell:min-w-0 shell:flex-none shell:flex-row shell:justify-start shell:gap-2 shell:px-3 shell:text-body";
+const activeNavLink = "bg-accent text-accent-foreground hover:bg-accent";
 
 // One markup for both layouts: on a phone the sidebar dissolves into a top strip and a bottom bar.
 function AppShell() {
   const { user: checkedUser } = Route.useRouteContext();
   // Live, so a focus re-checks the session and a Role change shows at once (users-and-access R35).
   const { data: user = checkedUser } = useGetCurrentUser({ query: { refetchOnMount: false } });
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const current = pageAt(pathname);
 
   return (
     <div className="flex min-h-dvh flex-col shell:flex-row">
@@ -56,24 +62,30 @@ function AppShell() {
         <p className="hidden px-3 pt-2 font-semibold shell:block">StockFlow</p>
         <nav
           aria-label="Main"
-          className="sticky bottom-0 order-last flex border-t bg-sidebar p-1 shell:static shell:order-none shell:flex-1 shell:flex-col shell:border-t-0 shell:p-0"
+          className="sticky bottom-0 order-last flex overflow-x-auto border-t bg-sidebar p-1 shell:static shell:order-none shell:flex-1 shell:flex-col shell:overflow-visible shell:border-t-0 shell:p-0"
         >
-          <Link to="/dashboard" className={navLinkClass} activeProps={activeNavLink}>
-            <LayoutDashboard aria-hidden size={18} />
-            Dashboard
-          </Link>
-          {/* users-and-access R11, R22: the Users pages are the Owner's alone. */}
-          {user.role === "owner" && (
-            <Link to="/users" className={navLinkClass} activeProps={activeNavLink}>
-              <Users aria-hidden size={18} />
-              Users
+          {/* users-and-access R11, R22: only the pages of the User's Role. */}
+          {pagesOf(user.role).map((page) => (
+            <Link
+              key={page.path}
+              to={page.path}
+              className={cn(navLinkClass, page === current && activeNavLink)}
+              aria-current={page === current ? "page" : undefined}
+            >
+              <page.icon aria-hidden size={18} />
+              {page.title}
             </Link>
-          )}
+          ))}
         </nav>
         <UserPanel user={user} />
       </aside>
       <main className="mx-auto w-full max-w-320 flex-1 px-3 py-6 shell:px-8 shell:py-8">
-        <Outlet />
+        {/* users-and-access R22: said on the page, not a silent redirect. */}
+        {canReach(user.role, pathname) ? (
+          <Outlet />
+        ) : (
+          <NoAccess landingPage={landingPageOf(user.role)} />
+        )}
       </main>
     </div>
   );
