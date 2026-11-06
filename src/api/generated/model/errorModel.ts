@@ -28,6 +28,9 @@ export interface ErrorModel {
      * login-failed: The email and password did not log anyone in. Identical for every cause.
      * session-ended: The request carried a session cookie that matches no live session.
      * setup-link-invalid: The Setup link is used, expired, replaced or was never issued.
+     * email-taken: A User has this email already, in any letter case.
+     * target-is-owner: The operation acts on a User, and that User is the Owner, who cannot be changed here.
+     * user-inactive: No Setup link can be issued for an Inactive User.
      */
   type?: ErrorModelType;
 }

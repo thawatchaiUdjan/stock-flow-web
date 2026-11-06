@@ -21,3 +21,10 @@ afterAll(() => server.close());
 
 // jsdom has no scrollTo, and the router calls it on every navigation.
 window.scrollTo = vi.fn();
+
+// jsdom has no ResizeObserver, and Radix's radio buttons measure themselves with one.
+globalThis.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};

@@ -5,13 +5,24 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './createUserBody';
+export * from './createUserBodyRole';
+export * from './createUserOutputBody';
 export * from './currentUser';
 export * from './currentUserRole';
 export * from './errorDetail';
 export * from './errorModel';
 export * from './errorModelType';
 export * from './healthOutputBody';
+export * from './listUsersOutputBody';
 export * from './logInInputBody';
 export * from './readSetupLinkInputBody';
 export * from './readSetupLinkOutputBody';
 export * from './setPasswordInputBody';
+export * from './setupLink';
+export * from './updateUserBody';
+export * from './updateUserBodyRole';
+export * from './updateUserBodyStatus';
+export * from './user';
+export * from './userRole';
+export * from './userStatus';
