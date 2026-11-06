@@ -3,8 +3,8 @@ import { z } from "zod";
 
 import { errorMessage } from "@/api/errors";
 import { useListLoginLog } from "@/api/generated/login-log/login-log";
-import type { LoginLogEntryBody, LoginLogUser } from "@/api/generated/model";
 import { LoginLogEntryBodyResult } from "@/api/generated/model";
+import type { LoginLogEntryBody, LoginLogUser } from "@/api/generated/model";
 import { useListUsers } from "@/api/generated/users/users";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -22,17 +22,19 @@ import {
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+type Result = LoginLogEntryBody["result"];
+
 const resultNames = {
   login: "Login",
   "failed-login": "Failed login",
   logout: "Logout",
-} as const satisfies Record<LoginLogEntryBody["result"], string>;
+} as const satisfies Record<Result, string>;
 
 const resultVariants = {
   login: "secondary",
   "failed-login": "destructive",
   logout: "outline",
-} as const satisfies Record<LoginLogEntryBody["result"], "secondary" | "destructive" | "outline">;
+} as const satisfies Record<Result, "secondary" | "destructive" | "outline">;
 
 // ADR 0008: the filters and the page live in the address, so a reload or a shared link keeps them.
 // A value the API wouldn't accept is dropped rather than sent.
@@ -109,8 +111,8 @@ function Filters({
   onChange,
 }: {
   userId: number | undefined;
-  result: LoginLogEntryBody["result"] | undefined;
-  onChange: (changes: { userId?: number; result?: LoginLogEntryBody["result"] }) => void;
+  result: Result | undefined;
+  onChange: (changes: { userId?: number; result?: Result }) => void;
 }) {
   const users = useListUsers();
 
@@ -148,9 +150,7 @@ function Filters({
           value={result ?? ""}
           onChange={(event) =>
             onChange({
-              result: event.target.value
-                ? (event.target.value as LoginLogEntryBody["result"])
-                : undefined,
+              result: event.target.value ? (event.target.value as Result) : undefined,
             })
           }
         >
