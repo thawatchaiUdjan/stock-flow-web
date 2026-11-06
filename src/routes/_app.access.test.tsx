@@ -90,6 +90,16 @@ const r11 = [
     staff: false,
   },
   {
+    page: "Users form, editing",
+    path: "/users/2/edit",
+    route: "/users/$id/edit",
+    label: undefined,
+    heading: "Edit User",
+    owner: true,
+    admin: false,
+    staff: false,
+  },
+  {
     page: "Login log",
     path: "/login-log",
     label: "Login log",
@@ -246,7 +256,9 @@ describe("where a User lands", () => {
     ["staff", "/reports", "/orders"],
     ["staff", "/dashboard", "/orders"],
     ["staff", "/users/new", "/orders"],
+    ["staff", "/users/2/edit", "/orders"],
     ["admin", "/users", "/dashboard"],
+    ["admin", "/users/2/edit", "/dashboard"],
     ["admin", "/login-log", "/dashboard"],
   ] as const)(
     "sends %s to the landing page when the page they were sent from (%s) is not theirs",
@@ -269,6 +281,8 @@ describe("the routes of the app", () => {
       .map((path) => (path.length > 1 ? path.replace(/\/$/, "") : path))
       .filter((path) => !notPages.includes(path));
 
-    expect(addresses.toSorted()).toEqual(r11.map((row) => row.path).toSorted());
+    expect(addresses.toSorted()).toEqual(
+      r11.map((row) => ("route" in row ? row.route : row.path)).toSorted(),
+    );
   });
 });
