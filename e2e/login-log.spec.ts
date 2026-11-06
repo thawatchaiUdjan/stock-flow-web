@@ -140,6 +140,8 @@ test("the Owner opens the Login log, filters it by User and by result, and pages
   await expect(page).toHaveURL("/login-log?result=failed-login");
   await expect(rows.filter({ hasNotText: "Failed login" })).toHaveCount(0);
   await expect(rows.filter({ hasText: "No User" }).first()).toBeVisible();
+  const resultOnly = requests.at(-1)!.searchParams;
+  expect([resultOnly.has("userId"), resultOnly.get("result")]).toEqual([false, "failed-login"]);
   await page.getByLabel("Result").selectOption({ label: "All results" });
   await expect(page).toHaveURL("/login-log");
 
@@ -260,6 +262,7 @@ for (const { width, phone } of [
       await expect(table.getByRole("columnheader")).toHaveCount(0);
       await expect(row).toContainText("mali@example.com");
       await expect(row).toContainText("Logout");
+      await expect(row).toContainText(time(119));
       await expect(row.locator("td:visible")).toHaveCount(3);
     } else {
       await expect(table.getByRole("columnheader")).toHaveText([
