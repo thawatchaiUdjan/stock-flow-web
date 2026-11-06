@@ -1,6 +1,6 @@
 # 0019: Authentication: server-side sessions in a first-party cookie
 
-Status: Proposed
+Status: Accepted
 Date: 2026-11-05
 
 ## What it is for
@@ -11,7 +11,7 @@ Sessions are owned by the Go API, in a cookie that is `HttpOnly`, `Secure` and `
 
 A shared decision, restated here because the rewrite exists for it. `HttpOnly` keeps the session away from any script on the page.
 
-Proposed until a Vercel preview shows a `Set-Cookie` from the API reaching the browser. The owner deferred that check to the first auth feature, ticket #7, whose hand check on a preview accepts this ADR.
+Accepted on 2026-11-06 by the hand check of ticket #7: on a Vercel preview, the requirements owner saw the API's `Set-Cookie` for `session` reach the browser through the rewrite, stored as `HttpOnly`, `Secure` and `SameSite=Lax`, and a reload stayed logged in.
 
 ## What was not chosen and why
 

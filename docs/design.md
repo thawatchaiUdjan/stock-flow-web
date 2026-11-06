@@ -14,7 +14,7 @@ The one visual direction every screen follows, so that screens built by differen
 
 StockFlow is a small inventory and order system for a shop or small warehouse. Its users are the Owner, Admins and Staff (context ADR 0001), working mostly at a desktop and sometimes on a phone. The one job its screens must do well: show what is in stock and what is running low, at a glance, while orders are being worked.
 
-The planned screens are Login, Dashboard, Product List, Product Form, Stock Movements, Orders List, Create Order and Reports. That list describes the product's shape. It sets no rule: every rule comes from `stock-flow-context`.
+The planned screens are Login, Set password, Dashboard, Product List, Product Form, Stock Movements, Orders List, Create Order and Reports. That list describes the product's shape. It sets no rule: every rule comes from `stock-flow-context`.
 
 The look is calm, readable and modern. It was chosen by the requirements owner over three bolder directions, which they found too stylized.
 
@@ -70,12 +70,14 @@ A white sidebar on the left and the work on the page beside it. Everything is le
 ```
 Desktop                                  Phone (below 800 px)
 ┌────────┬──────────────────────────┐    ┌──────────────────┐
-│ Stock  │ Title         [+ Action] │    │ Title   [+ Action]│
-│ Flow   │ ┌──────────────────────┐ │    │ [Search        ] │
-│        │ │ figure│figure│figure │ │    │ ┌──────────────┐ │
-│ ▣ Dash │ └──────────────────────┘ │    │ │ Name      18 │ │
-│ ▢ Prod │ ┌────────────┐ ┌───────┐ │    │ │ SKU     Low  │ │
-│ ▢ Stock│ │ chart      │ │ low   │ │    │ ├──────────────┤ │
+│ Stock  │ Title         [+ Action] │    │ Name    [Log out]│
+│ Flow   │ ┌──────────────────────┐ │    ├──────────────────┤
+│        │ │ figure│figure│figure │ │    │ Title   [+ Action]│
+│        │ └──────────────────────┘ │    │ [Search        ] │
+│ ▣ Dash │                          │    │ ┌──────────────┐ │
+│ ▢ Prod │ ┌────────────┐ ┌───────┐ │    │ │ Name      18 │ │
+│ ▢ Stock│ │ chart      │ │ low   │ │    │ │ SKU     Low  │ │
+│        │ │            │ │       │ │    │ ├──────────────┤ │
 │ ▢ Order│ └────────────┘ └───────┘ │    │ │ Name     233 │ │
 │ ▢ Repo │ ┌──────────────────────┐ │    │ └──────────────┘ │
 │        │ │ table                │ │    ├──────────────────┤
@@ -83,7 +85,7 @@ Desktop                                  Phone (below 800 px)
 └────────┴──────────────────────────┘    └──────────────────┘
 ```
 
-- **Sidebar:** 216 px, sticky, with an icon and a word for each item. On a phone it becomes a bottom bar, still with words.
+- **Sidebar:** 216 px, sticky, with an icon and a word for each item, and the User's name, Role and Log out at its foot. On a phone it becomes a bottom bar, still with words, and the name, Role and Log out move to a white strip at the top.
 - **Content:** 32 px side padding (12 px on a phone), up to 1280 px wide.
 - **Spacing:** a 4 px base: 4, 8, 12, 16, 24, 32. Gaps between surfaces are 16 px.
 - **Surfaces:** white, a 1 px Line border, 8 px radius, no shadow, no gradient. Related figures share one surface, split by rules, rather than sitting in separate cards.
@@ -91,7 +93,9 @@ Desktop                                  Phone (below 800 px)
 - **Tables:** 42 px rows at most for one line of text. A product row carries its SKU under the name. On a phone, drop secondary columns; stock and its state stay.
 - **Controls:** 38 px tall on a desktop, 44 px on a phone. shadcn's sizes are smaller, so set them when a screen first uses the component.
 - **Forms:** one column, up to 640 px wide, on a surface. Labels sit above their fields, and errors below them.
-- **Login:** the one screen without a sidebar: a single 400 px surface, centered on Page.
+- **Login and Set password:** the screens without a sidebar, because nobody is logged in: a single 400 px surface, centered on Page.
+- **This page didn't open:** the same surface, with Try again, when the check for a session fails with anything but a 401.
+- **Page not found:** inside the shell: a page title, one line, and a link to the landing page.
 - **Breakpoints:** 800 px switches the sidebar and stacks two-column sections. Check at 375, 768, 1024 and 1440 px; no page scrolls sideways.
 - **Focus:** a 2 px Forest outline, offset 2 px, on everything that takes focus. shadcn's default `ring/50` alone falls below 3:1 on Page, so it needs the solid border beside it.
 - **Motion:** 150 ms on hover and focus, nothing that plays by itself, and none under `prefers-reduced-motion`.
