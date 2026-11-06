@@ -182,7 +182,7 @@ function EntriesTable({ entries }: { entries: LoginLogEntryBody[] }) {
             <TableHead>User</TableHead>
             <TableHead>Result</TableHead>
             <TableHead>IP address</TableHead>
-            <TableHead>Browser or device</TableHead>
+            <TableHead className="w-full whitespace-normal">Browser or device</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -195,15 +195,24 @@ function EntriesTable({ entries }: { entries: LoginLogEntryBody[] }) {
                 <TableCell className="whitespace-nowrap max-shell:col-span-2 max-shell:pb-0 max-shell:text-small max-shell:text-muted-foreground">
                   {formatDateTime(entry.at)}
                 </TableCell>
-                <TableCell className="break-all whitespace-normal">{entry.email}</TableCell>
-                <TableCell className={cn(secondary, !user && "text-muted-foreground")}>
+                <TableCell className="wrap-anywhere whitespace-normal shell:min-w-44">
+                  {entry.email}
+                </TableCell>
+                <TableCell
+                  className={cn(secondary, "whitespace-nowrap", !user && "text-muted-foreground")}
+                >
                   {user ? user.name : "No User"}
                 </TableCell>
                 <TableCell>
                   <Badge variant={resultVariants[entry.result]}>{resultNames[entry.result]}</Badge>
                 </TableCell>
-                <TableCell className={secondary}>{entry.ip}</TableCell>
-                <TableCell className={cn(secondary, "whitespace-normal")}>
+                <TableCell
+                  className={cn(secondary, "wrap-anywhere whitespace-normal shell:min-w-36")}
+                >
+                  {entry.ip}
+                </TableCell>
+                {/* One line: the browser calls itself a long string. The whole of it is the tooltip. */}
+                <TableCell className={cn(secondary, "max-w-0 truncate")} title={entry.userAgent}>
                   {entry.userAgent}
                 </TableCell>
               </TableRow>

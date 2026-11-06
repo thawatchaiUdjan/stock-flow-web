@@ -65,7 +65,7 @@ export const getGetCurrentUserResponseMock500 = (overrideResponse: Partial<Extra
 
 
 export const getCreateSessionMockHandler = (overrideResponse?: CurrentUser | ((info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => Promise<CurrentUser> | CurrentUser), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, LogInInputBody>('*/login', async (info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => {
+  return http.post<PathParams, LogInInputBody>('*/api/login', async (info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -78,7 +78,7 @@ export const getCreateSessionMockHandler = (overrideResponse?: CurrentUser | ((i
 
 
 export const getCreateSessionMockHandler200 = (overrideResponse?: CurrentUser | ((info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => Promise<CurrentUser> | CurrentUser), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, LogInInputBody>('*/login', async (info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => {
+  return http.post<PathParams, LogInInputBody>('*/api/login', async (info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -91,7 +91,7 @@ export const getCreateSessionMockHandler200 = (overrideResponse?: CurrentUser | 
 
 
 export const getCreateSessionMockHandler401 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, LogInInputBody>('*/login', async (info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => {
+  return http.post<PathParams, LogInInputBody>('*/api/login', async (info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -104,7 +104,7 @@ export const getCreateSessionMockHandler401 = (overrideResponse?: ErrorModel | (
 
 
 export const getCreateSessionMockHandler422 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, LogInInputBody>('*/login', async (info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => {
+  return http.post<PathParams, LogInInputBody>('*/api/login', async (info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -117,7 +117,7 @@ export const getCreateSessionMockHandler422 = (overrideResponse?: ErrorModel | (
 
 
 export const getCreateSessionMockHandler500 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, LogInInputBody>('*/login', async (info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => {
+  return http.post<PathParams, LogInInputBody>('*/api/login', async (info: Parameters<HttpResponseResolver<PathParams, LogInInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -129,7 +129,7 @@ export const getCreateSessionMockHandler500 = (overrideResponse?: ErrorModel | (
 }
 
 export const getEndSessionMockHandler = (overrideResponse?: void | ((info: Parameters<HttpResponseResolver>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.post('*/logout', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.post('*/api/logout', async (info: Parameters<HttpResponseResolver>[0]) => {
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
 
     return new HttpResponse(null,
@@ -140,7 +140,7 @@ export const getEndSessionMockHandler = (overrideResponse?: void | ((info: Param
 
 
 export const getEndSessionMockHandler204 = (overrideResponse?: void | ((info: Parameters<HttpResponseResolver>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.post('*/logout', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.post('*/api/logout', async (info: Parameters<HttpResponseResolver>[0]) => {
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
 
     return new HttpResponse(null,
@@ -151,7 +151,7 @@ export const getEndSessionMockHandler204 = (overrideResponse?: void | ((info: Pa
 
 
 export const getEndSessionMockHandler401 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post('*/logout', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.post('*/api/logout', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -164,7 +164,7 @@ export const getEndSessionMockHandler401 = (overrideResponse?: ErrorModel | ((in
 
 
 export const getEndSessionMockHandler422 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post('*/logout', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.post('*/api/logout', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -177,7 +177,7 @@ export const getEndSessionMockHandler422 = (overrideResponse?: ErrorModel | ((in
 
 
 export const getEndSessionMockHandler500 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post('*/logout', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.post('*/api/logout', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -189,7 +189,7 @@ export const getEndSessionMockHandler500 = (overrideResponse?: ErrorModel | ((in
 }
 
 export const getGetCurrentUserMockHandler = (overrideResponse?: CurrentUser | ((info: Parameters<HttpResponseResolver>[0]) => Promise<CurrentUser> | CurrentUser), options?: RequestHandlerOptions) => {
-  return http.get('*/me', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/me', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -202,7 +202,7 @@ export const getGetCurrentUserMockHandler = (overrideResponse?: CurrentUser | ((
 
 
 export const getGetCurrentUserMockHandler200 = (overrideResponse?: CurrentUser | ((info: Parameters<HttpResponseResolver>[0]) => Promise<CurrentUser> | CurrentUser), options?: RequestHandlerOptions) => {
-  return http.get('*/me', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/me', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -215,7 +215,7 @@ export const getGetCurrentUserMockHandler200 = (overrideResponse?: CurrentUser |
 
 
 export const getGetCurrentUserMockHandler401 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/me', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/me', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -228,7 +228,7 @@ export const getGetCurrentUserMockHandler401 = (overrideResponse?: ErrorModel | 
 
 
 export const getGetCurrentUserMockHandler422 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/me', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/me', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -241,7 +241,7 @@ export const getGetCurrentUserMockHandler422 = (overrideResponse?: ErrorModel | 
 
 
 export const getGetCurrentUserMockHandler500 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/me', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/me', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined

@@ -79,7 +79,7 @@ function AppShell() {
         </nav>
         <UserPanel user={user} />
       </aside>
-      <main className="mx-auto w-full max-w-320 flex-1 px-3 py-6 shell:px-8 shell:py-8">
+      <main className="mx-auto w-full max-w-320 min-w-0 flex-1 px-3 py-6 shell:px-8 shell:py-8">
         {/* users-and-access R22: said on the page, not a silent redirect. */}
         {canReach(user.role, pathname) ? (
           <Outlet />

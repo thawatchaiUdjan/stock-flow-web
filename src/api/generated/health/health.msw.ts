@@ -36,7 +36,7 @@ export const getGetHealthResponseMock503 = (overrideResponse: Partial<Extract<Er
 
 
 export const getGetHealthMockHandler = (overrideResponse?: HealthOutputBody | ((info: Parameters<HttpResponseResolver>[0]) => Promise<HealthOutputBody> | HealthOutputBody), options?: RequestHandlerOptions) => {
-  return http.get('*/health', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/health', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -49,7 +49,7 @@ export const getGetHealthMockHandler = (overrideResponse?: HealthOutputBody | ((
 
 
 export const getGetHealthMockHandler200 = (overrideResponse?: HealthOutputBody | ((info: Parameters<HttpResponseResolver>[0]) => Promise<HealthOutputBody> | HealthOutputBody), options?: RequestHandlerOptions) => {
-  return http.get('*/health', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/health', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -62,7 +62,7 @@ export const getGetHealthMockHandler200 = (overrideResponse?: HealthOutputBody |
 
 
 export const getGetHealthMockHandler500 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/health', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/health', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -75,7 +75,7 @@ export const getGetHealthMockHandler500 = (overrideResponse?: ErrorModel | ((inf
 
 
 export const getGetHealthMockHandler503 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/health', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/health', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined

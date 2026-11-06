@@ -108,7 +108,7 @@ export const getResetPasswordResponseMock500 = (overrideResponse: Partial<Extrac
 
 
 export const getListUsersMockHandler = (overrideResponse?: ListUsersOutputBody | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ListUsersOutputBody> | ListUsersOutputBody), options?: RequestHandlerOptions) => {
-  return http.get('*/users', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/users', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -121,7 +121,7 @@ export const getListUsersMockHandler = (overrideResponse?: ListUsersOutputBody |
 
 
 export const getListUsersMockHandler200 = (overrideResponse?: ListUsersOutputBody | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ListUsersOutputBody> | ListUsersOutputBody), options?: RequestHandlerOptions) => {
-  return http.get('*/users', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/users', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -134,7 +134,7 @@ export const getListUsersMockHandler200 = (overrideResponse?: ListUsersOutputBod
 
 
 export const getListUsersMockHandler401 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/users', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/users', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -147,7 +147,7 @@ export const getListUsersMockHandler401 = (overrideResponse?: ErrorModel | ((inf
 
 
 export const getListUsersMockHandler403 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/users', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/users', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -160,7 +160,7 @@ export const getListUsersMockHandler403 = (overrideResponse?: ErrorModel | ((inf
 
 
 export const getListUsersMockHandler500 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/users', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/users', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -172,7 +172,7 @@ export const getListUsersMockHandler500 = (overrideResponse?: ErrorModel | ((inf
 }
 
 export const getCreateUserMockHandler = (overrideResponse?: CreateUserOutputBody | ((info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => Promise<CreateUserOutputBody> | CreateUserOutputBody), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, CreateUserBody>('*/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
+  return http.post<PathParams, CreateUserBody>('*/api/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -185,7 +185,7 @@ export const getCreateUserMockHandler = (overrideResponse?: CreateUserOutputBody
 
 
 export const getCreateUserMockHandler201 = (overrideResponse?: CreateUserOutputBody | ((info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => Promise<CreateUserOutputBody> | CreateUserOutputBody), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, CreateUserBody>('*/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
+  return http.post<PathParams, CreateUserBody>('*/api/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -198,7 +198,7 @@ export const getCreateUserMockHandler201 = (overrideResponse?: CreateUserOutputB
 
 
 export const getCreateUserMockHandler401 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, CreateUserBody>('*/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
+  return http.post<PathParams, CreateUserBody>('*/api/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -211,7 +211,7 @@ export const getCreateUserMockHandler401 = (overrideResponse?: ErrorModel | ((in
 
 
 export const getCreateUserMockHandler403 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, CreateUserBody>('*/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
+  return http.post<PathParams, CreateUserBody>('*/api/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -224,7 +224,7 @@ export const getCreateUserMockHandler403 = (overrideResponse?: ErrorModel | ((in
 
 
 export const getCreateUserMockHandler409 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, CreateUserBody>('*/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
+  return http.post<PathParams, CreateUserBody>('*/api/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -237,7 +237,7 @@ export const getCreateUserMockHandler409 = (overrideResponse?: ErrorModel | ((in
 
 
 export const getCreateUserMockHandler422 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, CreateUserBody>('*/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
+  return http.post<PathParams, CreateUserBody>('*/api/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -250,7 +250,7 @@ export const getCreateUserMockHandler422 = (overrideResponse?: ErrorModel | ((in
 
 
 export const getCreateUserMockHandler500 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, CreateUserBody>('*/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
+  return http.post<PathParams, CreateUserBody>('*/api/users', async (info: Parameters<HttpResponseResolver<PathParams, CreateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -262,7 +262,7 @@ export const getCreateUserMockHandler500 = (overrideResponse?: ErrorModel | ((in
 }
 
 export const getUpdateUserMockHandler = (overrideResponse?: User | ((info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => Promise<User> | User), options?: RequestHandlerOptions) => {
-  return http.patch<{ id: string }, UpdateUserBody>('*/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
+  return http.patch<{ id: string }, UpdateUserBody>('*/api/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -275,7 +275,7 @@ export const getUpdateUserMockHandler = (overrideResponse?: User | ((info: Param
 
 
 export const getUpdateUserMockHandler200 = (overrideResponse?: User | ((info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => Promise<User> | User), options?: RequestHandlerOptions) => {
-  return http.patch<{ id: string }, UpdateUserBody>('*/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
+  return http.patch<{ id: string }, UpdateUserBody>('*/api/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -288,7 +288,7 @@ export const getUpdateUserMockHandler200 = (overrideResponse?: User | ((info: Pa
 
 
 export const getUpdateUserMockHandler401 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.patch<{ id: string }, UpdateUserBody>('*/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
+  return http.patch<{ id: string }, UpdateUserBody>('*/api/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -301,7 +301,7 @@ export const getUpdateUserMockHandler401 = (overrideResponse?: ErrorModel | ((in
 
 
 export const getUpdateUserMockHandler403 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.patch<{ id: string }, UpdateUserBody>('*/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
+  return http.patch<{ id: string }, UpdateUserBody>('*/api/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -314,7 +314,7 @@ export const getUpdateUserMockHandler403 = (overrideResponse?: ErrorModel | ((in
 
 
 export const getUpdateUserMockHandler404 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.patch<{ id: string }, UpdateUserBody>('*/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
+  return http.patch<{ id: string }, UpdateUserBody>('*/api/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -327,7 +327,7 @@ export const getUpdateUserMockHandler404 = (overrideResponse?: ErrorModel | ((in
 
 
 export const getUpdateUserMockHandler422 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.patch<{ id: string }, UpdateUserBody>('*/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
+  return http.patch<{ id: string }, UpdateUserBody>('*/api/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -340,7 +340,7 @@ export const getUpdateUserMockHandler422 = (overrideResponse?: ErrorModel | ((in
 
 
 export const getUpdateUserMockHandler500 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.patch<{ id: string }, UpdateUserBody>('*/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
+  return http.patch<{ id: string }, UpdateUserBody>('*/api/users/:id', async (info: Parameters<HttpResponseResolver<{ id: string }, UpdateUserBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -352,7 +352,7 @@ export const getUpdateUserMockHandler500 = (overrideResponse?: ErrorModel | ((in
 }
 
 export const getResetPasswordMockHandler = (overrideResponse?: SetupLink | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<SetupLink> | SetupLink), options?: RequestHandlerOptions) => {
-  return http.post<{ id: string }>('*/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
+  return http.post<{ id: string }>('*/api/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -365,7 +365,7 @@ export const getResetPasswordMockHandler = (overrideResponse?: SetupLink | ((inf
 
 
 export const getResetPasswordMockHandler200 = (overrideResponse?: SetupLink | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<SetupLink> | SetupLink), options?: RequestHandlerOptions) => {
-  return http.post<{ id: string }>('*/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
+  return http.post<{ id: string }>('*/api/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -378,7 +378,7 @@ export const getResetPasswordMockHandler200 = (overrideResponse?: SetupLink | ((
 
 
 export const getResetPasswordMockHandler401 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<{ id: string }>('*/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
+  return http.post<{ id: string }>('*/api/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -391,7 +391,7 @@ export const getResetPasswordMockHandler401 = (overrideResponse?: ErrorModel | (
 
 
 export const getResetPasswordMockHandler403 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<{ id: string }>('*/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
+  return http.post<{ id: string }>('*/api/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -404,7 +404,7 @@ export const getResetPasswordMockHandler403 = (overrideResponse?: ErrorModel | (
 
 
 export const getResetPasswordMockHandler404 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<{ id: string }>('*/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
+  return http.post<{ id: string }>('*/api/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -417,7 +417,7 @@ export const getResetPasswordMockHandler404 = (overrideResponse?: ErrorModel | (
 
 
 export const getResetPasswordMockHandler409 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<{ id: string }>('*/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
+  return http.post<{ id: string }>('*/api/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -430,7 +430,7 @@ export const getResetPasswordMockHandler409 = (overrideResponse?: ErrorModel | (
 
 
 export const getResetPasswordMockHandler422 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<{ id: string }>('*/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
+  return http.post<{ id: string }>('*/api/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -443,7 +443,7 @@ export const getResetPasswordMockHandler422 = (overrideResponse?: ErrorModel | (
 
 
 export const getResetPasswordMockHandler500 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<{ id: string }>('*/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
+  return http.post<{ id: string }>('*/api/users/:id/reset-password', async (info: Parameters<HttpResponseResolver<{ id: string }>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
