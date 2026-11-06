@@ -5,6 +5,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './currentUser';
+export * from './currentUserRole';
 export * from './errorDetail';
 export * from './errorModel';
+export * from './errorModelType';
 export * from './healthOutputBody';
+export * from './logInInputBody';
+export * from './readSetupLinkInputBody';
+export * from './readSetupLinkOutputBody';
+export * from './setPasswordInputBody';

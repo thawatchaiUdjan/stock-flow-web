@@ -1,17 +1,17 @@
 # 0019: Authentication: server-side sessions in a first-party cookie
 
-Status: Proposed
+Status: Accepted
 Date: 2026-11-05
 
 ## What it is for
 
-Sessions are owned by the Go API, in a cookie that is `HttpOnly`, `Secure` and `SameSite=Lax`. There are two roles, owner and staff. No token is in browser storage. The browser talks only to the web origin, and `/api/*` is rewritten to the api (ADR 0016), so the cookie is first-party and no CORS is needed.
+Sessions are owned by the Go API, in a cookie that is `HttpOnly`, `Secure` and `SameSite=Lax`. There are three Roles, Owner, Admin and Staff (context ADR 0001). No token is in browser storage. The browser talks only to the web origin, and `/api/*` is rewritten to the api (ADR 0016), so the cookie is first-party and no CORS is needed.
 
 ## Why it was chosen
 
 A shared decision, restated here because the rewrite exists for it. `HttpOnly` keeps the session away from any script on the page.
 
-Proposed until a Vercel preview shows a `Set-Cookie` from the API reaching the browser. The API sets no cookie yet, so the owner deferred that check to the first auth feature.
+Accepted on 2026-11-06 by the hand check of ticket #7: on a Vercel preview, the requirements owner saw the API's `Set-Cookie` for `session` reach the browser through the rewrite, stored as `HttpOnly`, `Secure` and `SameSite=Lax`, and a reload stayed logged in.
 
 ## What was not chosen and why
 
