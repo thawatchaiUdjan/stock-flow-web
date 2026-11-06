@@ -1,6 +1,7 @@
 import { HttpResponse } from "msw";
 
-import type { ErrorModel, User, UserRole } from "@/api/generated/model";
+import { getListLoginLogMockHandler200 } from "@/api/generated/login-log/login-log.msw";
+import type { ErrorModel, LoginLogEntryBody, User, UserRole } from "@/api/generated/model";
 import {
   getCreateSessionMockHandler200,
   getEndSessionMockHandler204,
@@ -37,6 +38,8 @@ function freshInstall() {
     setupLinkUsed: false,
     // A real install lists its Owner, so the list is never empty (users-and-access R9).
     users: [ownerUser] as User[],
+    // Any order: the handler sorts, as the API does. Entries have the ids the API gives them.
+    loginLog: [] as LoginLogEntryBody[],
   };
 }
 
@@ -101,6 +104,15 @@ function requireSetupLink(token: string) {
     });
   }
 }
+
+// users-and-access R11: Admin and Staff are refused the Owner's operations.
+function requireOwner() {
+  if (mockApi.role !== "owner") {
+    throw problem({ status: 403, title: "Forbidden", detail: "Only the Owner can do this." });
+  }
+}
+
+const loginLogDefaultLimit = 50;
 
 const day = 24 * 60 * 60 * 1000;
 
@@ -209,6 +221,27 @@ export const handlers = [
     return {
       token: `mock-reset-token-for-user-${user.id}`,
       expiresAt: new Date(Date.now() + day).toISOString(),
+    };
+  }),
+  getListLoginLogMockHandler200(({ request }) => {
+    requireSession();
+    requireOwner();
+    const query = new URL(request.url).searchParams;
+    const userId = query.get("userId");
+    const result = query.get("result");
+    const before = query.get("before");
+    const limit = Number(query.get("limit") ?? loginLogDefaultLimit);
+    // users-and-access R38: newest first, and the filters narrow together.
+    const matching = mockApi.loginLog
+      .filter((entry) => userId === null || entry.user?.id === Number(userId))
+      .filter((entry) => result === null || entry.result === result)
+      .filter((entry) => before === null || entry.id < Number(before))
+      .toSorted((a, b) => b.id - a.id);
+    const entries = matching.slice(0, limit);
+    // Entries older than the last one on the page, or null when there are none.
+    return {
+      entries,
+      nextBefore: matching.length > entries.length ? entries[entries.length - 1]!.id : null,
     };
   }),
   getGetCurrentUserMockHandler200(() => {

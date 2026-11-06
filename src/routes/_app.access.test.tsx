@@ -158,16 +158,15 @@ describe("what each Role reaches", () => {
     });
 
     // users-and-access R40
-    it.each(r11.filter((row) => row[role] && !row.path.startsWith("/users")))(
-      "shows $page with its title and Coming soon",
-      async (row) => {
-        signedIn(role);
-        renderApp(row.path);
+    it.each(
+      r11.filter((row) => row[role] && !row.path.startsWith("/users") && row.path !== "/login-log"),
+    )("shows $page with its title and Coming soon", async (row) => {
+      signedIn(role);
+      renderApp(row.path);
 
-        expect(await screen.findByRole("heading", { name: row.heading })).toBeInTheDocument();
-        expect(screen.getByRole("main")).toHaveTextContent("Coming soon");
-      },
-    );
+      expect(await screen.findByRole("heading", { name: row.heading })).toBeInTheDocument();
+      expect(screen.getByRole("main")).toHaveTextContent("Coming soon");
+    });
 
     it.each(r11.filter((row) => row.label && row[role]))(
       "opens $page from the navigation",

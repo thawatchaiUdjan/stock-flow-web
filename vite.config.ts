@@ -36,6 +36,8 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       environment: "jsdom",
+      // Times are shown in the visitor's zone; tests assert them in this one.
+      env: { TZ: "UTC" },
       include: ["src/**/*.test.{ts,tsx}"],
       setupFiles: ["./src/test/setup.ts"],
     },
