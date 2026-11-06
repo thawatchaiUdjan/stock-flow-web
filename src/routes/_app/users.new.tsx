@@ -1,36 +1,20 @@
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, Copy } from "lucide-react";
-import { useState } from "react";
 import { z } from "zod";
 
 import { errorMessage, hasCode, hasFieldError, messageFor } from "@/api/errors";
-import type { CreateUserBodyRole, SetupLink } from "@/api/generated/model";
+import type { CreateUserBodyRole } from "@/api/generated/model";
 import { getListUsersQueryKey, useCreateUser } from "@/api/generated/users/users";
 import { CreateUserBody } from "@/api/generated/users/users.zod";
+import { SetupLinkDisplay } from "@/components/setup-link-display";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { formatDateTime } from "@/lib/format";
-import { roleNames } from "@/lib/roles";
+import { fieldMessages, NameField, RoleField } from "@/components/user-fields";
 
 export const Route = createFileRoute("/_app/users/new")({ component: NewUserPage });
-
-const fieldMessages = {
-  name: "Enter a name.",
-  email: "Enter a valid email address.",
-  role: "Choose a Role.",
-};
 
 // users-and-access R14. The rules are the contract's, so this can't be stricter than the API;
 // the spaces around a pasted name or email are dropped before they are checked.
@@ -39,9 +23,6 @@ const userSchema = z.object({
   email: z.string().trim().pipe(CreateUserBody.shape.email),
   role: CreateUserBody.shape.role,
 });
-
-// users-and-access R9, R10: the Owner is made at installation, never here.
-const roles = (["admin", "staff"] as const).map((value) => ({ value, label: roleNames[value] }));
 
 function NewUserPage() {
   const queryClient = useQueryClient();
@@ -68,24 +49,37 @@ function NewUserPage() {
 
   if (createUser.data) {
     return (
-      <SetupLinkView
+      <SetupLinkDisplay
+        title="User created"
         name={createUser.data.user.name}
         setupLink={createUser.data.setupLink}
-        onCreateAnother={() => {
-          createUser.reset();
-          form.reset();
-        }}
+        actions={
+          <>
+            <Button asChild>
+              <Link to="/users">Back to Users</Link>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                createUser.reset();
+                form.reset();
+              }}
+            >
+              Create another User
+            </Button>
+          </>
+        }
       />
     );
   }
 
   // The API's refusals sit beside the field they are about, in the same words as the checks above.
-  function fieldMessage(field: keyof typeof fieldMessages) {
-    if (field === "email" && hasCode(createUser.error, "email-taken")) {
+  function emailRefusal() {
+    if (hasCode(createUser.error, "email-taken")) {
       // users-and-access R3
       return messageFor("email-taken");
     }
-    return hasFieldError(createUser.error, field) ? fieldMessages[field] : undefined;
+    return hasFieldError(createUser.error, "email") ? fieldMessages.email : undefined;
   }
   const refusedByFields =
     hasCode(createUser.error, "email-taken") ||
@@ -109,30 +103,13 @@ function NewUserPage() {
         >
           <FieldGroup>
             <form.Field name="name">
-              {(field) => {
-                const error = fieldMessage("name");
-                const invalid = field.state.meta.errors.length > 0 || error !== undefined;
-
-                return (
-                  <Field data-invalid={invalid}>
-                    <FieldLabel htmlFor={field.name}>Name</FieldLabel>
-                    <Input
-                      id={field.name}
-                      autoComplete="off"
-                      aria-invalid={invalid}
-                      aria-describedby={invalid ? "name-error" : undefined}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(event) => field.handleChange(event.target.value)}
-                    />
-                    <FieldError id="name-error">{invalid ? fieldMessages.name : null}</FieldError>
-                  </Field>
-                );
-              }}
+              {(field) => (
+                <NameField field={field} refused={hasFieldError(createUser.error, "name")} />
+              )}
             </form.Field>
             <form.Field name="email">
               {(field) => {
-                const error = fieldMessage("email");
+                const error = emailRefusal();
                 const invalid = field.state.meta.errors.length > 0 || error !== undefined;
 
                 return (
@@ -160,35 +137,9 @@ function NewUserPage() {
               }}
             </form.Field>
             <form.Field name="role">
-              {(field) => {
-                const invalid =
-                  field.state.meta.errors.length > 0 || fieldMessage("role") !== undefined;
-
-                return (
-                  <FieldSet data-invalid={invalid}>
-                    <FieldLegend variant="label">Role</FieldLegend>
-                    <RadioGroup
-                      aria-describedby={invalid ? "role-error" : undefined}
-                      value={field.state.value}
-                      onValueChange={(value) => field.handleChange(value as CreateUserBodyRole)}
-                    >
-                      {roles.map(({ value, label }) => (
-                        <Field key={value} orientation="horizontal" data-invalid={invalid}>
-                          <RadioGroupItem
-                            value={value}
-                            id={`role-${value}`}
-                            aria-invalid={invalid}
-                          />
-                          <FieldLabel htmlFor={`role-${value}`} className="font-normal">
-                            {label}
-                          </FieldLabel>
-                        </Field>
-                      ))}
-                    </RadioGroup>
-                    <FieldError id="role-error">{invalid ? fieldMessages.role : null}</FieldError>
-                  </FieldSet>
-                );
-              }}
+              {(field) => (
+                <RoleField field={field} refused={hasFieldError(createUser.error, "role")} />
+              )}
             </form.Field>
             <div className="flex flex-wrap gap-2">
               <Button type="submit" disabled={createUser.isPending}>
@@ -200,74 +151,6 @@ function NewUserPage() {
             </div>
           </FieldGroup>
         </form>
-      </div>
-    </div>
-  );
-}
-
-// users-and-access R28: shown once, and the API keeps only a hash (ADR 0002).
-function SetupLinkView({
-  name,
-  setupLink,
-  onCreateAnother,
-}: {
-  name: string;
-  setupLink: SetupLink;
-  onCreateAnother: () => void;
-}) {
-  const [copy, setCopy] = useState<"idle" | "copied" | "failed">("idle");
-  // The api returns only the token, so the link is right on every deployment (ADR 0022).
-  const link = `${window.location.origin}/set-password#${setupLink.token}`;
-
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopy("copied");
-    } catch {
-      setCopy("failed");
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-title">User created</h1>
-      <div className="flex max-w-160 flex-col gap-4 rounded-lg border bg-card p-6">
-        <p>
-          Pass this Setup link to {name}. They use it to set their own password. It won't be shown
-          again, so copy it now.
-        </p>
-        <Field>
-          <FieldLabel htmlFor="setup-link">Setup link</FieldLabel>
-          <div className="flex flex-col gap-2 shell:flex-row">
-            <Input
-              id="setup-link"
-              readOnly
-              value={link}
-              onFocus={(event) => event.currentTarget.select()}
-            />
-            <Button variant="outline" onClick={() => void copyLink()}>
-              {copy === "copied" ? (
-                <Check aria-hidden data-icon="inline-start" />
-              ) : (
-                <Copy aria-hidden data-icon="inline-start" />
-              )}
-              {copy === "copied" ? "Copied" : "Copy link"}
-            </Button>
-          </div>
-          {copy === "failed" && (
-            <FieldError>Couldn't copy. Select the link and copy it by hand.</FieldError>
-          )}
-        </Field>
-        {/* users-and-access R27 */}
-        <p className="text-muted-foreground">Expires {formatDateTime(setupLink.expiresAt)}.</p>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild>
-            <Link to="/users">Back to Users</Link>
-          </Button>
-          <Button variant="outline" onClick={onCreateAnother}>
-            Create another User
-          </Button>
-        </div>
       </div>
     </div>
   );

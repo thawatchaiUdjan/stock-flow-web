@@ -13,6 +13,8 @@ import {
 import {
   getCreateUserMockHandler201,
   getListUsersMockHandler200,
+  getResetPasswordMockHandler200,
+  getUpdateUserMockHandler200,
 } from "@/api/generated/users/users.msw";
 
 export const owner = { name: "Nok Srisuk", email: "nok@example.com", role: "owner" } as const;
@@ -71,6 +73,22 @@ function requireSession() {
       detail: "Your session has ended. Log in again.",
     });
   }
+}
+
+// A new object, so a User a test put in the list is never changed behind its back.
+function updateMockUser(user: User, changes: Partial<User>) {
+  const changed = { ...user, ...changes };
+  mockApi.users = mockApi.users.map((one) => (one === user ? changed : one));
+  return changed;
+}
+
+function targetIsOwner() {
+  return problem({
+    type: "target-is-owner",
+    status: 403,
+    title: "Forbidden",
+    detail: "The Owner can't be changed.",
+  });
 }
 
 function requireSetupLink(token: string) {
@@ -146,6 +164,51 @@ export const handlers = [
         token: `mock-token-for-user-${user.id}`,
         expiresAt: new Date(Date.now() + day).toISOString(),
       },
+    };
+  }),
+  getUpdateUserMockHandler200(async ({ request, params }) => {
+    requireSession();
+    const user = mockApi.users.find(({ id }) => id === Number(params.id));
+    if (!user) throw problem({ status: 404, title: "Not Found" });
+    // users-and-access R18, ADR 0004: every change to the Owner is refused alike.
+    if (user.role === "owner") throw targetIsOwner();
+    const { name, role, status } = await request.json();
+    // users-and-access R14: the name is required; the API refuses a blank one.
+    if (name !== undefined && !/\S/.test(name)) {
+      throw problem({
+        status: 422,
+        title: "Unprocessable Entity",
+        detail: "validation failed",
+        errors: [
+          { location: "body.name", message: "expected string to match pattern", value: name },
+        ],
+      });
+    }
+    return updateMockUser(user, {
+      ...(name !== undefined && { name }),
+      ...(role !== undefined && { role }),
+      ...(status !== undefined && { status }),
+    });
+  }),
+  getResetPasswordMockHandler200(({ params }) => {
+    requireSession();
+    const user = mockApi.users.find(({ id }) => id === Number(params.id));
+    if (!user) throw problem({ status: 404, title: "Not Found" });
+    if (user.role === "owner") throw targetIsOwner();
+    // users-and-access R32
+    if (user.status === "inactive") {
+      throw problem({
+        type: "user-inactive",
+        status: 409,
+        title: "Conflict",
+        detail: "This User is Inactive.",
+      });
+    }
+    // users-and-access R31: the old password stops working, and the new link is the only way in.
+    updateMockUser(user, { passwordSet: false });
+    return {
+      token: `mock-reset-token-for-user-${user.id}`,
+      expiresAt: new Date(Date.now() + day).toISOString(),
     };
   }),
   getGetCurrentUserMockHandler200(() => {

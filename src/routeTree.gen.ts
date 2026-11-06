@@ -24,6 +24,7 @@ import { Route as AppProductsIndexRouteImport } from './routes/_app/products.ind
 import { Route as AppProductsNewRouteImport } from './routes/_app/products.new'
 import { Route as AppUsersIndexRouteImport } from './routes/_app/users.index'
 import { Route as AppUsersNewRouteImport } from './routes/_app/users.new'
+import { Route as AppUsersIdEditRouteImport } from './routes/_app/users.$id.edit'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -99,6 +100,11 @@ const AppUsersNewRoute = AppUsersNewRouteImport.update({
   path: '/users/new',
   getParentRoute: () => AppRoute,
 } as any)
+const AppUsersIdEditRoute = AppUsersIdEditRouteImport.update({
+  id: '/users/$id/edit',
+  path: '/users/$id/edit',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/orders/': typeof AppOrdersIndexRoute
   '/products/': typeof AppProductsIndexRoute
   '/users/': typeof AppUsersIndexRoute
+  '/users/$id/edit': typeof AppUsersIdEditRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/orders': typeof AppOrdersIndexRoute
   '/products': typeof AppProductsIndexRoute
   '/users': typeof AppUsersIndexRoute
+  '/users/$id/edit': typeof AppUsersIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/_app/orders/': typeof AppOrdersIndexRoute
   '/_app/products/': typeof AppProductsIndexRoute
   '/_app/users/': typeof AppUsersIndexRoute
+  '/_app/users/$id/edit': typeof AppUsersIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/orders/'
     | '/products/'
     | '/users/'
+    | '/users/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/products'
     | '/users'
+    | '/users/$id/edit'
   id:
     | '__root__'
     | '/_app'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/_app/orders/'
     | '/_app/products/'
     | '/_app/users/'
+    | '/_app/users/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -315,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppUsersNewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/users/$id/edit': {
+      id: '/_app/users/$id/edit'
+      path: '/users/$id/edit'
+      fullPath: '/users/$id/edit'
+      preLoaderRoute: typeof AppUsersIdEditRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -331,6 +350,7 @@ interface AppRouteChildren {
   AppOrdersIndexRoute: typeof AppOrdersIndexRoute
   AppProductsIndexRoute: typeof AppProductsIndexRoute
   AppUsersIndexRoute: typeof AppUsersIndexRoute
+  AppUsersIdEditRoute: typeof AppUsersIdEditRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -346,6 +366,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOrdersIndexRoute: AppOrdersIndexRoute,
   AppProductsIndexRoute: AppProductsIndexRoute,
   AppUsersIndexRoute: AppUsersIndexRoute,
+  AppUsersIdEditRoute: AppUsersIdEditRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
