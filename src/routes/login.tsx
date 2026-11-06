@@ -14,19 +14,21 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { landingPage, safeReturnAddress } from "@/lib/session";
+import { landingPageOf } from "@/lib/access";
+import { addressAfterLogin } from "@/lib/session";
 
 export const Route = createFileRoute("/login")({
   validateSearch: z.object({ redirect: z.string().optional().catch(undefined) }),
   beforeLoad: async ({ context }) => {
+    let user;
     try {
-      await context.queryClient.ensureQueryData(getGetCurrentUserQueryOptions());
+      user = await context.queryClient.ensureQueryData(getGetCurrentUserQueryOptions());
     } catch (error) {
       // users-and-access R26. The API keeps the cookie, so Login hears session-ended too.
       return { sessionEnded: hasCode(error, "session-ended") };
     }
     // users-and-access R25
-    throw redirect({ to: landingPage });
+    throw redirect({ to: landingPageOf(user.role).path });
   },
   component: LoginPage,
 });
@@ -42,7 +44,7 @@ function LoginPage() {
       onSuccess: async (user) => {
         queryClient.setQueryData(getGetCurrentUserQueryKey(), user);
         // users-and-access R24
-        await navigate({ href: safeReturnAddress(search.redirect) ?? landingPage });
+        await navigate({ href: addressAfterLogin(user.role, search.redirect) });
       },
     },
   });

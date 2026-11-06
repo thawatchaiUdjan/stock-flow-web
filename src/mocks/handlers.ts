@@ -1,6 +1,6 @@
 import { HttpResponse } from "msw";
 
-import type { ErrorModel, User } from "@/api/generated/model";
+import type { ErrorModel, User, UserRole } from "@/api/generated/model";
 import {
   getCreateSessionMockHandler200,
   getEndSessionMockHandler204,
@@ -16,6 +16,12 @@ import {
 } from "@/api/generated/users/users.msw";
 
 export const owner = { name: "Nok Srisuk", email: "nok@example.com", role: "owner" } as const;
+// Who can log in to the mock install: one person per Role, all with the one `mockApi.password`.
+export const people = {
+  owner,
+  admin: { name: "Anan Chaiyo", email: "anan@example.com", role: "admin" },
+  staff: { name: "Suda Prasert", email: "suda@example.com", role: "staff" },
+} as const;
 export const setupToken = "mock-setup-link-token";
 
 const ownerUser: User = { id: 1, ...owner, status: "active", passwordSet: true };
@@ -23,6 +29,8 @@ const ownerUser: User = { id: 1, ...owner, status: "active", passwordSet: true }
 function freshInstall() {
   return {
     session: "none" as "none" | "live" | "ended",
+    // Whose session it is, once it is live.
+    role: "owner" as UserRole,
     password: undefined as string | undefined,
     setupLinkUsed: false,
     // A real install lists its Owner, so the list is never empty (users-and-access R9).
@@ -142,11 +150,12 @@ export const handlers = [
   }),
   getGetCurrentUserMockHandler200(() => {
     requireSession();
-    return owner;
+    return people[mockApi.role];
   }),
   getCreateSessionMockHandler200(async ({ request }) => {
     const { email, password } = await request.json();
-    if (email.toLowerCase() !== owner.email || password !== mockApi.password) {
+    const person = Object.values(people).find((one) => one.email === email.toLowerCase());
+    if (!person || password !== mockApi.password) {
       throw problem({
         type: "login-failed",
         status: 401,
@@ -155,7 +164,8 @@ export const handlers = [
       });
     }
     mockApi.session = "live";
-    return owner;
+    mockApi.role = person.role;
+    return person;
   }),
   getEndSessionMockHandler204(() => {
     requireSession();
