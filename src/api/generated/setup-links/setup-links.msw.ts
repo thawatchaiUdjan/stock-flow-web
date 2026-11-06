@@ -52,7 +52,7 @@ export const getReadSetupLinkResponseMock500 = (overrideResponse: Partial<Extrac
 
 
 export const getSetPasswordMockHandler = (overrideResponse?: void | ((info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, SetPasswordInputBody>('*/setup-link/password', async (info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => {
+  return http.post<PathParams, SetPasswordInputBody>('*/api/setup-link/password', async (info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => {
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
 
     return new HttpResponse(null,
@@ -63,7 +63,7 @@ export const getSetPasswordMockHandler = (overrideResponse?: void | ((info: Para
 
 
 export const getSetPasswordMockHandler204 = (overrideResponse?: void | ((info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, SetPasswordInputBody>('*/setup-link/password', async (info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => {
+  return http.post<PathParams, SetPasswordInputBody>('*/api/setup-link/password', async (info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => {
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
 
     return new HttpResponse(null,
@@ -74,7 +74,7 @@ export const getSetPasswordMockHandler204 = (overrideResponse?: void | ((info: P
 
 
 export const getSetPasswordMockHandler410 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, SetPasswordInputBody>('*/setup-link/password', async (info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => {
+  return http.post<PathParams, SetPasswordInputBody>('*/api/setup-link/password', async (info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -87,7 +87,7 @@ export const getSetPasswordMockHandler410 = (overrideResponse?: ErrorModel | ((i
 
 
 export const getSetPasswordMockHandler422 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, SetPasswordInputBody>('*/setup-link/password', async (info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => {
+  return http.post<PathParams, SetPasswordInputBody>('*/api/setup-link/password', async (info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -100,7 +100,7 @@ export const getSetPasswordMockHandler422 = (overrideResponse?: ErrorModel | ((i
 
 
 export const getSetPasswordMockHandler500 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, SetPasswordInputBody>('*/setup-link/password', async (info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => {
+  return http.post<PathParams, SetPasswordInputBody>('*/api/setup-link/password', async (info: Parameters<HttpResponseResolver<PathParams, SetPasswordInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -112,7 +112,7 @@ export const getSetPasswordMockHandler500 = (overrideResponse?: ErrorModel | ((i
 }
 
 export const getReadSetupLinkMockHandler = (overrideResponse?: ReadSetupLinkOutputBody | ((info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => Promise<ReadSetupLinkOutputBody> | ReadSetupLinkOutputBody), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, ReadSetupLinkInputBody>('*/setup-link/read', async (info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => {
+  return http.post<PathParams, ReadSetupLinkInputBody>('*/api/setup-link/read', async (info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -125,7 +125,7 @@ export const getReadSetupLinkMockHandler = (overrideResponse?: ReadSetupLinkOutp
 
 
 export const getReadSetupLinkMockHandler200 = (overrideResponse?: ReadSetupLinkOutputBody | ((info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => Promise<ReadSetupLinkOutputBody> | ReadSetupLinkOutputBody), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, ReadSetupLinkInputBody>('*/setup-link/read', async (info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => {
+  return http.post<PathParams, ReadSetupLinkInputBody>('*/api/setup-link/read', async (info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -138,7 +138,7 @@ export const getReadSetupLinkMockHandler200 = (overrideResponse?: ReadSetupLinkO
 
 
 export const getReadSetupLinkMockHandler410 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, ReadSetupLinkInputBody>('*/setup-link/read', async (info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => {
+  return http.post<PathParams, ReadSetupLinkInputBody>('*/api/setup-link/read', async (info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -151,7 +151,7 @@ export const getReadSetupLinkMockHandler410 = (overrideResponse?: ErrorModel | (
 
 
 export const getReadSetupLinkMockHandler422 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, ReadSetupLinkInputBody>('*/setup-link/read', async (info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => {
+  return http.post<PathParams, ReadSetupLinkInputBody>('*/api/setup-link/read', async (info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -164,7 +164,7 @@ export const getReadSetupLinkMockHandler422 = (overrideResponse?: ErrorModel | (
 
 
 export const getReadSetupLinkMockHandler500 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.post<PathParams, ReadSetupLinkInputBody>('*/setup-link/read', async (info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => {
+  return http.post<PathParams, ReadSetupLinkInputBody>('*/api/setup-link/read', async (info: Parameters<HttpResponseResolver<PathParams, ReadSetupLinkInputBody>>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined

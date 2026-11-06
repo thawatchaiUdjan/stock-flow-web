@@ -42,7 +42,7 @@ export const getListLoginLogResponseMock500 = (overrideResponse: Partial<Extract
 
 
 export const getListLoginLogMockHandler = (overrideResponse?: ListLoginLogOutputBody | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ListLoginLogOutputBody> | ListLoginLogOutputBody), options?: RequestHandlerOptions) => {
-  return http.get('*/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -55,7 +55,7 @@ export const getListLoginLogMockHandler = (overrideResponse?: ListLoginLogOutput
 
 
 export const getListLoginLogMockHandler200 = (overrideResponse?: ListLoginLogOutputBody | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ListLoginLogOutputBody> | ListLoginLogOutputBody), options?: RequestHandlerOptions) => {
-  return http.get('*/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -68,7 +68,7 @@ export const getListLoginLogMockHandler200 = (overrideResponse?: ListLoginLogOut
 
 
 export const getListLoginLogMockHandler401 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -81,7 +81,7 @@ export const getListLoginLogMockHandler401 = (overrideResponse?: ErrorModel | ((
 
 
 export const getListLoginLogMockHandler403 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -94,7 +94,7 @@ export const getListLoginLogMockHandler403 = (overrideResponse?: ErrorModel | ((
 
 
 export const getListLoginLogMockHandler422 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined
@@ -107,7 +107,7 @@ export const getListLoginLogMockHandler422 = (overrideResponse?: ErrorModel | ((
 
 
 export const getListLoginLogMockHandler500 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
+  return http.get('*/api/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
 
 
     return HttpResponse.json(overrideResponse !== undefined

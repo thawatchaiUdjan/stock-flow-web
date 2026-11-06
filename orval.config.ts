@@ -12,7 +12,7 @@ export default defineConfig({
       client: "react-query",
       httpClient: "fetch",
       baseUrl: "/api",
-      mock: { generators: [{ type: "msw", generateEachHttpStatus: true }] },
+      mock: { generators: [{ type: "msw", baseUrl: "*/api", generateEachHttpStatus: true }] },
       clean: true,
       override: {
         // Orval's own fetch resolves on a 503, so Query would call it a success (ADR 0004).
