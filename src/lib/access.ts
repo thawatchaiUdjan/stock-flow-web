@@ -8,12 +8,13 @@ import {
   PackagePlus,
   ScrollText,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 
 import type { UserRole } from "@/api/generated/model";
 
 // users-and-access R11, the one place it lives: navigation and page access both read this table.
-// A route under `_app` that is not here has no rule, so `access.test.tsx` fails until it is added.
+// A route under `_app` that is not here has no rule, so `_app.access.test.tsx` fails until it is added.
 // `path` is where the navigation leads; `also` are further addresses of the same R11 row.
 export const pages = [
   {
@@ -77,7 +78,7 @@ interface Page {
   title: string;
   path: string;
   also?: readonly string[];
-  icon: typeof Users;
+  icon: LucideIcon;
   roles: readonly UserRole[];
 }
 
