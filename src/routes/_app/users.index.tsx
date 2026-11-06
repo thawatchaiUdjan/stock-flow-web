@@ -34,12 +34,18 @@ import {
 import { roleNames, statusNames } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
+// The Setup link of a reset, and whose it is.
+interface IssuedLink {
+  name: string;
+  setupLink: SetupLink;
+}
+
 export const Route = createFileRoute("/_app/users/")({ component: UsersPage });
 
 function UsersPage() {
   const users = useListUsers();
   // users-and-access R28: the Setup link of a reset, shown once and gone when the Owner leaves it.
-  const [issued, setIssued] = useState<{ name: string; setupLink: SetupLink } | null>(null);
+  const [issued, setIssued] = useState<IssuedLink | null>(null);
 
   if (issued) {
     return (
@@ -71,12 +77,7 @@ function UsersPage() {
           </Button>
         </>
       )}
-      {users.isSuccess && (
-        <UsersTable
-          users={users.data.users}
-          onSetupLink={(name, setupLink) => setIssued({ name, setupLink })}
-        />
-      )}
+      {users.isSuccess && <UsersTable users={users.data.users} onSetupLink={setIssued} />}
     </div>
   );
 }
@@ -89,7 +90,7 @@ function UsersTable({
   onSetupLink,
 }: {
   users: User[];
-  onSetupLink: (name: string, setupLink: SetupLink) => void;
+  onSetupLink: (issued: IssuedLink) => void;
 }) {
   // users-and-access R9: the Owner is a User, so this is how a new install looks.
   const hasOthers = users.some(({ role }) => role !== "owner");
@@ -147,7 +148,7 @@ function UserActions({
   onSetupLink,
 }: {
   user: User;
-  onSetupLink: (name: string, setupLink: SetupLink) => void;
+  onSetupLink: (issued: IssuedLink) => void;
 }) {
   // users-and-access R18, context ADR 0004: nothing can be done to the Owner here.
   if (user.role === "owner") return null;
@@ -214,7 +215,7 @@ function ResetPasswordAction({
   onSetupLink,
 }: {
   user: User;
-  onSetupLink: (name: string, setupLink: SetupLink) => void;
+  onSetupLink: (issued: IssuedLink) => void;
 }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -224,7 +225,7 @@ function ResetPasswordAction({
       gcTime: 0,
       onSuccess: (setupLink) => {
         void queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
-        onSetupLink(user.name, setupLink);
+        onSetupLink({ name: user.name, setupLink });
       },
     },
   });

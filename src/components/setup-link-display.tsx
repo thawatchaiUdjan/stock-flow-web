@@ -7,7 +7,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { formatDateTime } from "@/lib/format";
 
-// users-and-access R28: shown once, and the API keeps only a hash (ADR 0002).
+// users-and-access R28: shown once, and the API keeps only a hash (context ADR 0002).
 // `title` says which action issued the link; `actions` are the ways out of this view.
 export function SetupLinkDisplay({
   title,

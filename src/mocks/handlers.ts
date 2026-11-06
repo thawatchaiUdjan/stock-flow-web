@@ -76,7 +76,7 @@ function requireSession() {
 }
 
 // A new object, so a User a test put in the list is never changed behind its back.
-function change(user: User, changes: Partial<User>) {
+function updateMockUser(user: User, changes: Partial<User>) {
   const changed = { ...user, ...changes };
   mockApi.users = mockApi.users.map((one) => (one === user ? changed : one));
   return changed;
@@ -184,7 +184,7 @@ export const handlers = [
         ],
       });
     }
-    return change(user, {
+    return updateMockUser(user, {
       ...(name !== undefined && { name }),
       ...(role !== undefined && { role }),
       ...(status !== undefined && { status }),
@@ -205,7 +205,7 @@ export const handlers = [
       });
     }
     // users-and-access R31: the old password stops working, and the new link is the only way in.
-    change(user, { passwordSet: false });
+    updateMockUser(user, { passwordSet: false });
     return {
       token: `mock-reset-token-for-user-${user.id}`,
       expiresAt: new Date(Date.now() + day).toISOString(),

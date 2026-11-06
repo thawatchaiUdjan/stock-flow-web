@@ -102,11 +102,11 @@ function withoutTrailingSlash(pathname: string) {
 export function pageAt(pathname: string): AppPage | undefined {
   const path = withoutTrailingSlash(pathname);
   return pages.find(
-    (page) => page.path === path || (page as Page).also?.some((one) => matches(one, path)),
+    (page) => page.path === path || (page as Page).also?.some((one) => matchesPattern(one, path)),
   );
 }
 
-function matches(pattern: string, path: string) {
+function matchesPattern(pattern: string, path: string) {
   const parts = path.split("/");
   const expected = pattern.split("/");
   return (
