@@ -22,10 +22,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatDateTime } from "@/lib/format";
+import { roleNames } from "@/lib/roles";
 
 export const Route = createFileRoute("/_app/users/new")({ component: NewUserPage });
 
-const messages = {
+const fieldMessages = {
   name: "Enter a name.",
   email: "Enter a valid email address.",
   role: "Choose a Role.",
@@ -39,10 +40,8 @@ const userSchema = z.object({
   role: CreateUserBody.shape.role,
 });
 
-const roles: { value: CreateUserBodyRole; label: string }[] = [
-  { value: "admin", label: "Admin" },
-  { value: "staff", label: "Staff" },
-];
+// users-and-access R9, R10: the Owner is made at installation, never here.
+const roles = (["admin", "staff"] as const).map((value) => ({ value, label: roleNames[value] }));
 
 function NewUserPage() {
   const queryClient = useQueryClient();
@@ -81,12 +80,12 @@ function NewUserPage() {
   }
 
   // The API's refusals sit beside the field they are about, in the same words as the checks above.
-  function fieldMessage(field: keyof typeof messages) {
+  function fieldMessage(field: keyof typeof fieldMessages) {
     if (field === "email" && hasCode(createUser.error, "email-taken")) {
       // users-and-access R3
       return messageFor("email-taken");
     }
-    return hasFieldError(createUser.error, field) ? messages[field] : undefined;
+    return hasFieldError(createUser.error, field) ? fieldMessages[field] : undefined;
   }
   const refusedByFields =
     hasCode(createUser.error, "email-taken") ||
@@ -126,7 +125,7 @@ function NewUserPage() {
                       onBlur={field.handleBlur}
                       onChange={(event) => field.handleChange(event.target.value)}
                     />
-                    <FieldError id="name-error">{invalid ? messages.name : null}</FieldError>
+                    <FieldError id="name-error">{invalid ? fieldMessages.name : null}</FieldError>
                   </Field>
                 );
               }}
@@ -154,7 +153,7 @@ function NewUserPage() {
                       }}
                     />
                     <FieldError id="email-error">
-                      {invalid ? (error ?? messages.email) : null}
+                      {invalid ? (error ?? fieldMessages.email) : null}
                     </FieldError>
                   </Field>
                 );
@@ -186,7 +185,7 @@ function NewUserPage() {
                         </Field>
                       ))}
                     </RadioGroup>
-                    <FieldError id="role-error">{invalid ? messages.role : null}</FieldError>
+                    <FieldError id="role-error">{invalid ? fieldMessages.role : null}</FieldError>
                   </FieldSet>
                 );
               }}

@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { roleNames } from "@/lib/roles";
+import { roleNames, statusNames } from "@/lib/roles";
 
 export const Route = createFileRoute("/_app/users/")({ component: UsersPage });
 
@@ -71,7 +71,7 @@ function UsersTable({ users }: { users: User[] }) {
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
                     <Badge variant={user.status === "active" ? "secondary" : "outline"}>
-                      {user.status === "active" ? "Active" : "Inactive"}
+                      {statusNames[user.status]}
                     </Badge>
                     {/* users-and-access R33 */}
                     {!user.passwordSet && <Badge variant="outline">Password not set</Badge>}

@@ -1,7 +1,6 @@
 import { HttpResponse } from "msw";
 
-import type { ErrorModel } from "@/api/generated/model";
-import type { User } from "@/api/generated/model";
+import type { ErrorModel, User } from "@/api/generated/model";
 import {
   getCreateSessionMockHandler200,
   getEndSessionMockHandler204,
@@ -89,18 +88,20 @@ export const handlers = [
     requireSession();
     const { name, email, role } = await request.json();
     // users-and-access R14: the name is required; the API refuses a blank one.
-    if (!/\S/.test(name) || !email.includes("@")) {
+    const nameOk = /\S/.test(name);
+    const emailOk = email.includes("@");
+    if (!nameOk || !emailOk) {
       throw problem({
         status: 422,
         title: "Unprocessable Entity",
         detail: "validation failed",
         errors: [
-          ...(/\S/.test(name)
+          ...(nameOk
             ? []
             : [
                 { location: "body.name", message: "expected string to match pattern", value: name },
               ]),
-          ...(email.includes("@")
+          ...(emailOk
             ? []
             : [
                 {
