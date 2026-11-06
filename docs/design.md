@@ -12,7 +12,7 @@ The one visual direction every screen follows, so that screens built by differen
 
 ## Subject
 
-StockFlow is a small inventory and order system for a shop or small warehouse. Its users are the owner and staff (ADR 0019), working mostly at a desktop and sometimes on a phone. The one job its screens must do well: show what is in stock and what is running low, at a glance, while orders are being worked.
+StockFlow is a small inventory and order system for a shop or small warehouse. Its users are the Owner, Admins and Staff (context ADR 0001), working mostly at a desktop and sometimes on a phone. The one job its screens must do well: show what is in stock and what is running low, at a glance, while orders are being worked.
 
 The planned screens are Login, Dashboard, Product List, Product Form, Stock Movements, Orders List, Create Order and Reports. That list describes the product's shape. It sets no rule: every rule comes from `stock-flow-context`.
 
@@ -111,7 +111,7 @@ Plain and direct, like a good colleague at the stock desk. English only (ADR 000
 
 Every example below shows wording only. None of them says what the product does: which actions, states and limits exist is the record's to decide, and a screen uses these patterns for whatever the record states.
 
-- **Naming:** use the glossary's terms once `stock-flow-context` has them, and until then the words people use at work: products, stock, orders. Roles are Owner and Staff.
+- **Naming:** use the glossary's terms once `stock-flow-context` has them, and until then the words people use at work: products, stock, orders. Roles are Owner, Admin and Staff.
 - **Case:** sentence case everywhere, including buttons and table headers.
 - **Buttons:** a verb and its object: "New order", "Add product", "Receive stock". Never "Submit" or "OK".
 - **Same word through the flow:** "Add product" leads to "Product added", and "Cancel order" to "Order cancelled".

@@ -19,6 +19,10 @@ Keep the three clones side by side: the agent docs refer to the siblings as `../
 4. `./scripts/install-skills.sh` installs the skills listed below.
 5. Commit.
 
+## The Owner's Setup link
+
+`cmd/install` in `stock-flow-api` prints a token, not a link. Open `<web origin>/set-password#<token>` (ADR 0022).
+
 ## How work arrives
 
 The full workflow, step by step, is in `stock-flow-context`'s [docs/workflow.md](../stock-flow-context/docs/workflow.md).
