@@ -18,6 +18,10 @@ export default defineConfig({
         // Orval's own fetch resolves on a 503, so Query would call it a success (ADR 0004).
         mutator: { path: "./src/api/fetcher.ts", name: "apiFetch" },
         fetch: { includeHttpResponseReturnType: false },
+        operations: {
+          // A POST only to keep the token out of request logs: it reads, so it is a query.
+          "read-setup-link": { query: { useQuery: true, useMutation: false } },
+        },
       },
     },
   },

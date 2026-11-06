@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ErrorDetail } from './errorDetail';
+import type { ErrorModelType } from './errorModelType';
 
 export interface ErrorModel {
   /** A URL to the JSON Schema for this object. */
@@ -22,6 +23,11 @@ export interface ErrorModel {
   status?: number;
   /** A short, human-readable summary of the problem type. This value should not change between occurrences of the error. */
   title?: string;
-  /** A URI reference to human-readable documentation for the error. */
-  type?: string;
+  /**
+     * The error's kind: about:blank for a plain HTTP error, or a domain error code.
+     * login-failed: The email and password did not log anyone in. Identical for every cause.
+     * session-ended: The request carried a session cookie that matches no live session.
+     * setup-link-invalid: The Setup link is used, expired, replaced or was never issued.
+     */
+  type?: ErrorModelType;
 }
