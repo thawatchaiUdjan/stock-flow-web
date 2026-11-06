@@ -2,10 +2,11 @@ import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import {
+  getCreateSessionMockHandler200,
   getCreateSessionMockHandler500,
   getGetCurrentUserMockHandler500,
 } from "@/api/generated/sessions/sessions.msw";
-import { mockApi, owner } from "@/mocks/handlers";
+import { mockApi, owner, serverFailure } from "@/mocks/handlers";
 import { renderApp } from "@/test/render-app";
 import { server } from "@/test/server";
 
@@ -31,13 +32,20 @@ describe("Login", () => {
   });
 
   // users-and-access R3: the API compares, so the email goes as typed.
-  it("sends the email as it was typed", async () => {
-    mockApi.password = password;
+  it("sends the email and password as they were typed", async () => {
+    let sent: unknown;
+    server.use(
+      getCreateSessionMockHandler200(async ({ request }) => {
+        sent = await request.json();
+        return owner;
+      }),
+    );
     const { user } = renderApp("/login");
 
     await logIn(user, "NOK@Example.com", password);
 
-    expect(await screen.findByRole("heading", { name: "Dashboard" })).toBeInTheDocument();
+    await screen.findByRole("heading", { name: "Dashboard" });
+    expect(sent).toEqual({ email: "NOK@Example.com", password });
   });
 
   // users-and-access R5
@@ -65,13 +73,7 @@ describe("Login", () => {
   });
 
   it("shows a general message, not the server's text, when the API fails", async () => {
-    server.use(
-      getCreateSessionMockHandler500({
-        status: 500,
-        title: "Internal Server Error",
-        detail: "something went wrong on our side",
-      }),
-    );
+    server.use(getCreateSessionMockHandler500(serverFailure));
     const { user } = renderApp("/login");
 
     await logIn(user, owner.email, password);
@@ -127,13 +129,7 @@ describe("Login", () => {
   });
 
   it("still works when the check for a session fails", async () => {
-    server.use(
-      getGetCurrentUserMockHandler500({
-        status: 500,
-        title: "Internal Server Error",
-        detail: "something went wrong on our side",
-      }),
-    );
+    server.use(getGetCurrentUserMockHandler500(serverFailure));
     renderApp("/login");
 
     expect(await screen.findByLabelText("Email")).toBeEnabled();

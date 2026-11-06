@@ -47,9 +47,9 @@ const roleNames: Record<CurrentUserRole, string> = {
 
 // One markup for both layouts: on a phone the sidebar dissolves into a top strip and a bottom bar.
 function AppShell() {
-  const { user: checked } = Route.useRouteContext();
+  const { user: checkedUser } = Route.useRouteContext();
   // Live, so a focus re-checks the session and a Role change shows at once (users-and-access R35).
-  const { data: user = checked } = useGetCurrentUser({ query: { refetchOnMount: false } });
+  const { data: user = checkedUser } = useGetCurrentUser({ query: { refetchOnMount: false } });
 
   return (
     <div className="flex min-h-dvh flex-col shell:flex-row">
@@ -57,11 +57,11 @@ function AppShell() {
         <p className="hidden px-3 pt-2 font-semibold shell:block">StockFlow</p>
         <nav
           aria-label="Main"
-          className="fixed inset-x-0 bottom-0 z-10 flex border-t bg-sidebar p-1 shell:static shell:flex-1 shell:flex-col shell:border-t-0 shell:p-0"
+          className="sticky bottom-0 order-last flex border-t bg-sidebar p-1 shell:static shell:order-none shell:flex-1 shell:flex-col shell:border-t-0 shell:p-0"
         >
           <Link
             to="/dashboard"
-            className="flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg text-small font-medium transition-colors hover:bg-muted motion-reduce:transition-none shell:h-9.5 shell:min-h-0 shell:flex-none shell:flex-row shell:justify-start shell:gap-2 shell:px-3 shell:text-body"
+            className="flex min-h-11 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-small font-medium transition-colors hover:bg-muted shell:h-9.5 shell:min-h-0 shell:flex-none shell:flex-row shell:justify-start shell:gap-2 shell:px-3 shell:text-body"
             activeProps={{ className: "bg-accent text-accent-foreground hover:bg-accent" }}
           >
             <LayoutDashboard aria-hidden size={18} />
@@ -70,7 +70,7 @@ function AppShell() {
         </nav>
         <UserPanel user={user} />
       </aside>
-      <main className="mx-auto w-full max-w-320 flex-1 px-3 pt-6 pb-24 shell:px-8 shell:py-8">
+      <main className="mx-auto w-full max-w-320 flex-1 px-3 py-6 shell:px-8 shell:py-8">
         <Outlet />
       </main>
     </div>
@@ -83,7 +83,7 @@ function UserPanel({ user }: { user: CurrentUser }) {
   const logOut = useEndSession({
     mutation: {
       onSuccess: async () => {
-        // Before leaving: what this User saw must not reach whoever logs in next on this device.
+        // users-and-access R7. Cleared first, so nothing reaches whoever logs in next here.
         queryClient.clear();
         await navigate({ to: "/login" });
       },

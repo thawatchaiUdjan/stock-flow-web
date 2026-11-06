@@ -22,8 +22,7 @@ export const Route = createFileRoute("/login")({
     try {
       await context.queryClient.ensureQueryData(getGetCurrentUserQueryOptions());
     } catch (error) {
-      // users-and-access R26. The API keeps the cookie, so it says this here too, and the
-      // message can't be forged with a link. Any other failure still leaves Login usable.
+      // users-and-access R26. The API keeps the cookie, so Login hears session-ended too.
       return { sessionEnded: hasCode(error, "session-ended") };
     }
     // users-and-access R25
@@ -48,8 +47,7 @@ function LoginPage() {
     },
   });
 
-  // No validators: nothing here may be stricter than the API, which answers any email and
-  // password alike (users-and-access R5).
+  // No validators: the API answers any email and password alike (users-and-access R5).
   const form = useForm({
     defaultValues: { email: "", password: "" },
     onSubmit: ({ value }) => logIn.mutate({ data: value }),

@@ -8,7 +8,7 @@ import { isSessionLost } from "./lib/session";
 import { routeTree } from "./routeTree.gen";
 
 export function createAppRouter(history?: RouterHistory) {
-  // A 401 for a User already in the app. A first visit has no User here: the routes handle that.
+  // users-and-access R26: a 401 for a User already in the app. A first visit is the routes' to handle.
   const onError = (error: unknown) => {
     if (!isSessionLost(error) || !queryClient.getQueryData(getGetCurrentUserQueryKey())) return;
     queryClient.clear();

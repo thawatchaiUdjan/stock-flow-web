@@ -27,4 +27,10 @@ test("a person sets a password through a Setup link and logs in", async ({ page 
   await expect(page.getByRole("main").getByText("Coming soon")).toBeVisible();
   await expect(page.getByText("Owner", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
+
+  await page.setViewportSize({ width: 375, height: 667 });
+  await expect(page.getByText("Nok Srisuk")).toBeInViewport();
+  await expect(page.getByText("Owner", { exact: true })).toBeInViewport();
+  await expect(page.getByRole("button", { name: "Log out" })).toBeInViewport();
+  await expect(page.getByRole("navigation", { name: "Main" })).toBeInViewport();
 });

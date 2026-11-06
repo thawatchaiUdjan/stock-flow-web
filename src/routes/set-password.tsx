@@ -22,7 +22,7 @@ const passwordSchema = z.object({
 });
 
 function SetPasswordPage() {
-  // The fragment reaches no server, so the token stays out of every request log (ADR 0022).
+  // users-and-access R27. The fragment reaches no server, so no request log holds it (ADR 0022).
   const token = useLocation({ select: (location) => location.hash });
   const setupLink = useReadSetupLink(
     { token },

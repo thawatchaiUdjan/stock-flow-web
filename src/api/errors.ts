@@ -1,8 +1,7 @@
 import { ApiError } from "./fetcher";
 import type { ErrorModelType } from "./generated/model";
 
-// `satisfies` is the CI check: the typecheck fails when a published code has no message, or a
-// message is kept for a code the contract no longer lists (ADR 0021).
+// `satisfies` is ADR 0021's CI check: a code missing here, or not in the contract, fails tsc.
 const messages = {
   "about:blank": "Something went wrong. Try again.",
   // users-and-access R5: vague on purpose, or it would reveal which emails have a User.

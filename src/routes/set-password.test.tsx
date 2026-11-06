@@ -6,7 +6,7 @@ import {
   getSetPasswordMockHandler422,
   getSetPasswordMockHandler500,
 } from "@/api/generated/setup-links/setup-links.msw";
-import { mockApi, owner, setupToken } from "@/mocks/handlers";
+import { mockApi, owner, serverFailure, setupToken } from "@/mocks/handlers";
 import { renderApp } from "@/test/render-app";
 import { server } from "@/test/server";
 
@@ -14,11 +14,6 @@ const setupLink = `/set-password#${setupToken}`;
 const tooShort = "Use at least 6 characters.";
 const noLongerWorks =
   "This Setup link has been used, has expired or was replaced. Ask the Owner for a new one.";
-const failure = {
-  status: 500,
-  title: "Internal Server Error",
-  detail: "something went wrong on our side",
-};
 
 function sentToTheApi() {
   const paths: string[] = [];
@@ -153,7 +148,7 @@ describe("Set password", () => {
   });
 
   it("shows a general message, not the server's text, when reading the link fails", async () => {
-    server.use(getReadSetupLinkMockHandler500(failure));
+    server.use(getReadSetupLinkMockHandler500(serverFailure));
     const { user } = renderApp(setupLink);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -167,7 +162,7 @@ describe("Set password", () => {
   });
 
   it("keeps the form when setting the password fails", async () => {
-    server.use(getSetPasswordMockHandler500(failure));
+    server.use(getSetPasswordMockHandler500(serverFailure));
     const { user } = renderApp(setupLink);
     const password = await screen.findByLabelText("New password");
 

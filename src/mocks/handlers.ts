@@ -14,19 +14,24 @@ import {
 export const owner = { name: "Nok Srisuk", email: "nok@example.com", role: "owner" } as const;
 export const setupToken = "mock-setup-link-token";
 
-const installed = {
+const freshInstall = {
   session: "none" as "none" | "live" | "ended",
   password: undefined as string | undefined,
   setupLinkUsed: false,
 };
 
-// The state the real API would hold for a freshly installed Owner. "ended" is a session cookie
-// that matches no live session: the API leaves it in place, so every request reports it again.
-export const mockApi = { ...installed };
+// "ended" is a cookie matching no live session: the API keeps it, so each request hears so again.
+export const mockApi = { ...freshInstall };
 
 export function resetMockApi() {
-  Object.assign(mockApi, installed);
+  Object.assign(mockApi, freshInstall);
 }
+
+export const serverFailure = {
+  status: 500,
+  title: "Internal Server Error",
+  detail: "something went wrong on our side",
+};
 
 // Thrown from a resolver: the generated handlers answer one status, and MSW sends a thrown Response.
 function problem(body: ErrorModel & { status: number }) {

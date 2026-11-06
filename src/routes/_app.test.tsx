@@ -6,15 +6,9 @@ import {
   getGetCurrentUserMockHandler200,
   getGetCurrentUserMockHandler500,
 } from "@/api/generated/sessions/sessions.msw";
-import { mockApi } from "@/mocks/handlers";
+import { mockApi, serverFailure } from "@/mocks/handlers";
 import { renderApp } from "@/test/render-app";
 import { server } from "@/test/server";
-
-const failure = {
-  status: 500,
-  title: "Internal Server Error",
-  detail: "something went wrong on our side",
-};
 
 describe("the app shell", () => {
   it("shows the User's name and Role and a Log out action", async () => {
@@ -59,7 +53,7 @@ describe("the app shell", () => {
 
   // A failure of the API says nothing about the session: Login would be the wrong answer.
   it("offers another try when the check for a session fails", async () => {
-    server.use(getGetCurrentUserMockHandler500(failure));
+    server.use(getGetCurrentUserMockHandler500(serverFailure));
     const { user, router } = renderApp("/dashboard");
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -102,7 +96,7 @@ describe("the app shell", () => {
 
     it("stays and says so when the API fails", async () => {
       mockApi.session = "live";
-      server.use(getEndSessionMockHandler500(failure));
+      server.use(getEndSessionMockHandler500(serverFailure));
       const { user } = renderApp("/dashboard");
 
       await user.click(await screen.findByRole("button", { name: "Log out" }));
