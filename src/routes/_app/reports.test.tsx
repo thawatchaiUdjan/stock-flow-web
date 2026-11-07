@@ -297,7 +297,7 @@ describe("Reports", () => {
 
     expect(
       await screen.findByText(
-        "The API refused this range. Choose a From day on or before To, and 366 days or fewer.",
+        "This range isn't valid. Choose a From day on or before To, and 366 days or fewer.",
       ),
     ).toBeInTheDocument();
     expect(sent.map((url) => url.search)).toEqual(["?from=2020-01-01"]);
@@ -318,7 +318,7 @@ describe("Reports", () => {
 
     expect(
       await screen.findByText(
-        "The API refused this range. Choose a From day on or before To, and 366 days or fewer.",
+        "This range isn't valid. Choose a From day on or before To, and 366 days or fewer.",
       ),
     ).toBeInTheDocument();
   });

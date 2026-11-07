@@ -116,7 +116,7 @@ function ReportsPage() {
 // its own terms, and the screen says it in the Shop's (ADR 0021).
 function reportError(error: unknown) {
   if (error instanceof ApiError && error.status === 422) {
-    return "The API refused this range. Choose a From day on or before To, and 366 days or fewer.";
+    return "This range isn't valid. Choose a From day on or before To, and 366 days or fewer.";
   }
   return errorMessage(error);
 }
