@@ -1,8 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { z } from "zod";
 
 import { errorMessage, hasCode } from "@/api/errors";
 import type { Order } from "@/api/generated/model";
@@ -31,7 +32,13 @@ import {
 import { useCurrentUser } from "@/lib/current-user";
 import { formatBaht, formatDateTime } from "@/lib/format";
 
-export const Route = createFileRoute("/_app/orders/$number")({ component: OrderDetailPage });
+// Create Order sets `created` to open the Order it made with a notice.
+const searchSchema = z.object({ created: z.boolean().optional().catch(undefined) });
+
+export const Route = createFileRoute("/_app/orders/$number")({
+  validateSearch: searchSchema,
+  component: OrderDetailPage,
+});
 
 function BackToOrders() {
   return (
@@ -95,7 +102,21 @@ function OrderDetail({ order }: { order: Order }) {
   const { role } = useCurrentUser();
   const queryClient = useQueryClient();
   const [asking, setAsking] = useState<Question>();
-  const [notice, setNotice] = useState<Notice>();
+  const { created } = Route.useSearch();
+  const [notice, setNotice] = useState<Notice | undefined>(() =>
+    created
+      ? {
+          kind: "done",
+          title: `Order #${order.number} created`,
+          text: "Its stock is taken. Complete it once the customer has paid and has the goods.",
+        }
+      : undefined,
+  );
+  // The notice is said once: the address drops the flag, so a reload or Back doesn't repeat it.
+  const navigate = Route.useNavigate();
+  useEffect(() => {
+    if (created) void navigate({ search: {}, replace: true });
+  }, [created, navigate]);
 
   const refresh = (changed: Order) => {
     queryClient.setQueryData(getGetOrderQueryKey(changed.number), changed);

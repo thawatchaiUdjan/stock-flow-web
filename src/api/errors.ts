@@ -15,8 +15,8 @@ const messages = {
   "user-inactive": "This User is Inactive. Set them Active before issuing a Setup link.",
   // stock-movements R6: the form says how many there are (`stockOf`); this is the fallback.
   "insufficient-stock": "There isn't enough stock for this change.",
-  // stock-movements R9
-  "product-archived": "This product is archived, so its stock can't change. Choose another.",
+  // stock-movements R9, orders R6: worded for both a stock change and an Order line.
+  "product-archived": "This product is archived. Choose an active product instead.",
   // orders R13: completed and cancelled are final; the detail refreshes to say which.
   "order-not-pending": "This order was completed or cancelled already, so it can't change.",
   "setup-link-invalid":

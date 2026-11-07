@@ -8,12 +8,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { characters } from "@/lib/format";
 
 export type StockChangeMode = "receive" | "adjust";
 
 // stock-movements R2: a note is up to 200 characters, counted as the API counts them.
 const noteLimit = 200;
-const characters = (text: string) => Array.from(text).length;
 
 // Receive adds units, Adjust moves stock up or down. Either way the API wants one whole number.
 const modes = {
