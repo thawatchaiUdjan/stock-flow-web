@@ -12,19 +12,25 @@ import { cn } from "@/lib/utils";
 
 const chartHeight = "h-40";
 
+// Past a month the bars are hairlines, so the gaps shrink and only the ends of the range are named.
+const denseFrom = 32;
+
 // dashboard-and-reports R4, R7: every day is a bar, so a day with no Sales is 0 and leaves no gap.
 export function SalesByDay({
   title,
   days,
   focus,
+  tableOpen,
 }: {
   title: string;
   days: SalesDay[];
   focus?: string;
+  tableOpen?: boolean;
 }) {
   const highest = Math.max(...days.map(({ sales }) => sales), 0);
   const first = days[0];
   const last = days[days.length - 1];
+  const dense = days.length >= denseFrom;
 
   return (
     <div className="flex flex-col gap-3">
@@ -33,7 +39,7 @@ export function SalesByDay({
           <p className="text-small text-muted-foreground">Highest day {formatBaht(highest)}</p>
           <figure
             aria-label={`${title}, ${formatDay(first.date)} to ${formatDay(last.date)}, highest day ${formatBaht(highest)}`}
-            className={cn("flex items-end gap-1 border-b", chartHeight)}
+            className={cn("flex items-end border-b", dense ? "gap-px" : "gap-1", chartHeight)}
           >
             {days.map((one) => (
               <div
@@ -54,19 +60,26 @@ export function SalesByDay({
               </div>
             ))}
           </figure>
-          <div aria-hidden className="flex gap-1">
-            {days.map((one) => (
-              <p
-                key={one.date}
-                className="min-w-0 flex-1 text-center text-small text-muted-foreground"
-              >
-                {Number(one.date.slice(8))}
-              </p>
-            ))}
-          </div>
+          {dense ? (
+            <p aria-hidden className="flex justify-between text-small text-muted-foreground">
+              <span>{formatDay(first.date)}</span>
+              <span>{formatDay(last.date)}</span>
+            </p>
+          ) : (
+            <div aria-hidden className="flex gap-1">
+              {days.map((one) => (
+                <p
+                  key={one.date}
+                  className="min-w-0 flex-1 text-center text-small text-muted-foreground"
+                >
+                  {Number(one.date.slice(8))}
+                </p>
+              ))}
+            </div>
+          )}
         </>
       )}
-      <details className="text-body">
+      <details open={tableOpen} className="text-body">
         <summary className="w-fit cursor-pointer font-medium hover:underline">
           Show the figures
         </summary>

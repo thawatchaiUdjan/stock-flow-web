@@ -1,6 +1,9 @@
 import { HttpResponse } from "msw";
 
-import { getGetDashboardMockHandler200 } from "@/api/generated/dashboard-and-reports/dashboard-and-reports.msw";
+import {
+  getGetDashboardMockHandler200,
+  getGetSalesReportMockHandler200,
+} from "@/api/generated/dashboard-and-reports/dashboard-and-reports.msw";
 import { getListLoginLogMockHandler200 } from "@/api/generated/login-log/login-log.msw";
 import type {
   DashboardOutputBody,
@@ -10,8 +13,10 @@ import type {
   OrderSummary,
   Product,
   ProductStockState,
+  ReportProduct,
   RestockProduct,
   SalesDay,
+  SalesReportOutputBody,
   StockMovement,
   User,
   UserRole,
@@ -561,6 +566,76 @@ function dashboardOf(): DashboardOutputBody {
   };
 }
 
+const reportMaxDays = 366;
+const reportTopProducts = 20;
+
+// dashboard-and-reports R7, R8, as the API works them out: both ends included, this month so far
+// when `from` and `to` are left out, and 422 for a range that ends first or is over 366 days.
+function salesReportOf(from: string | null, to: string | null): SalesReportOutputBody {
+  const last = to ?? bangkokDay(Date.now());
+  const first = from ?? `${last.slice(0, 8)}01`;
+  if (last < first) {
+    throw problem({
+      status: 422,
+      title: "Unprocessable Entity",
+      detail: "The range ends before it starts.",
+      errors: [{ location: "query.to", message: "must not be before from", value: last }],
+    });
+  }
+  const days = (Date.parse(last) - Date.parse(first)) / day + 1;
+  if (days > reportMaxDays) {
+    throw problem({
+      status: 422,
+      title: "Unprocessable Entity",
+      detail: "The range is too long.",
+      errors: [
+        { location: "query.from", message: "range must not be over 366 days", value: first },
+      ],
+    });
+  }
+  const completed = mockApi.orders.filter(
+    (one) =>
+      one.status === "completed" &&
+      one.completed &&
+      bangkokDay(one.completed.at) >= first &&
+      bangkokDay(one.completed.at) <= last,
+  );
+  const salesByDay: SalesDay[] = Array.from({ length: days }, (_, i) => {
+    const date = new Date(Date.parse(first) + i * day).toISOString().slice(0, 10);
+    const that = completed.filter((one) => bangkokDay(one.completed!.at) === date);
+    return {
+      date,
+      sales: that.reduce((sum, one) => sum + one.total, 0),
+      ordersCompleted: that.length,
+    };
+  });
+  const sales = salesByDay.reduce((sum, one) => sum + one.sales, 0);
+  const ordersCompleted = completed.length;
+  const sold = new Map<number, ReportProduct>();
+  for (const line of completed.flatMap((one) => one.lines)) {
+    const before = sold.get(line.product.id);
+    sold.set(line.product.id, {
+      id: line.product.id,
+      name: line.product.name,
+      sku: line.product.sku,
+      quantitySold: (before?.quantitySold ?? 0) + line.quantity,
+      sales: (before?.sales ?? 0) + line.quantity * line.price,
+    });
+  }
+  return {
+    from: first,
+    to: last,
+    sales,
+    ordersCompleted,
+    // Rounded half up to the satang; 0 when none were completed.
+    averageSales: ordersCompleted === 0 ? 0 : Math.round(sales / ordersCompleted),
+    salesByDay,
+    topProducts: [...sold.values()]
+      .toSorted((a, b) => b.sales - a.sales || a.id - b.id)
+      .slice(0, reportTopProducts),
+  };
+}
+
 // Orval's default mocks return random strings; each handler here pins what the real API sends.
 export const handlers = [
   getListUsersMockHandler200(() => {
@@ -845,6 +920,13 @@ export const handlers = [
     // users-and-access R11: the figures are for the Owner and Admins.
     requireAdminOrOwner();
     return dashboardOf();
+  }),
+  getGetSalesReportMockHandler200(({ request }) => {
+    requireSession();
+    // users-and-access R11: the figures are for the Owner and Admins.
+    requireAdminOrOwner();
+    const query = new URL(request.url).searchParams;
+    return salesReportOf(query.get("from"), query.get("to"));
   }),
   getListLoginLogMockHandler200(({ request }) => {
     requireSession();
