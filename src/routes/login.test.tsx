@@ -37,6 +37,8 @@ describe("Login", () => {
     server.use(
       getCreateSessionMockHandler200(async ({ request }) => {
         sent = await request.json();
+        // The API starts the session the Dashboard then asks its figures with.
+        mockApi.session = "live";
         return owner;
       }),
     );

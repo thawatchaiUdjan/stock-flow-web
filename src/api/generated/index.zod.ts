@@ -1,3 +1,4 @@
+export * from './dashboard-and-reports/dashboard-and-reports.zod';
 export * from './health/health.zod';
 export * from './login-log/login-log.zod';
 export * from './orders/orders.zod';

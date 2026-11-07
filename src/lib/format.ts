@@ -17,6 +17,13 @@ export function formatDateTime(iso: string) {
   return dateTime.format(new Date(iso));
 }
 
+const day = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+
+// A day of the Shop as the API gives it (`2026-11-05`) read as written, in any zone: `5 Nov`.
+export function formatDay(date: string) {
+  return day.format(new Date(`${date}T00:00:00Z`));
+}
+
 const baht = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // Every amount in the contract is whole satang (฿1 = 100); the screen shows `฿48,210.00`.

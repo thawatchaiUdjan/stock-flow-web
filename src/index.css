@@ -48,6 +48,10 @@
   --text-title--letter-spacing: -0.015em;
   --text-body: 0.9375rem;
   --text-body--line-height: 1.5;
+  --text-figure: 1.875rem;
+  --text-figure--line-height: 2.375rem;
+  --text-figure--font-weight: 650;
+  --text-figure--letter-spacing: -0.015em;
   --text-stock: 1rem;
   --text-stock--line-height: 1.5;
   --text-stock--font-weight: 650;
