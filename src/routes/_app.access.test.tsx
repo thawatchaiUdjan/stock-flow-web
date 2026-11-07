@@ -189,7 +189,8 @@ describe("what each Role reaches", () => {
           !row.path.startsWith("/orders") &&
           !("route" in row && row.route === "/orders/$number") &&
           row.path !== "/login-log" &&
-          row.path !== "/dashboard",
+          row.path !== "/dashboard" &&
+          row.path !== "/reports",
       ),
     )("shows $page with its title and Coming soon", async (row) => {
       signedIn(role);

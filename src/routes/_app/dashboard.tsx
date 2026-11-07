@@ -3,13 +3,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { errorMessage } from "@/api/errors";
 import { useGetDashboard } from "@/api/generated/dashboard-and-reports/dashboard-and-reports";
 import type { DashboardOutputBody, RestockProduct } from "@/api/generated/model";
+import { Figure } from "@/components/figure";
 import { OrdersTable } from "@/components/orders-table";
 import { SalesByDay } from "@/components/sales-by-day";
 import { StockLevelBar, StockStateBadge } from "@/components/stock-level";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { formatBaht } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
@@ -138,27 +138,6 @@ function DashboardFigures({ dashboard }: { dashboard: DashboardOutputBody }) {
         )}
       </section>
     </>
-  );
-}
-
-function Figure({
-  label,
-  value,
-  tone,
-  className,
-}: {
-  label: string;
-  value: string;
-  tone?: string;
-  className?: string;
-}) {
-  return (
-    <div className={cn("flex flex-col gap-1 bg-card p-4", className)}>
-      <dt className="text-small text-muted-foreground">{label}</dt>
-      <dd className="text-figure wrap-anywhere">
-        <span className={tone}>{value}</span>
-      </dd>
-    </div>
   );
 }
 
