@@ -45,6 +45,7 @@ import {
   getResetPasswordMockHandler200,
   getUpdateUserMockHandler200,
 } from "@/api/generated/users/users.msw";
+import { characters, int32Max } from "@/lib/format";
 
 export const owner = { name: "Nok Srisuk", email: "nok@example.com", role: "owner" } as const;
 // Who can log in to the mock install: one person per Role, all with the one `mockApi.password`.
@@ -382,8 +383,7 @@ function changeOrder(order: Order, changes: Partial<Order>) {
   return changed;
 }
 
-// orders R1, R3: what the API refuses with 422 before it looks at any Product. Lengths are in
-// characters, as the API counts them; a quantity is an int32 in the contract.
+// orders R1, R3: what the API refuses with 422 before it looks at any Product.
 type OrderFields = { customer?: unknown; note?: unknown; lines?: unknown };
 
 function requireValidOrder(body: OrderFields) {
@@ -394,7 +394,7 @@ function requireValidOrder(body: OrderFields) {
   });
   const lines = Array.isArray(body.lines) ? (body.lines as Record<string, unknown>[]) : [];
   const tooLong = (value: unknown, max: number) =>
-    value !== undefined && !(typeof value === "string" && Array.from(value).length <= max);
+    value !== undefined && !(typeof value === "string" && characters(value) <= max);
   const seen = new Set<unknown>();
   const errors = [
     ...(tooLong(body.customer, 120) ? [bad("customer", body.customer)] : []),
@@ -403,9 +403,7 @@ function requireValidOrder(body: OrderFields) {
     ...lines.flatMap((line, i) => {
       const { quantity } = line;
       const quantityOk =
-        Number.isInteger(quantity) &&
-        (quantity as number) >= 1 &&
-        (quantity as number) <= 2_147_483_647;
+        Number.isInteger(quantity) && (quantity as number) >= 1 && (quantity as number) <= int32Max;
       return quantityOk ? [] : [bad(`lines[${i}].quantity`, quantity)];
     }),
     // orders R3: a Product is on one line at most.
@@ -425,14 +423,24 @@ function requireValidOrder(body: OrderFields) {
   }
 }
 
-// orders R6 to R8, context ADR 0007, in the API's order: no such Product, then Archived, then every
-// short line at once. Nothing is taken unless the whole Order is.
+// orders R6 to R8, context ADR 0007, checked in the API's order; nothing is taken unless all is.
 function makeOrder(body: Required<Pick<OrderFields, "lines">> & OrderFields) {
   const lines = body.lines as { productId: number; quantity: number }[];
+  // The total is an int64 in the contract: past it, a 422 on the lines.
+  let total = 0n;
   const products = lines.map((line) => {
     const product = mockApi.products.find(({ id }) => id === line.productId);
     if (!product)
       throw problem({ status: 404, title: "Not Found", detail: "There is no such Product." });
+    total += BigInt(line.quantity) * BigInt(product.price);
+    if (total > 9_223_372_036_854_775_807n) {
+      throw problem({
+        status: 422,
+        title: "Unprocessable Entity",
+        detail: "The total would be too large.",
+        errors: [{ location: "body.lines", message: "would make a total past the limit" }],
+      });
+    }
     return product;
   });
   if (products.some(({ status }) => status === "archived")) {

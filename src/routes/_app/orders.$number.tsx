@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { z } from "zod";
 
@@ -32,7 +32,7 @@ import {
 import { useCurrentUser } from "@/lib/current-user";
 import { formatBaht, formatDateTime } from "@/lib/format";
 
-// `created` is set by Create Order, which opens the detail of the Order it made.
+// Create Order sets `created` to open the Order it made with a notice.
 const searchSchema = z.object({ created: z.boolean().optional().catch(undefined) });
 
 export const Route = createFileRoute("/_app/orders/$number")({
@@ -112,6 +112,11 @@ function OrderDetail({ order }: { order: Order }) {
         }
       : undefined,
   );
+  // The notice is said once: the address drops the flag, so a reload or Back doesn't repeat it.
+  const navigate = Route.useNavigate();
+  useEffect(() => {
+    if (created) void navigate({ search: {}, replace: true });
+  }, [created, navigate]);
 
   const refresh = (changed: Order) => {
     queryClient.setQueryData(getGetOrderQueryKey(changed.number), changed);

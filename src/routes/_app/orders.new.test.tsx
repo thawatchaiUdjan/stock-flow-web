@@ -165,7 +165,9 @@ describe("Create Order", () => {
     await user.click(screen.getByRole("button", { name: "Create order" }));
 
     expect(await screen.findByRole("heading", { name: "Order #1" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/orders/1");
+    expect(screen.getByText("Order #1 created")).toBeInTheDocument();
+    // Said once: the address keeps no flag that a reload would show again.
+    await waitFor(() => expect(router.state.location.href).toBe("/orders/1"));
     expect(screen.getByText("Order #1 created")).toBeInTheDocument();
     expect(sent).toEqual([
       {
@@ -327,7 +329,7 @@ describe("Create Order", () => {
 
     expect(
       await within(lineOf("Work gloves")).findByText(
-        "This product is archived, so its stock can't change. Choose another.",
+        "This product is archived. Choose an active product instead.",
       ),
     ).toBeInTheDocument();
     // Beside its line only, not again above the form.

@@ -438,7 +438,7 @@ describe("Receive stock", () => {
     await user.click(screen.getByRole("button", { name: "Receive stock" }));
 
     const message = await screen.findByText(
-      "This product is archived, so its stock can't change. Choose another.",
+      "This product is archived. Choose an active product instead.",
     );
     expect(
       screen.getByLabelText("Product", { selector: "#stock-product" }),

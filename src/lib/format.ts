@@ -1,3 +1,9 @@
+// Characters as the API counts them (code points), so an emoji is one, not two UTF-16 units.
+export const characters = (text: string) => Array.from(text).length;
+
+// The contract's int32: the most units a quantity or a stock can be.
+export const int32Max = 2_147_483_647;
+
 const dateTime = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
   month: "short",

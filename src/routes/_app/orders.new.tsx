@@ -29,7 +29,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { formatBaht } from "@/lib/format";
+import { characters, formatBaht, int32Max } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/orders/new")({ component: NewOrderPage });
 
@@ -41,21 +41,18 @@ interface LineValues {
   quantity: string;
 }
 
-// orders R1: lengths are counted in characters, as the API counts them.
-const characters = (text: string) => Array.from(text).length;
-
 // orders R3: a whole quantity of at least 1. The contract keeps it to an int32.
 const quantity = z
   .string()
   .trim()
   .transform((text) => (/^\d+$/.test(text) ? Number(text) : Number.NaN))
-  .pipe(CreateOrderBody.shape.lines.element.shape.quantity.max(2_147_483_647));
+  .pipe(CreateOrderBody.shape.lines.element.shape.quantity.max(int32Max));
 
 const orderSchema = z
   .object({
     // orders R1: one or more lines.
     lines: z.array(z.object({ product: z.custom<LineProduct>(), quantity })).min(1),
-    // orders R1: both optional; spaces around them are dropped before they are counted.
+    // orders R1: both optional, counted in characters once the spaces around them are dropped.
     customer: z
       .string()
       .trim()
@@ -73,7 +70,6 @@ const orderSchema = z
 
 const quantityMessage = "Enter a whole number of 1 or more.";
 
-// The line's quantity as a number, or undefined while it isn't one.
 function quantityOf(text: string) {
   const result = quantity.safeParse(text);
   return result.success ? result.data : undefined;
@@ -267,7 +263,7 @@ function NewOrderPage() {
               {createOrder.isPending ? "Creating order" : "Create order"}
             </Button>
             <Button variant="outline" asChild>
-              <Link to="/orders">Cancel</Link>
+              <Link to="/orders">Back to orders</Link>
             </Button>
           </div>
         </FieldGroup>
@@ -384,8 +380,7 @@ function ProductSearch({
   );
 }
 
-// A line mounts when its Product is added: the Add button it came from is gone with the search
-// text, and its quantity is what comes next. Stable, so it runs once per line.
+// A new line takes the focus from its vanished Add button; stable, so once per line.
 const focusOnMount = (input: HTMLInputElement | null) => input?.focus();
 
 function OrderLine({
@@ -461,8 +456,7 @@ function OrderLine({
   );
 }
 
-// orders R4, R19: the sum of the lines' amounts, updated as they change. The API fixes the prices
-// when the Order is created; these are the ones offered.
+// orders R4, R19: at the prices offered; the API fixes the real ones when it creates the Order.
 function Total({ lines }: { lines: LineValues[] }) {
   const total = lines.reduce(
     (sum, line) => sum + (quantityOf(line.quantity) ?? 0) * line.product.price,
