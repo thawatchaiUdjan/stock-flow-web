@@ -17,6 +17,8 @@ const messages = {
   "insufficient-stock": "There isn't enough stock for this change.",
   // stock-movements R9
   "product-archived": "This product is archived, so its stock can't change. Choose another.",
+  // orders R13: completed and cancelled are final; the detail refreshes to say which.
+  "order-not-pending": "This order was completed or cancelled already, so it can't change.",
   "setup-link-invalid":
     "This Setup link has been used, has expired or was replaced. Ask the Owner for a new one.",
 } satisfies Record<ErrorModelType, string>;

@@ -351,9 +351,15 @@ function MovementsTable({ movements }: { movements: StockMovement[] }) {
               </TableCell>
               <TableCell className="whitespace-nowrap max-shell:col-start-1 max-shell:row-start-3 max-shell:pt-0">
                 <p>{kindNames[movement.kind]}</p>
-                {/* The Order's page comes with the Orders feature; it links here then. */}
+                {/* orders R17 */}
                 {movement.order && (
-                  <p className="text-small text-muted-foreground">#{movement.order.number}</p>
+                  <Link
+                    to="/orders/$number"
+                    params={{ number: String(movement.order.number) }}
+                    className="text-small text-muted-foreground underline-offset-2 hover:underline"
+                  >
+                    #{movement.order.number}
+                  </Link>
                 )}
               </TableCell>
               <TableCell className="text-right max-shell:col-start-2 max-shell:row-span-2 max-shell:row-start-2 max-shell:self-center">

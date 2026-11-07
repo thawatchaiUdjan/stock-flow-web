@@ -35,8 +35,9 @@ export interface ErrorModel {
      * target-is-owner: The operation acts on a User, and that User is the Owner, who cannot be changed here.
      * user-inactive: No Setup link can be issued for an Inactive User.
      * sku-taken: Another Product has this SKU, in any letter case.
-     * insufficient-stock: The stock change would take a Product's stock below 0. The error's products member names each such Product with its stock.
-     * product-archived: The Product is Archived: its stock cannot be received or adjusted.
+     * insufficient-stock: The stock change, or the Order, would take a Product's stock below 0. The error's products member names each such Product with its stock.
+     * product-archived: The Product is Archived: its stock cannot be received or adjusted, and it cannot be ordered.
+     * order-not-pending: The Order is completed or cancelled already, and neither can change.
      */
   type?: ErrorModelType;
 }

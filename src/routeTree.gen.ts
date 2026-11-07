@@ -19,6 +19,7 @@ import { Route as AppLoginLogRouteImport } from './routes/_app/login-log'
 import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppStockMovementsRouteImport } from './routes/_app/stock-movements'
 import { Route as AppOrdersIndexRouteImport } from './routes/_app/orders.index'
+import { Route as AppOrdersNumberRouteImport } from './routes/_app/orders.$number'
 import { Route as AppOrdersNewRouteImport } from './routes/_app/orders.new'
 import { Route as AppProductsIndexRouteImport } from './routes/_app/products.index'
 import { Route as AppProductsNewRouteImport } from './routes/_app/products.new'
@@ -76,6 +77,11 @@ const AppOrdersIndexRoute = AppOrdersIndexRouteImport.update({
   path: '/orders/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOrdersNumberRoute = AppOrdersNumberRouteImport.update({
+  id: '/orders/$number',
+  path: '/orders/$number',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOrdersNewRoute = AppOrdersNewRouteImport.update({
   id: '/orders/new',
   path: '/orders/new',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/login-log': typeof AppLoginLogRoute
   '/reports': typeof AppReportsRoute
   '/stock-movements': typeof AppStockMovementsRoute
+  '/orders/$number': typeof AppOrdersNumberRoute
   '/orders/new': typeof AppOrdersNewRoute
   '/products/new': typeof AppProductsNewRoute
   '/users/new': typeof AppUsersNewRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AppReportsRoute
   '/stock-movements': typeof AppStockMovementsRoute
   '/': typeof AppIndexRoute
+  '/orders/$number': typeof AppOrdersNumberRoute
   '/orders/new': typeof AppOrdersNewRoute
   '/products/new': typeof AppProductsNewRoute
   '/users/new': typeof AppUsersNewRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/_app/reports': typeof AppReportsRoute
   '/_app/stock-movements': typeof AppStockMovementsRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/orders/$number': typeof AppOrdersNumberRoute
   '/_app/orders/new': typeof AppOrdersNewRoute
   '/_app/products/new': typeof AppProductsNewRoute
   '/_app/users/new': typeof AppUsersNewRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/login-log'
     | '/reports'
     | '/stock-movements'
+    | '/orders/$number'
     | '/orders/new'
     | '/products/new'
     | '/users/new'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/stock-movements'
     | '/'
+    | '/orders/$number'
     | '/orders/new'
     | '/products/new'
     | '/users/new'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/_app/reports'
     | '/_app/stock-movements'
     | '/_app/'
+    | '/_app/orders/$number'
     | '/_app/orders/new'
     | '/_app/products/new'
     | '/_app/users/new'
@@ -304,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrdersIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/orders/$number': {
+      id: '/_app/orders/$number'
+      path: '/orders/$number'
+      fullPath: '/orders/$number'
+      preLoaderRoute: typeof AppOrdersNumberRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/orders/new': {
       id: '/_app/orders/new'
       path: '/orders/new'
@@ -363,6 +382,7 @@ interface AppRouteChildren {
   AppReportsRoute: typeof AppReportsRoute
   AppStockMovementsRoute: typeof AppStockMovementsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppOrdersNumberRoute: typeof AppOrdersNumberRoute
   AppOrdersNewRoute: typeof AppOrdersNewRoute
   AppProductsNewRoute: typeof AppProductsNewRoute
   AppUsersNewRoute: typeof AppUsersNewRoute
@@ -380,6 +400,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppReportsRoute: AppReportsRoute,
   AppStockMovementsRoute: AppStockMovementsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppOrdersNumberRoute: AppOrdersNumberRoute,
   AppOrdersNewRoute: AppOrdersNewRoute,
   AppProductsNewRoute: AppProductsNewRoute,
   AppUsersNewRoute: AppUsersNewRoute,

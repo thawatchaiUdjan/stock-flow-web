@@ -6,6 +6,8 @@
  */
 
 export * from './adjustStockBody';
+export * from './createOrderBody';
+export * from './createOrderLine';
 export * from './createProductBody';
 export * from './createUserBody';
 export * from './createUserBodyRole';
@@ -19,6 +21,9 @@ export * from './healthOutputBody';
 export * from './listLoginLogOutputBody';
 export * from './listLoginLogParams';
 export * from './listLoginLogResult';
+export * from './listOrdersOutputBody';
+export * from './listOrdersParams';
+export * from './listOrdersStatus';
 export * from './listProductsOutputBody';
 export * from './listProductsParams';
 export * from './listProductsStatus';
@@ -31,6 +36,14 @@ export * from './logInInputBody';
 export * from './loginLogEntryBody';
 export * from './loginLogEntryBodyResult';
 export * from './loginLogUser';
+export * from './order';
+export * from './orderFinish';
+export * from './orderLine';
+export * from './orderLineProduct';
+export * from './orderStatus';
+export * from './orderSummary';
+export * from './orderSummaryStatus';
+export * from './orderUser';
 export * from './product';
 export * from './productStatus';
 export * from './productStock';

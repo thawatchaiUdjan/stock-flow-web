@@ -64,6 +64,17 @@ const r11 = [
     staff: true,
   },
   {
+    // R17: an Order's detail follows the Orders List's access.
+    page: "Order detail",
+    path: "/orders/12",
+    route: "/orders/$number",
+    label: undefined,
+    heading: "Order not found",
+    owner: true,
+    admin: true,
+    staff: true,
+  },
+  {
     page: "Create Order",
     path: "/orders/new",
     label: "New order",
@@ -175,6 +186,8 @@ describe("what each Role reaches", () => {
           !row.path.startsWith("/users") &&
           !row.path.startsWith("/products") &&
           row.path !== "/stock-movements" &&
+          row.path !== "/orders" &&
+          !("route" in row && row.route === "/orders/$number") &&
           row.path !== "/login-log",
       ),
     )("shows $page with its title and Coming soon", async (row) => {

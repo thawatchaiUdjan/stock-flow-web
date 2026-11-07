@@ -46,6 +46,7 @@ export const pages = [
   {
     title: "Orders",
     path: "/orders",
+    also: ["/orders/$number"],
     icon: ClipboardList,
     roles: ["owner", "admin", "staff"],
   },
@@ -102,8 +103,10 @@ function withoutTrailingSlash(pathname: string) {
 // The R11 row an address belongs to; none for an address that is no page (or a redirect).
 export function pageAt(pathname: string): AppPage | undefined {
   const path = withoutTrailingSlash(pathname);
-  return pages.find(
-    (page) => page.path === path || (page as Page).also?.some((one) => matchesPattern(one, path)),
+  // An exact address wins over a pattern: `/orders/new` is New order, not an Order numbered "new".
+  return (
+    pages.find((page) => page.path === path) ??
+    pages.find((page) => (page as Page).also?.some((one) => matchesPattern(one, path)))
   );
 }
 
