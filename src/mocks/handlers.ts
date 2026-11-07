@@ -15,6 +15,7 @@ import type {
 import {
   getCancelOrderMockHandler200,
   getCompleteOrderMockHandler200,
+  getCreateOrderMockHandler201,
   getGetOrderMockHandler200,
   getListOrdersMockHandler200,
 } from "@/api/generated/orders/orders.msw";
@@ -381,6 +382,105 @@ function changeOrder(order: Order, changes: Partial<Order>) {
   return changed;
 }
 
+// orders R1, R3: what the API refuses with 422 before it looks at any Product. Lengths are in
+// characters, as the API counts them; a quantity is an int32 in the contract.
+type OrderFields = { customer?: unknown; note?: unknown; lines?: unknown };
+
+function requireValidOrder(body: OrderFields) {
+  const bad = (location: string, value: unknown) => ({
+    location: `body.${location}`,
+    message: "validation failed",
+    value,
+  });
+  const lines = Array.isArray(body.lines) ? (body.lines as Record<string, unknown>[]) : [];
+  const tooLong = (value: unknown, max: number) =>
+    value !== undefined && !(typeof value === "string" && Array.from(value).length <= max);
+  const seen = new Set<unknown>();
+  const errors = [
+    ...(tooLong(body.customer, 120) ? [bad("customer", body.customer)] : []),
+    ...(tooLong(body.note, 200) ? [bad("note", body.note)] : []),
+    ...(lines.length === 0 ? [bad("lines", body.lines)] : []),
+    ...lines.flatMap((line, i) => {
+      const { quantity } = line;
+      const quantityOk =
+        Number.isInteger(quantity) &&
+        (quantity as number) >= 1 &&
+        (quantity as number) <= 2_147_483_647;
+      return quantityOk ? [] : [bad(`lines[${i}].quantity`, quantity)];
+    }),
+    // orders R3: a Product is on one line at most.
+    ...lines.flatMap((line, i) => {
+      const duplicate = seen.has(line.productId);
+      seen.add(line.productId);
+      return duplicate ? [bad(`lines[${i}].productId`, line.productId)] : [];
+    }),
+  ];
+  if (errors.length > 0) {
+    throw problem({
+      status: 422,
+      title: "Unprocessable Entity",
+      detail: "validation failed",
+      errors,
+    });
+  }
+}
+
+// orders R6 to R8, context ADR 0007, in the API's order: no such Product, then Archived, then every
+// short line at once. Nothing is taken unless the whole Order is.
+function makeOrder(body: Required<Pick<OrderFields, "lines">> & OrderFields) {
+  const lines = body.lines as { productId: number; quantity: number }[];
+  const products = lines.map((line) => {
+    const product = mockApi.products.find(({ id }) => id === line.productId);
+    if (!product)
+      throw problem({ status: 404, title: "Not Found", detail: "There is no such Product." });
+    return product;
+  });
+  if (products.some(({ status }) => status === "archived")) {
+    throw problem({
+      type: "product-archived",
+      status: 409,
+      title: "Conflict",
+      detail: "A Product on this Order is Archived.",
+    });
+  }
+  const short = lines
+    .map((line, i) => ({ product: products[i]!, quantity: line.quantity }))
+    .filter(({ product, quantity }) => quantity > product.stock)
+    .map(({ product }) => ({ id: product.id, stock: product.stock }))
+    .toSorted((a, b) => a.id - b.id);
+  if (short.length > 0) {
+    throw problem({
+      type: "insufficient-stock",
+      status: 409,
+      title: "Conflict",
+      detail: "Not enough stock.",
+      products: short,
+    });
+  }
+  // orders R2: numbers count up and are never reused.
+  const number = Math.max(0, ...mockApi.orders.map((one) => one.number)) + 1;
+  const order = orderOf({
+    number,
+    createdAt: new Date().toISOString(),
+    createdBy: actor(),
+    customer: typeof body.customer === "string" ? body.customer : "",
+    note: typeof body.note === "string" ? body.note : "",
+    // orders R3: the price is the Product's now.
+    lines: lines.map((line, i) => ({
+      product: { id: products[i]!.id, name: products[i]!.name, sku: products[i]!.sku },
+      quantity: line.quantity,
+      price: products[i]!.price,
+    })),
+  });
+  // orders R7: one Order movement per line.
+  for (const line of lines) {
+    const product = mockApi.products.find(({ id }) => id === line.productId)!;
+    recordMovement(product, "order", -line.quantity, undefined, { id: order.id, number });
+  }
+  mockApi.orders.push(order);
+  return order;
+}
+
 const productsDefaultLimit = 50;
 
 const stockMovementsDefaultLimit = 50;
@@ -633,6 +733,13 @@ export const handlers = [
     const order = mockApi.orders.find((one) => one.number === Number(params.number));
     if (!order) throw problem({ status: 404, title: "Not Found" });
     return order;
+  }),
+  getCreateOrderMockHandler201(async ({ request }) => {
+    requireSession();
+    // orders R5: every Role creates Orders.
+    const body = await request.json();
+    requireValidOrder(body);
+    return makeOrder(body);
   }),
   getCompleteOrderMockHandler200(({ params }) => {
     requireSession();

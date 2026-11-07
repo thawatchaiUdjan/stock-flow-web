@@ -186,7 +186,7 @@ describe("what each Role reaches", () => {
           !row.path.startsWith("/users") &&
           !row.path.startsWith("/products") &&
           row.path !== "/stock-movements" &&
-          row.path !== "/orders" &&
+          !row.path.startsWith("/orders") &&
           !("route" in row && row.route === "/orders/$number") &&
           row.path !== "/login-log",
       ),
