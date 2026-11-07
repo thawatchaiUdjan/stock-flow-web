@@ -126,8 +126,8 @@ describe("the Stock Movements list", () => {
     expect(screen.queryByRole("link", { name: /edit|delete/i })).not.toBeInTheDocument();
   });
 
-  // stock-movements R3, R11: Orders make these; the Order's page comes with the Orders feature.
-  it("renders Order and Cancellation entries with their Order's number", async () => {
+  // stock-movements R3, R11: Orders make these; orders R17, the number leads to the Order's detail.
+  it("renders Order and Cancellation entries with their Order's number, linking to its detail", async () => {
     signedIn("owner");
     mockApi.products = [helmet];
     mockApi.stockMovements = [
@@ -144,6 +144,23 @@ describe("the Stock Movements list", () => {
     await screen.findAllByText("#1007");
     expect(rowOf(/Order/)).toHaveTextContent("Order#1007−414");
     expect(rowOf(/Cancellation/)).toHaveTextContent("Cancellation#1007+418");
+    for (const link of screen.getAllByRole("link", { name: "#1007" })) {
+      expect(link).toHaveAttribute("href", "/orders/1007");
+    }
+  });
+
+  it("opens the Order's detail from one of its entries", async () => {
+    signedIn("owner");
+    mockApi.products = [helmet];
+    mockApi.stockMovements = [
+      movement(1, { kind: "order", change: -4, stockAfter: 14, order: { id: 7, number: 1007 } }),
+    ];
+    const { user, router } = renderApp("/stock-movements");
+
+    await user.click(await screen.findByRole("link", { name: "#1007" }));
+
+    expect(await screen.findByRole("heading", { name: "Order not found" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/orders/1007");
   });
 
   it("says what belongs here when there are no entries", async () => {

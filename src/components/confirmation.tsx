@@ -20,6 +20,7 @@ export function Confirmation({
   title,
   description,
   confirm,
+  dismiss = "Cancel",
   pending,
   error,
   onConfirm,
@@ -29,6 +30,8 @@ export function Confirmation({
   title: string;
   description: ReactNode;
   confirm: string;
+  // What the button that leaves the order as it was says.
+  dismiss?: string;
   pending: boolean;
   error: unknown;
   onConfirm: () => void;
@@ -46,7 +49,7 @@ export function Confirmation({
           </Alert>
         )}
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{dismiss}</AlertDialogCancel>
           {/* Not AlertDialogAction: that closes the question before the API has answered. */}
           <Button disabled={pending} onClick={onConfirm}>
             {confirm}

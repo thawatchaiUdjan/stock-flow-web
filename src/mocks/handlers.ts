@@ -4,12 +4,20 @@ import { getListLoginLogMockHandler200 } from "@/api/generated/login-log/login-l
 import type {
   ErrorModel,
   LoginLogEntryBody,
+  Order,
+  OrderSummary,
   Product,
   ProductStockState,
   StockMovement,
   User,
   UserRole,
 } from "@/api/generated/model";
+import {
+  getCancelOrderMockHandler200,
+  getCompleteOrderMockHandler200,
+  getGetOrderMockHandler200,
+  getListOrdersMockHandler200,
+} from "@/api/generated/orders/orders.msw";
 import {
   getCreateProductMockHandler201,
   getGetProductMockHandler200,
@@ -64,6 +72,9 @@ function freshInstall() {
     // Any order: the handler sorts, as the API does. A real install starts with none. Entries have
     // the ids the API gives them, and a test that adds one keeps its Product's stock to match.
     stockMovements: [] as StockMovement[],
+    // Any order: the handler sorts, as the API does. A real install starts with none. Build them
+    // with `orderOf`; cancelling one gives its stock back and adds its movements.
+    orders: [] as Order[],
   };
 }
 
@@ -270,9 +281,8 @@ function makeStockMovement(
       detail: "The Product is Archived.",
     });
   }
-  const stockAfter = product.stock + change;
   // stock-movements R6: refused, saying how many are in stock.
-  if (stockAfter < 0) {
+  if (product.stock + change < 0) {
     throw problem({
       type: "insufficient-stock",
       status: 409,
@@ -281,23 +291,94 @@ function makeStockMovement(
       products: [{ id: product.id, stock: product.stock }],
     });
   }
+  return recordMovement(product, kind, change, note, null);
+}
+
+// The signed-in person as the API names a User on a record.
+function actor() {
   const person = people[mockApi.role];
+  return { id: Object.values(people).indexOf(person) + 1, name: person.name };
+}
+
+// ADR 0006: the stock moves with its movement; the Product is replaced, not altered.
+function recordMovement(
+  product: Product,
+  kind: StockMovement["kind"],
+  change: number,
+  note: string | undefined,
+  order: StockMovement["order"],
+) {
   const movement: StockMovement = {
     id: Math.max(0, ...mockApi.stockMovements.map(({ id }) => id)) + 1,
     at: new Date().toISOString(),
     kind,
     product: { id: product.id, name: product.name, sku: product.sku },
     change,
-    stockAfter,
-    user: { id: Object.values(people).indexOf(person) + 1, name: person.name },
+    stockAfter: product.stock + change,
+    user: actor(),
     note: note ?? "",
-    order: null,
+    order,
   };
   mockApi.stockMovements.push(movement);
   mockApi.products = mockApi.products.map((one) =>
-    one === product ? productOf({ ...product, stock: stockAfter }) : one,
+    one === product ? productOf({ ...product, stock: movement.stockAfter }) : one,
   );
   return movement;
+}
+
+// orders R3, R4: an Order as the API holds it. A line's amount and the Order's total follow from
+// the quantities and prices; the Order starts Pending (R10) unless a test says otherwise.
+export function orderOf(
+  fields: Pick<Order, "number" | "createdAt" | "createdBy"> &
+    Partial<Pick<Order, "customer" | "note" | "status" | "completed" | "cancelled">> & {
+      lines: Pick<Order["lines"][number], "product" | "quantity" | "price">[];
+    },
+): Order {
+  const lines = fields.lines.map((line) => ({ ...line, amount: line.quantity * line.price }));
+  return {
+    id: fields.number + 1000,
+    customer: "",
+    note: "",
+    status: "pending",
+    completed: null,
+    cancelled: null,
+    ...fields,
+    lines,
+    total: lines.reduce((sum, line) => sum + line.amount, 0),
+  };
+}
+
+function summaryOf(order: Order): OrderSummary {
+  return {
+    id: order.id,
+    number: order.number,
+    createdAt: order.createdAt,
+    customer: order.customer,
+    lineCount: order.lines.length,
+    total: order.total,
+    status: order.status,
+  };
+}
+
+// orders R10, R13: only a Pending Order can be completed or cancelled.
+function pendingOrder(number: number) {
+  const order = mockApi.orders.find((one) => one.number === number);
+  if (!order) throw problem({ status: 404, title: "Not Found" });
+  if (order.status !== "pending") {
+    throw problem({
+      type: "order-not-pending",
+      status: 409,
+      title: "Conflict",
+      detail: "The Order is completed or cancelled already.",
+    });
+  }
+  return order;
+}
+
+function changeOrder(order: Order, changes: Partial<Order>) {
+  const changed = { ...order, ...changes };
+  mockApi.orders = mockApi.orders.map((one) => (one === order ? changed : one));
+  return changed;
 }
 
 const productsDefaultLimit = 50;
@@ -305,6 +386,8 @@ const productsDefaultLimit = 50;
 const stockMovementsDefaultLimit = 50;
 
 const loginLogDefaultLimit = 50;
+
+const ordersDefaultLimit = 50;
 
 const day = 24 * 60 * 60 * 1000;
 
@@ -520,6 +603,65 @@ export const handlers = [
     const body = await request.json();
     requireValidStockChange(body, { field: "change", ok: (n) => n !== 0, noteRequired: true });
     return makeStockMovement("adjustment", body.productId, body.change, body.note);
+  }),
+  getListOrdersMockHandler200(({ request }) => {
+    requireSession();
+    const query = new URL(request.url).searchParams;
+    const search = (query.get("search") ?? "").trim().toLowerCase();
+    const status = query.get("status");
+    const limit = Number(query.get("limit") ?? ordersDefaultLimit);
+    const offset = Number(query.get("offset") ?? 0);
+    // orders R15, R16: newest first; the Order with that number and the customers containing the
+    // text, in any letter case; the status narrows both.
+    const matching = mockApi.orders
+      .filter((one) => status === null || one.status === status)
+      .filter(
+        (one) =>
+          search === "" ||
+          String(one.number) === search ||
+          one.customer.toLowerCase().includes(search),
+      )
+      .toSorted((a, b) => b.number - a.number);
+    return {
+      orders: matching.slice(offset, offset + limit).map(summaryOf),
+      total: matching.length,
+    };
+  }),
+  getGetOrderMockHandler200(({ params }) => {
+    requireSession();
+    // orders R18: every Role sees every Order.
+    const order = mockApi.orders.find((one) => one.number === Number(params.number));
+    if (!order) throw problem({ status: 404, title: "Not Found" });
+    return order;
+  }),
+  getCompleteOrderMockHandler200(({ params }) => {
+    requireSession();
+    // orders R11: every Role completes, and no stock changes (ADR 0007).
+    const order = pendingOrder(Number(params.number));
+    return changeOrder(order, {
+      status: "completed",
+      completed: { at: new Date().toISOString(), by: actor() },
+    });
+  }),
+  getCancelOrderMockHandler200(({ params }) => {
+    requireSession();
+    // orders R12: only the Owner and Admins cancel.
+    requireAdminOrOwner();
+    const order = pendingOrder(Number(params.number));
+    // One cancellation movement per line, even for a Product Archived since.
+    for (const line of order.lines) {
+      const product = mockApi.products.find(({ id }) => id === line.product.id);
+      if (product) {
+        recordMovement(product, "cancellation", line.quantity, undefined, {
+          id: order.id,
+          number: order.number,
+        });
+      }
+    }
+    return changeOrder(order, {
+      status: "cancelled",
+      cancelled: { at: new Date().toISOString(), by: actor() },
+    });
   }),
   getListLoginLogMockHandler200(({ request }) => {
     requireSession();
