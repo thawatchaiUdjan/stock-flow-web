@@ -174,6 +174,7 @@ describe("what each Role reaches", () => {
           row[role] &&
           !row.path.startsWith("/users") &&
           !row.path.startsWith("/products") &&
+          row.path !== "/stock-movements" &&
           row.path !== "/login-log",
       ),
     )("shows $page with its title and Coming soon", async (row) => {

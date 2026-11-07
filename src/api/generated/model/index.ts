@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adjustStockBody';
 export * from './createProductBody';
 export * from './createUserBody';
 export * from './createUserBodyRole';
@@ -22,6 +23,9 @@ export * from './listProductsOutputBody';
 export * from './listProductsParams';
 export * from './listProductsStatus';
 export * from './listProductsStockItem';
+export * from './listStockMovementsKind';
+export * from './listStockMovementsOutputBody';
+export * from './listStockMovementsParams';
 export * from './listUsersOutputBody';
 export * from './logInInputBody';
 export * from './loginLogEntryBody';
@@ -29,11 +33,18 @@ export * from './loginLogEntryBodyResult';
 export * from './loginLogUser';
 export * from './product';
 export * from './productStatus';
+export * from './productStock';
 export * from './productStockState';
 export * from './readSetupLinkInputBody';
 export * from './readSetupLinkOutputBody';
+export * from './receiveStockBody';
 export * from './setPasswordInputBody';
 export * from './setupLink';
+export * from './stockMovement';
+export * from './stockMovementKind';
+export * from './stockMovementOrder';
+export * from './stockMovementProduct';
+export * from './stockMovementUser';
 export * from './updateProductBody';
 export * from './updateProductBodyStatus';
 export * from './updateUserBody';

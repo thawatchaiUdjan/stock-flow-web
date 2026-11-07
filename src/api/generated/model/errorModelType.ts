@@ -14,6 +14,8 @@
  * target-is-owner: The operation acts on a User, and that User is the Owner, who cannot be changed here.
  * user-inactive: No Setup link can be issued for an Inactive User.
  * sku-taken: Another Product has this SKU, in any letter case.
+ * insufficient-stock: The stock change would take a Product's stock below 0. The error's products member names each such Product with its stock.
+ * product-archived: The Product is Archived: its stock cannot be received or adjusted.
  */
 export type ErrorModelType = typeof ErrorModelType[keyof typeof ErrorModelType];
 
@@ -27,4 +29,6 @@ export const ErrorModelType = {
   'target-is-owner': 'target-is-owner',
   'user-inactive': 'user-inactive',
   'sku-taken': 'sku-taken',
+  'insufficient-stock': 'insufficient-stock',
+  'product-archived': 'product-archived',
 } as const;
