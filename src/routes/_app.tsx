@@ -13,15 +13,12 @@ import { LogOut } from "lucide-react";
 
 import { errorMessage } from "@/api/errors";
 import type { CurrentUser } from "@/api/generated/model";
-import {
-  getGetCurrentUserQueryOptions,
-  useEndSession,
-  useGetCurrentUser,
-} from "@/api/generated/sessions/sessions";
+import { getGetCurrentUserQueryOptions, useEndSession } from "@/api/generated/sessions/sessions";
 import { CenteredSurface } from "@/components/centered-surface";
 import { NoAccess } from "@/components/no-access";
 import { Button } from "@/components/ui/button";
 import { canReach, landingPageOf, pageAt, pagesOf } from "@/lib/access";
+import { useCurrentUser } from "@/lib/current-user";
 import { roleNames } from "@/lib/roles";
 import { isSessionLost } from "@/lib/session";
 import { cn } from "@/lib/utils";
@@ -50,9 +47,7 @@ const activeNavLink = "bg-accent text-accent-foreground hover:bg-accent";
 
 // One markup for both layouts: on a phone the sidebar dissolves into a top strip and a bottom bar.
 function AppShell() {
-  const { user: checkedUser } = Route.useRouteContext();
-  // Live, so a focus re-checks the session and a Role change shows at once (users-and-access R35).
-  const { data: user = checkedUser } = useGetCurrentUser({ query: { refetchOnMount: false } });
+  const user = useCurrentUser();
   const pathname = useLocation({ select: (location) => location.pathname });
   const current = pageAt(pathname);
 
