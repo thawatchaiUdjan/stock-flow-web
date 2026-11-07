@@ -6,6 +6,7 @@ import type {
   LoginLogEntryBody,
   Product,
   ProductStockState,
+  StockMovement,
   User,
   UserRole,
 } from "@/api/generated/model";
@@ -24,6 +25,11 @@ import {
   getReadSetupLinkMockHandler200,
   getSetPasswordMockHandler204,
 } from "@/api/generated/setup-links/setup-links.msw";
+import {
+  getAdjustStockMockHandler201,
+  getListStockMovementsMockHandler200,
+  getReceiveStockMockHandler201,
+} from "@/api/generated/stock-movements/stock-movements.msw";
 import {
   getCreateUserMockHandler201,
   getListUsersMockHandler200,
@@ -55,6 +61,9 @@ function freshInstall() {
     loginLog: [] as LoginLogEntryBody[],
     // Any order: the handler sorts, as the API does. A real install starts with none.
     products: [] as Product[],
+    // Any order: the handler sorts, as the API does. A real install starts with none. Entries have
+    // the ids the API gives them, and a test that adds one keeps its Product's stock to match.
+    stockMovements: [] as StockMovement[],
   };
 }
 
@@ -127,10 +136,14 @@ function requireOwner() {
   }
 }
 
-// products R10: the Owner and Admins change Products, Staff only read them.
+// products R10, stock-movements R5: the Owner and Admins change Products and adjust stock.
 function requireAdminOrOwner() {
   if (mockApi.role === "staff") {
-    throw problem({ status: 403, title: "Forbidden", detail: "Staff can't change Products." });
+    throw problem({
+      status: 403,
+      title: "Forbidden",
+      detail: "Only the Owner and Admins can do this.",
+    });
   }
 }
 
@@ -206,7 +219,90 @@ function requireFreeSku(sku: string, except?: number) {
   }
 }
 
+// stock-movements R4 to R6, R9: what the API refuses with 422, 404 and 409 before it moves any stock.
+type StockFields = Partial<Record<"productId" | "quantity" | "change" | "note", unknown>>;
+
+function requireValidStockChange(
+  body: StockFields,
+  rules: { field: "quantity" | "change"; ok: (value: number) => boolean; noteRequired: boolean },
+) {
+  const value = body[rules.field];
+  const note = body.note;
+  const bad = (location: string, value: unknown) => ({
+    location: `body.${location}`,
+    message: "validation failed",
+    value,
+  });
+  const errors = [
+    ...(!Number.isInteger(value) || !rules.ok(value as number) ? [bad(rules.field, value)] : []),
+    ...(note !== undefined && !(typeof note === "string" && Array.from(note).length <= 200)
+      ? [bad("note", note)]
+      : []),
+    ...(rules.noteRequired && !(typeof note === "string" && /\S/.test(note))
+      ? [bad("note", note)]
+      : []),
+  ];
+  if (errors.length > 0) {
+    throw problem({
+      status: 422,
+      title: "Unprocessable Entity",
+      detail: "validation failed",
+      errors,
+    });
+  }
+}
+
+// Receives and Adjustments are the movements a User makes: the Product's stock moves with them (ADR 0006).
+function makeStockMovement(
+  kind: "receive" | "adjustment",
+  productId: number,
+  change: number,
+  note: string | undefined,
+) {
+  const product = mockApi.products.find(({ id }) => id === productId);
+  if (!product) throw problem({ status: 404, title: "Not Found" });
+  // stock-movements R9, products R12
+  if (product.status === "archived") {
+    throw problem({
+      type: "product-archived",
+      status: 409,
+      title: "Conflict",
+      detail: "The Product is Archived.",
+    });
+  }
+  const stockAfter = product.stock + change;
+  // stock-movements R6: refused, saying how many are in stock.
+  if (stockAfter < 0) {
+    throw problem({
+      type: "insufficient-stock",
+      status: 409,
+      title: "Conflict",
+      detail: "Not enough stock.",
+      products: [{ id: product.id, stock: product.stock }],
+    });
+  }
+  const person = people[mockApi.role];
+  const movement: StockMovement = {
+    id: Math.max(0, ...mockApi.stockMovements.map(({ id }) => id)) + 1,
+    at: new Date().toISOString(),
+    kind,
+    product: { id: product.id, name: product.name, sku: product.sku },
+    change,
+    stockAfter,
+    user: { id: Object.values(people).indexOf(person) + 1, name: person.name },
+    note: note ?? "",
+    order: null,
+  };
+  mockApi.stockMovements.push(movement);
+  mockApi.products = mockApi.products.map((one) =>
+    one === product ? productOf({ ...product, stock: stockAfter }) : one,
+  );
+  return movement;
+}
+
 const productsDefaultLimit = 50;
+
+const stockMovementsDefaultLimit = 50;
 
 const loginLogDefaultLimit = 50;
 
@@ -385,6 +481,45 @@ export const handlers = [
     });
     mockApi.products = mockApi.products.map((one) => (one === product ? changed : one));
     return changed;
+  }),
+  getListStockMovementsMockHandler200(({ request }) => {
+    requireSession();
+    const query = new URL(request.url).searchParams;
+    const productId = query.get("productId");
+    const kind = query.get("kind");
+    const from = query.get("from");
+    const to = query.get("to");
+    const before = query.get("before");
+    const limit = Number(query.get("limit") ?? stockMovementsDefaultLimit);
+    // stock-movements R10: newest first; the filters narrow together; the days are the Shop's,
+    // Bangkok time (dashboard-and-reports R1), so a day ends at Bangkok midnight.
+    const matching = mockApi.stockMovements
+      .filter((one) => productId === null || one.product.id === Number(productId))
+      .filter((one) => kind === null || one.kind === kind)
+      .filter((one) => from === null || Date.parse(one.at) >= Date.parse(`${from}T00:00:00+07:00`))
+      .filter((one) => to === null || Date.parse(one.at) < Date.parse(`${to}T00:00:00+07:00`) + day)
+      .filter((one) => before === null || one.id < Number(before))
+      .toSorted((a, b) => b.id - a.id);
+    const movements = matching.slice(0, limit);
+    return {
+      movements,
+      nextBefore: matching.length > movements.length ? movements[movements.length - 1]!.id : null,
+    };
+  }),
+  getReceiveStockMockHandler201(async ({ request }) => {
+    requireSession();
+    const body = await request.json();
+    // stock-movements R4
+    requireValidStockChange(body, { field: "quantity", ok: (n) => n >= 1, noteRequired: false });
+    return makeStockMovement("receive", body.productId, body.quantity, body.note);
+  }),
+  getAdjustStockMockHandler201(async ({ request }) => {
+    requireSession();
+    // stock-movements R5: only the Owner and Admins adjust.
+    requireAdminOrOwner();
+    const body = await request.json();
+    requireValidStockChange(body, { field: "change", ok: (n) => n !== 0, noteRequired: true });
+    return makeStockMovement("adjustment", body.productId, body.change, body.note);
   }),
   getListLoginLogMockHandler200(({ request }) => {
     requireSession();

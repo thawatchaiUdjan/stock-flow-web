@@ -6,6 +6,7 @@
  */
 import type { ErrorDetail } from './errorDetail';
 import type { ErrorModelType } from './errorModelType';
+import type { ProductStock } from './productStock';
 
 export interface ErrorModel {
   /** A URL to the JSON Schema for this object. */
@@ -19,6 +20,8 @@ export interface ErrorModel {
   errors?: ErrorDetail[] | null;
   /** A URI reference that identifies the specific occurrence of the problem. */
   instance?: string;
+  /** Only with insufficient-stock: each Product whose stock is too low for the change, with its stock. */
+  products?: ProductStock[];
   /** HTTP status code */
   status?: number;
   /** A short, human-readable summary of the problem type. This value should not change between occurrences of the error. */
@@ -32,6 +35,8 @@ export interface ErrorModel {
      * target-is-owner: The operation acts on a User, and that User is the Owner, who cannot be changed here.
      * user-inactive: No Setup link can be issued for an Inactive User.
      * sku-taken: Another Product has this SKU, in any letter case.
+     * insufficient-stock: The stock change would take a Product's stock below 0. The error's products member names each such Product with its stock.
+     * product-archived: The Product is Archived: its stock cannot be received or adjusted.
      */
   type?: ErrorModelType;
 }

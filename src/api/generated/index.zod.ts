@@ -3,4 +3,5 @@ export * from './login-log/login-log.zod';
 export * from './products/products.zod';
 export * from './sessions/sessions.zod';
 export * from './setup-links/setup-links.zod';
+export * from './stock-movements/stock-movements.zod';
 export * from './users/users.zod';
