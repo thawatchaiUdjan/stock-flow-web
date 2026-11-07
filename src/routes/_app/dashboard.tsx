@@ -15,9 +15,9 @@ export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
 });
 
-// dashboard-and-reports R9: asked for again each time the page opens, and shown as the API gives it.
+// dashboard-and-reports R9: dropped when the page closes, so it never opens on the last visit's figures.
 function DashboardPage() {
-  const dashboard = useGetDashboard();
+  const dashboard = useGetDashboard({ query: { gcTime: 0 } });
 
   return (
     <div className="flex flex-col gap-4">

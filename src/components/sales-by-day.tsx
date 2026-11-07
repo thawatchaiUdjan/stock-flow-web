@@ -12,9 +12,7 @@ import { cn } from "@/lib/utils";
 
 const chartHeight = "h-40";
 
-// Sales for each day as bars, and the same figures as text under "Show the figures". The API gives
-// every day in the range, so a day with no Sales is a bar of 0 and there is no gap
-// (dashboard-and-reports R4, R7). `focus` is the day in Ink, such as today.
+// dashboard-and-reports R4, R7: every day is a bar, so a day with no Sales is 0 and leaves no gap.
 export function SalesByDay({
   title,
   days,
