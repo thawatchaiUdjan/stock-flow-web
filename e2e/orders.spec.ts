@@ -21,6 +21,8 @@ async function logIn(page: Page, email: string, password: string) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
+  // The session is live only once the app has left Log in; a `goto` before that reloads logged out.
+  await expect(page).not.toHaveURL(/\/login/);
 }
 
 function helmet(name: string) {
