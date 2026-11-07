@@ -120,3 +120,28 @@ test("an Admin cancels a Pending Order and traces its stock from Stock movements
   await expect(page.getByRole("heading", { name: "Order #12" })).toBeVisible();
   await expect(page.getByText("Cancelled", { exact: true }).first()).toBeVisible();
 });
+
+// docs/design.md, *Breakpoints*: no page scrolls sideways at any of these widths.
+for (const width of [375, 768, 1024, 1440]) {
+  test(`the Orders List and an Order detail fit ${width} px`, async ({ page }) => {
+    const password = `correct-horse-${test.info().testId}`;
+    const name = "Safety helmet with a very long name that goes on and on past the edge";
+    await install(page, password, {
+      products: [helmet(name)],
+      orders: [pendingOrder(name, "Somchai with a very long customer name that goes on and on")],
+    });
+    await page.setViewportSize({ width, height: 900 });
+    await logIn(page, people.staff, password);
+    await expect(page.getByRole("link", { name: "#12" })).toBeVisible();
+
+    const sideways = () =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+    expect(await sideways()).toBe(0);
+
+    await page.getByRole("link", { name: "#12" }).click();
+    await expect(page.getByRole("heading", { name: "Order #12" })).toBeVisible();
+    expect(await sideways()).toBe(0);
+  });
+}
