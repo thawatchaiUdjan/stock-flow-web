@@ -6,8 +6,13 @@ import { z } from "zod";
 import { errorMessage } from "@/api/errors";
 import { ListStockMovementsKind } from "@/api/generated/model";
 import type { StockMovement } from "@/api/generated/model";
-import { useGetProduct } from "@/api/generated/products/products";
 import {
+  getGetProductQueryKey,
+  getListProductsQueryKey,
+  useGetProduct,
+} from "@/api/generated/products/products";
+import {
+  getListStockMovementsQueryKey,
   useAdjustStock,
   useListStockMovements,
   useReceiveStock,
@@ -57,12 +62,22 @@ export const Route = createFileRoute("/_app/stock-movements")({
   component: StockMovementsPage,
 });
 
+// What the page says after a movement is saved.
+interface Notice {
+  title: string;
+  text: string;
+}
+
 function StockMovementsPage() {
   const { role } = useCurrentUser();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const [open, setOpen] = useState<StockChangeMode>();
-  const [done, setDone] = useState<{ title: string; text: string }>();
+  const [done, setDone] = useState<Notice>();
+  const openForm = (mode: StockChangeMode) => {
+    setDone(undefined);
+    setOpen(mode);
+  };
   // stock-movements R5: only the Owner and Admins adjust.
   const canAdjust = role !== "staff";
   // A range that ends before it starts holds nothing, and is said so rather than asked of the API.
@@ -80,22 +95,9 @@ function StockMovementsPage() {
         <h1 className="text-title">Stock movements</h1>
         {open === undefined && (
           <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => {
-                setDone(undefined);
-                setOpen("receive");
-              }}
-            >
-              Receive stock
-            </Button>
+            <Button onClick={() => openForm("receive")}>Receive stock</Button>
             {canAdjust && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setDone(undefined);
-                  setOpen("adjust");
-                }}
-              >
+              <Button variant="outline" onClick={() => openForm("adjust")}>
                 Adjust stock
               </Button>
             )}
@@ -180,17 +182,19 @@ function StockChangePanel({
   mode: StockChangeMode;
   preset: number | undefined;
   onCancel: () => void;
-  onDone: (notice: { title: string; text: string }) => void;
+  onDone: (notice: Notice) => void;
 }) {
   const queryClient = useQueryClient();
   const products = useActiveProducts();
   const finish = (movement: StockMovement) => {
     // The stock moved with the movement (ADR 0006): the list, and every Product's stock, are stale.
-    void queryClient.invalidateQueries({
-      predicate: ({ queryKey }) =>
-        typeof queryKey[0] === "string" &&
-        (queryKey[0].startsWith("/api/stock-movements") || queryKey[0].startsWith("/api/products")),
-    });
+    for (const queryKey of [
+      getListStockMovementsQueryKey(),
+      getListProductsQueryKey(),
+      getGetProductQueryKey(movement.product.id),
+    ]) {
+      void queryClient.invalidateQueries({ queryKey });
+    }
     onDone({
       title: mode === "receive" ? "Stock received" : "Stock adjusted",
       text: `${movement.product.name} (${movement.product.sku}) now has ${movement.stockAfter} in stock.`,

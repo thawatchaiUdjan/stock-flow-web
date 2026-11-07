@@ -37,8 +37,8 @@ export function errorMessage(error: unknown) {
 
 // stock-movements R6: the stock the API names for a Product, to say "Only 18 in stock."
 export function stockOf(error: unknown, productId: number) {
-  if (!hasCode(error, "insufficient-stock")) return undefined;
-  const products: ProductStock[] = (error as ApiError).problem.products ?? [];
+  if (!(error instanceof ApiError) || error.problem.type !== "insufficient-stock") return undefined;
+  const products: ProductStock[] = error.problem.products ?? [];
   return products.find(({ id }) => id === productId)?.stock;
 }
 
