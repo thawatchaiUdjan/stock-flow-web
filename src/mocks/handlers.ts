@@ -1,13 +1,17 @@
 import { HttpResponse } from "msw";
 
+import { getGetDashboardMockHandler200 } from "@/api/generated/dashboard-and-reports/dashboard-and-reports.msw";
 import { getListLoginLogMockHandler200 } from "@/api/generated/login-log/login-log.msw";
 import type {
+  DashboardOutputBody,
   ErrorModel,
   LoginLogEntryBody,
   Order,
   OrderSummary,
   Product,
   ProductStockState,
+  RestockProduct,
+  SalesDay,
   StockMovement,
   User,
   UserRole,
@@ -499,6 +503,64 @@ const ordersDefaultLimit = 50;
 
 const day = 24 * 60 * 60 * 1000;
 
+// dashboard-and-reports R1: the Shop's days are Bangkok days, UTC+7 all year.
+const bangkokOffset = 7 * 60 * 60 * 1000;
+
+function bangkokDay(at: number | string) {
+  return new Date(new Date(at).getTime() + bangkokOffset).toISOString().slice(0, 10);
+}
+
+// dashboard-and-reports R2 to R6, as the API works them out when asked.
+function dashboardOf(): DashboardOutputBody {
+  const today = bangkokDay(Date.now());
+  // R2: Sales are the Orders completed, counted on the day each was completed.
+  const completed = mockApi.orders.filter((one) => one.status === "completed" && one.completed);
+  const salesOn = (date: string) => {
+    const that = completed.filter((one) => bangkokDay(one.completed!.at) === date);
+    return {
+      date,
+      sales: that.reduce((sum, one) => sum + one.total, 0),
+      ordersCompleted: that.length,
+    };
+  };
+  // R4: the last 14 days, today included, oldest first; a day with no Sales is 0.
+  const salesByDay: SalesDay[] = Array.from({ length: 14 }, (_, i) =>
+    salesOn(bangkokDay(Date.now() - (13 - i) * day)),
+  );
+  const active = mockApi.products.filter((one) => one.status === "active");
+  // R5: Out of stock first, then the lowest stock; up to 10.
+  const restock: RestockProduct[] = active
+    .filter((one) => one.stockState !== "in-stock")
+    .toSorted(
+      (a, b) => Number(b.stock === 0) - Number(a.stock === 0) || a.stock - b.stock || a.id - b.id,
+    )
+    .slice(0, 10)
+    .map(({ id, name, sku, unit, stock, minimumStock, stockState }) => ({
+      id,
+      name,
+      sku,
+      unit,
+      stock,
+      minimumStock,
+      stockState: stockState === "low" ? "low" : "out-of-stock",
+    }));
+  return {
+    today,
+    sales: salesByDay[13]!.sales,
+    ordersCompleted: salesByDay[13]!.ordersCompleted,
+    pendingOrders: mockApi.orders.filter((one) => one.status === "pending").length,
+    lowProducts: active.filter((one) => one.stockState === "low").length,
+    outOfStockProducts: active.filter((one) => one.stockState === "out-of-stock").length,
+    salesByDay,
+    restock,
+    // R6
+    newestOrders: mockApi.orders
+      .toSorted((a, b) => b.number - a.number)
+      .slice(0, 5)
+      .map(summaryOf),
+  };
+}
+
 // Orval's default mocks return random strings; each handler here pins what the real API sends.
 export const handlers = [
   getListUsersMockHandler200(() => {
@@ -777,6 +839,12 @@ export const handlers = [
       status: "cancelled",
       cancelled: { at: new Date().toISOString(), by: actor() },
     });
+  }),
+  getGetDashboardMockHandler200(() => {
+    requireSession();
+    // users-and-access R11: the figures are for the Owner and Admins.
+    requireAdminOrOwner();
+    return dashboardOf();
   }),
   getListLoginLogMockHandler200(({ request }) => {
     requireSession();

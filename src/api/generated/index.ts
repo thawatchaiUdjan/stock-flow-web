@@ -1,3 +1,4 @@
+export * from './dashboard-and-reports/dashboard-and-reports';
 export * from './health/health';
 export * from './login-log/login-log';
 export * from './orders/orders';

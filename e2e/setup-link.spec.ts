@@ -24,7 +24,7 @@ test("a person sets a password through a Setup link and logs in", async ({ page 
 
   await expect(page).toHaveURL("/dashboard");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
-  await expect(page.getByRole("main").getByText("Coming soon")).toBeVisible();
+  await expect(page.getByText("Today's sales", { exact: true })).toBeVisible();
   await expect(page.getByText("Owner", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
 
