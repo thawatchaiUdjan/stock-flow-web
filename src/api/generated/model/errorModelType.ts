@@ -13,6 +13,7 @@
  * email-taken: A User has this email already, in any letter case.
  * target-is-owner: The operation acts on a User, and that User is the Owner, who cannot be changed here.
  * user-inactive: No Setup link can be issued for an Inactive User.
+ * sku-taken: Another Product has this SKU, in any letter case.
  */
 export type ErrorModelType = typeof ErrorModelType[keyof typeof ErrorModelType];
 
@@ -25,4 +26,5 @@ export const ErrorModelType = {
   'email-taken': 'email-taken',
   'target-is-owner': 'target-is-owner',
   'user-inactive': 'user-inactive',
+  'sku-taken': 'sku-taken',
 } as const;

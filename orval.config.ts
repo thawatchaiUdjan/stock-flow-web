@@ -1,6 +1,28 @@
 import { defineConfig } from "orval";
 
-const input = { target: "./openapi/openapi.yaml" };
+// The contract types an optional array as `["array", "null"]`. Orval only repeats a key per value
+// (`stock=low&stock=out-of-stock`, as the contract says) for a plain `array`, and otherwise joins
+// the values with commas, which the API would not read as two states. A query array that may be
+// left out is the same array for the client, so the null is dropped here, not in the contract.
+function arraysOnly(spec: any) {
+  for (const path of Object.values<any>(spec.paths ?? {})) {
+    for (const operation of Object.values<any>(path)) {
+      for (const parameter of operation?.parameters ?? []) {
+        const { schema } = parameter;
+        if (
+          parameter.in === "query" &&
+          Array.isArray(schema?.type) &&
+          schema.type.includes("array")
+        ) {
+          schema.type = "array";
+        }
+      }
+    }
+  }
+  return spec;
+}
+
+const input = { target: "./openapi/openapi.yaml", override: { transformer: arraysOnly } };
 
 export default defineConfig({
   client: {

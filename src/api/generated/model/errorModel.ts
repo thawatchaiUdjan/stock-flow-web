@@ -31,6 +31,7 @@ export interface ErrorModel {
      * email-taken: A User has this email already, in any letter case.
      * target-is-owner: The operation acts on a User, and that User is the Owner, who cannot be changed here.
      * user-inactive: No Setup link can be issued for an Inactive User.
+     * sku-taken: Another Product has this SKU, in any letter case.
      */
   type?: ErrorModelType;
 }
