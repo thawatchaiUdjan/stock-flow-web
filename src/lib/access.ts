@@ -33,6 +33,7 @@ export const pages = [
   {
     title: "New product",
     path: "/products/new",
+    also: ["/products/$id/edit"],
     icon: PackagePlus,
     roles: ["owner", "admin"],
   },

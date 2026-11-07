@@ -9,6 +9,8 @@ const messages = {
   "session-ended": "Your session has ended. Log in again.",
   // users-and-access R3
   "email-taken": "A User with this email already exists.",
+  // products R3
+  "sku-taken": "Another product already uses this SKU. Use a different one.",
   "target-is-owner": "The Owner can't be changed here.",
   "user-inactive": "This User is Inactive. Set them Active before issuing a Setup link.",
   "setup-link-invalid":

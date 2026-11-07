@@ -19,7 +19,7 @@ export interface LoginLogEntryBody {
   /** A successful login, a failed login, or a logout. */
   result: LoginLogEntryBodyResult;
   /** The User the email matches, or null when it matches none. */
-  user: LoginLogUser;
+  user: LoginLogUser | null;
   /** The browser or device, as it called itself. Empty when it sent nothing. */
   userAgent: string;
 }

@@ -48,6 +48,9 @@
   --text-title--letter-spacing: -0.015em;
   --text-body: 0.9375rem;
   --text-body--line-height: 1.5;
+  --text-stock: 1rem;
+  --text-stock--line-height: 1.5;
+  --text-stock--font-weight: 650;
   --text-small: 0.8125rem;
   --text-small--line-height: 1.125rem;
   --radius-sm: calc(var(--radius) * 0.6);

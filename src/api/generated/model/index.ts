@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './createProductBody';
 export * from './createUserBody';
 export * from './createUserBodyRole';
 export * from './createUserOutputBody';
@@ -17,15 +18,24 @@ export * from './healthOutputBody';
 export * from './listLoginLogOutputBody';
 export * from './listLoginLogParams';
 export * from './listLoginLogResult';
+export * from './listProductsOutputBody';
+export * from './listProductsParams';
+export * from './listProductsStatus';
+export * from './listProductsStockItem';
 export * from './listUsersOutputBody';
 export * from './logInInputBody';
 export * from './loginLogEntryBody';
 export * from './loginLogEntryBodyResult';
 export * from './loginLogUser';
+export * from './product';
+export * from './productStatus';
+export * from './productStockState';
 export * from './readSetupLinkInputBody';
 export * from './readSetupLinkOutputBody';
 export * from './setPasswordInputBody';
 export * from './setupLink';
+export * from './updateProductBody';
+export * from './updateProductBodyStatus';
 export * from './updateUserBody';
 export * from './updateUserBodyRole';
 export * from './updateUserBodyStatus';

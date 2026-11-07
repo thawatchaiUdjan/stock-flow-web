@@ -1,7 +1,20 @@
 import { HttpResponse } from "msw";
 
 import { getListLoginLogMockHandler200 } from "@/api/generated/login-log/login-log.msw";
-import type { ErrorModel, LoginLogEntryBody, User, UserRole } from "@/api/generated/model";
+import type {
+  ErrorModel,
+  LoginLogEntryBody,
+  Product,
+  ProductStockState,
+  User,
+  UserRole,
+} from "@/api/generated/model";
+import {
+  getCreateProductMockHandler201,
+  getGetProductMockHandler200,
+  getListProductsMockHandler200,
+  getUpdateProductMockHandler200,
+} from "@/api/generated/products/products.msw";
 import {
   getCreateSessionMockHandler200,
   getEndSessionMockHandler204,
@@ -40,6 +53,8 @@ function freshInstall() {
     users: [ownerUser] as User[],
     // Any order: the handler sorts, as the API does. Entries have the ids the API gives them.
     loginLog: [] as LoginLogEntryBody[],
+    // Any order: the handler sorts, as the API does. A real install starts with none.
+    products: [] as Product[],
   };
 }
 
@@ -111,6 +126,87 @@ function requireOwner() {
     throw problem({ status: 403, title: "Forbidden", detail: "Only the Owner can do this." });
   }
 }
+
+// products R10: the Owner and Admins change Products, Staff only read them.
+function requireAdminOrOwner() {
+  if (mockApi.role === "staff") {
+    throw problem({ status: 403, title: "Forbidden", detail: "Staff can't change Products." });
+  }
+}
+
+// products R9
+export function stockStateOf(stock: number, minimumStock: number): ProductStockState {
+  if (stock === 0) return "out-of-stock";
+  return stock <= minimumStock ? "low" : "in-stock";
+}
+
+// A Product as the API holds it: the state follows from the stock and the Minimum stock.
+export function productOf(
+  fields: Pick<Product, "id" | "name" | "sku" | "unit" | "price"> &
+    Partial<Pick<Product, "minimumStock" | "stock" | "status">>,
+): Product {
+  const { minimumStock = 0, stock = 0, status = "active" } = fields;
+  return { ...fields, minimumStock, stock, status, stockState: stockStateOf(stock, minimumStock) };
+}
+
+// products R2 to R5, R8: what the API refuses with 422, one entry per field.
+type ProductFields = Partial<Record<"name" | "sku" | "unit" | "price" | "minimumStock", unknown>>;
+
+function productFieldErrors(body: ProductFields) {
+  const { name, sku, unit, price, minimumStock } = body;
+  const bad = (location: string, value: unknown) => ({
+    location: `body.${location}`,
+    message: "validation failed",
+    value,
+  });
+  return [
+    ...(name !== undefined && !(typeof name === "string" && /\S/.test(name) && name.length <= 120)
+      ? [bad("name", name)]
+      : []),
+    ...(sku !== undefined && !(typeof sku === "string" && /^[A-Za-z0-9-]{1,40}$/.test(sku))
+      ? [bad("sku", sku)]
+      : []),
+    ...(unit !== undefined && !(typeof unit === "string" && /\S/.test(unit) && unit.length <= 20)
+      ? [bad("unit", unit)]
+      : []),
+    ...(price !== undefined &&
+    !(Number.isInteger(price) && (price as number) >= 0 && (price as number) <= 999_999_999)
+      ? [bad("price", price)]
+      : []),
+    ...(minimumStock !== undefined &&
+    !(Number.isInteger(minimumStock) && (minimumStock as number) >= 0)
+      ? [bad("minimumStock", minimumStock)]
+      : []),
+  ];
+}
+
+function requireValidProduct(body: ProductFields) {
+  const errors = productFieldErrors(body);
+  if (errors.length > 0) {
+    throw problem({
+      status: 422,
+      title: "Unprocessable Entity",
+      detail: "validation failed",
+      errors,
+    });
+  }
+}
+
+// products R3: compared without regard to letter case, and not against the Product itself.
+function requireFreeSku(sku: string, except?: number) {
+  if (
+    mockApi.products.some((one) => one.id !== except && one.sku.toLowerCase() === sku.toLowerCase())
+  ) {
+    throw problem({
+      type: "sku-taken",
+      status: 409,
+      title: "Conflict",
+      detail: "Another Product has this SKU.",
+    });
+  }
+}
+
+const productsDefaultLimit = 50;
 
 const loginLogDefaultLimit = 50;
 
@@ -222,6 +318,73 @@ export const handlers = [
       token: `mock-reset-token-for-user-${user.id}`,
       expiresAt: new Date(Date.now() + day).toISOString(),
     };
+  }),
+  getListProductsMockHandler200(({ request }) => {
+    requireSession();
+    const query = new URL(request.url).searchParams;
+    const search = (query.get("search") ?? "").trim().toLowerCase();
+    const states = query.getAll("stock");
+    const status = query.get("status") ?? "active";
+    const limit = Number(query.get("limit") ?? productsDefaultLimit);
+    const offset = Number(query.get("offset") ?? 0);
+    // products R13, R14: sorted by name, the filters narrow together, Active unless asked.
+    const matching = mockApi.products
+      .filter((one) => one.status === status)
+      .filter((one) => states.length === 0 || states.includes(one.stockState))
+      .filter(
+        (one) =>
+          search === "" ||
+          one.name.toLowerCase().includes(search) ||
+          one.sku.toLowerCase().includes(search),
+      )
+      .toSorted((a, b) => a.name.localeCompare(b.name) || a.id - b.id);
+    return { products: matching.slice(offset, offset + limit), total: matching.length };
+  }),
+  getGetProductMockHandler200(({ params }) => {
+    requireSession();
+    const product = mockApi.products.find(({ id }) => id === Number(params.id));
+    if (!product) throw problem({ status: 404, title: "Not Found" });
+    return product;
+  }),
+  getCreateProductMockHandler201(async ({ request }) => {
+    requireSession();
+    requireAdminOrOwner();
+    const body = await request.json();
+    requireValidProduct(body);
+    requireFreeSku(body.sku);
+    // products R7, R8, R11: stock 0, Minimum stock 0 when left out, Active.
+    const product = productOf({
+      id: Math.max(0, ...mockApi.products.map(({ id }) => id)) + 1,
+      name: body.name,
+      sku: body.sku,
+      unit: body.unit,
+      price: body.price,
+      minimumStock: body.minimumStock,
+    });
+    mockApi.products.push(product);
+    return product;
+  }),
+  getUpdateProductMockHandler200(async ({ request, params }) => {
+    requireSession();
+    requireAdminOrOwner();
+    const product = mockApi.products.find(({ id }) => id === Number(params.id));
+    if (!product) throw problem({ status: 404, title: "Not Found" });
+    const body = await request.json();
+    requireValidProduct(body);
+    if (body.sku !== undefined) requireFreeSku(body.sku, product.id);
+    // The body names what changes; a new object, so a Product a test put in the list is not altered.
+    const { name, sku, unit, price, minimumStock, status } = body;
+    const changed = productOf({
+      ...product,
+      ...(name !== undefined && { name }),
+      ...(sku !== undefined && { sku }),
+      ...(unit !== undefined && { unit }),
+      ...(price !== undefined && { price }),
+      ...(minimumStock !== undefined && { minimumStock }),
+      ...(status !== undefined && { status }),
+    });
+    mockApi.products = mockApi.products.map((one) => (one === product ? changed : one));
+    return changed;
   }),
   getListLoginLogMockHandler200(({ request }) => {
     requireSession();

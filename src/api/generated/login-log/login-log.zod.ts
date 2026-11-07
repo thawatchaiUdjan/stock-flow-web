@@ -33,10 +33,10 @@ export const ListLoginLogResponse = zod.object({
   "id": zod.int().describe('Identifies the entry. Later entries have higher ids.'),
   "ip": zod.string().describe('The visitor\'s IP address.'),
   "result": zod.enum(['login', 'failed-login', 'logout']).describe('A successful login, a failed login, or a logout.'),
-  "user": zod.object({
+  "user": zod.union([zod.object({
   "id": zod.int().describe('Identifies the User.'),
   "name": zod.string().describe('The User\'s name now.')
-}).describe('The User the email matches, or null when it matches none.'),
+}),zod.null()]).describe('The User the email matches, or null when it matches none.'),
   "userAgent": zod.string().describe('The browser or device, as it called itself. Empty when it sent nothing.')
 })).describe('Newest first.'),
   "nextBefore": zod.int().nullable().describe('Pass as before for the next page. Null on the last page.')

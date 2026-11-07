@@ -36,6 +36,16 @@ const r11 = [
     staff: false,
   },
   {
+    page: "Product Form, editing",
+    path: "/products/2/edit",
+    route: "/products/$id/edit",
+    label: undefined,
+    heading: "Edit product",
+    owner: true,
+    admin: true,
+    staff: false,
+  },
+  {
     page: "Stock Movements",
     path: "/stock-movements",
     label: "Stock movements",
@@ -159,7 +169,13 @@ describe("what each Role reaches", () => {
 
     // users-and-access R40
     it.each(
-      r11.filter((row) => row[role] && !row.path.startsWith("/users") && row.path !== "/login-log"),
+      r11.filter(
+        (row) =>
+          row[role] &&
+          !row.path.startsWith("/users") &&
+          !row.path.startsWith("/products") &&
+          row.path !== "/login-log",
+      ),
     )("shows $page with its title and Coming soon", async (row) => {
       signedIn(role);
       renderApp(row.path);

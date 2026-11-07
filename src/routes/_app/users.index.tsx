@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 
 import { errorMessage } from "@/api/errors";
 import type { SetupLink, User } from "@/api/generated/model";
@@ -10,17 +10,9 @@ import {
   useResetPassword,
   useUpdateUser,
 } from "@/api/generated/users/users";
+import { Confirmation } from "@/components/confirmation";
 import { SetupLinkDisplay } from "@/components/setup-link-display";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -254,49 +246,5 @@ function ResetPasswordAction({
         onConfirm={() => reset.mutate({ id: user.id })}
       />
     </>
-  );
-}
-
-// Asks before an action that ends the person's sessions; stays open, with the reason, if it fails.
-function Confirmation({
-  open,
-  onOpenChange,
-  title,
-  description,
-  confirm,
-  pending,
-  error,
-  onConfirm,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description: ReactNode;
-  confirm: string;
-  pending: boolean;
-  error: unknown;
-  onConfirm: () => void;
-}) {
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        {error != null && (
-          <Alert variant="destructive">
-            <AlertDescription>{errorMessage(error)}</AlertDescription>
-          </Alert>
-        )}
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          {/* Not AlertDialogAction: that closes the question before the API has answered. */}
-          <Button disabled={pending} onClick={onConfirm}>
-            {confirm}
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
   );
 }
