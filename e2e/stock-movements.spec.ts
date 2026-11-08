@@ -1,26 +1,9 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
 
-// The people and state key of src/mocks, the install every test starts from.
-const stateKey = "stock-flow-mock-api";
+import { install, logIn } from "./support";
+
+// The people of src/mocks.
 const people = { staff: "suda@example.com" };
-
-// An install where everyone already has this password, and where the Shop already sells `products`.
-async function install(page: Page, password: string, products: object[]) {
-  await page.addInitScript(
-    ({ key, state }) => {
-      if (!sessionStorage.getItem(key)) sessionStorage.setItem(key, state);
-    },
-    { key: stateKey, state: JSON.stringify({ password, products }) },
-  );
-}
-
-async function logIn(page: Page, email: string, password: string) {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Log in" }).click();
-}
 
 test("Staff receive stock for a Product and see its new stock on the Product List", async ({
   page,
@@ -28,19 +11,21 @@ test("Staff receive stock for a Product and see its new stock on the Product Lis
   const password = `correct-horse-${test.info().testId}`;
   // Unique, so that no other test's data can match.
   const name = `Safety helmet ${test.info().testId}`;
-  await install(page, password, [
-    {
-      id: 1,
-      name,
-      sku: "HLM-001",
-      unit: "pcs",
-      price: 12_345,
-      minimumStock: 60,
-      stock: 18,
-      stockState: "low",
-      status: "active",
-    },
-  ]);
+  await install(page, password, {
+    products: [
+      {
+        id: 1,
+        name,
+        sku: "HLM-001",
+        unit: "pcs",
+        price: 12_345,
+        minimumStock: 60,
+        stock: 18,
+        stockState: "low",
+        status: "active",
+      },
+    ],
+  });
 
   await logIn(page, people.staff, password);
   await expect(page).toHaveURL("/orders");

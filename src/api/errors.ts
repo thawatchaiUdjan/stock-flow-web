@@ -32,8 +32,14 @@ export function messageFor(code: ErrorModelType) {
 }
 
 // Never the server's own text: an error reaches the screen through the list above.
-export function errorMessage(error: unknown) {
+// users-and-access R11: a plain 403 means the person's Role may not do this, which only the caller
+// can name (`whenForbidden`): a Role can change during the session, past what the screen offered.
+export function errorMessage(error: unknown, whenForbidden?: string) {
   const code = error instanceof ApiError ? error.problem.type : undefined;
+  const plain = !code || code === "about:blank";
+  if (whenForbidden && error instanceof ApiError && error.status === 403 && plain) {
+    return whenForbidden;
+  }
   return (code && messages[code]) ?? messages["about:blank"];
 }
 

@@ -33,6 +33,8 @@ A fast layer is only as good as its fakes. A fake more permissive than the real 
 - **Few end-to-end tests**, one per user journey the record names, not one per rule. Rules are covered in the fast layer.
 - **Build and start the app once** per run, not once per test.
 - **Unique data per test** (generated names, keys), so tests never collide on shared mock state.
+- **Log in through the shared helper**, `logIn` in `e2e/support.ts`, never a copy of it: it waits until the app has left Log in, which is when the mock API has saved the session. A test that expects to stay on Log in (a wrong password) uses `attemptLogIn`, which does not wait.
+- **Never `goto` right after an action that saves state** without first waiting for what proves it was saved (the URL changes, a notice appears). The mock API saves asynchronously, and a reload before that comes up with the old state.
 
 ## Running long tests as an agent
 

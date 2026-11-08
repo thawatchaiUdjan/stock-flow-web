@@ -1,26 +1,9 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
 
-// The people and state key of src/mocks, the install every test starts from.
-const stateKey = "stock-flow-mock-api";
+import { install, logIn } from "./support";
+
+// The people of src/mocks.
 const people = { owner: "nok@example.com", staff: "suda@example.com" };
-
-// An install where everyone already has this password, and where the Shop already sells `products`.
-async function install(page: Page, password: string, products: object[] = []) {
-  await page.addInitScript(
-    ({ key, state }) => {
-      if (!sessionStorage.getItem(key)) sessionStorage.setItem(key, state);
-    },
-    { key: stateKey, state: JSON.stringify({ password, products }) },
-  );
-}
-
-async function logIn(page: Page, email: string, password: string) {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Log in" }).click();
-}
 
 function product(id: number, fields: object) {
   return {
@@ -99,20 +82,22 @@ for (const { width, phone } of [
     page,
   }) => {
     const password = `correct-horse-${test.info().testId}`;
-    await install(page, password, [
-      product(1, {
-        name: "Safety helmet with a very long name that goes on and on past the edge",
-        sku: "HLM-001-WITH-A-LONG-SKU-THAT-KEEPS-GOING",
-        price: 4_821_000,
-      }),
-      product(2, {
-        name: "Work gloves",
-        sku: "GLV-010",
-        stock: 233,
-        minimumStock: 20,
-        stockState: "in-stock",
-      }),
-    ]);
+    await install(page, password, {
+      products: [
+        product(1, {
+          name: "Safety helmet with a very long name that goes on and on past the edge",
+          sku: "HLM-001-WITH-A-LONG-SKU-THAT-KEEPS-GOING",
+          price: 4_821_000,
+        }),
+        product(2, {
+          name: "Work gloves",
+          sku: "GLV-010",
+          stock: 233,
+          minimumStock: 20,
+          stockState: "in-stock",
+        }),
+      ],
+    });
     await page.setViewportSize({ width, height: 900 });
     await logIn(page, people.owner, password);
     await page
@@ -162,7 +147,9 @@ test("Staff see the Product List without actions, and the Product Form says No a
   page,
 }) => {
   const password = `correct-horse-${test.info().testId}`;
-  await install(page, password, [product(1, { name: "Safety helmet", sku: "HLM-001" })]);
+  await install(page, password, {
+    products: [product(1, { name: "Safety helmet", sku: "HLM-001" })],
+  });
 
   await logIn(page, people.staff, password);
   await expect(page).toHaveURL("/orders");

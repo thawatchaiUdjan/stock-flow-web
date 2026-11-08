@@ -498,13 +498,23 @@ function makeOrder(body: Required<Pick<OrderFields, "lines">> & OrderFields) {
   return order;
 }
 
-const productsDefaultLimit = 50;
+const defaultLimit = 50;
+const maxLimit = 100;
 
-const stockMovementsDefaultLimit = 50;
-
-const loginLogDefaultLimit = 50;
-
-const ordersDefaultLimit = 50;
+// The contract's `limit`, an integer from 1 to 100: past that the API answers 422, not a clipped page.
+function limitOf(query: URLSearchParams) {
+  const asked = query.get("limit");
+  const limit = Number(asked ?? defaultLimit);
+  if (!Number.isInteger(limit) || limit < 1 || limit > maxLimit) {
+    throw problem({
+      status: 422,
+      title: "Unprocessable Entity",
+      detail: "The limit is out of range.",
+      errors: [{ location: "query.limit", message: `must be from 1 to ${maxLimit}`, value: asked }],
+    });
+  }
+  return limit;
+}
 
 const day = 24 * 60 * 60 * 1000;
 
@@ -566,12 +576,35 @@ function dashboardOf(): DashboardOutputBody {
   };
 }
 
+// A `format: date` in the contract: YYYY-MM-DD, and a day the calendar has.
+function isDate(text: string) {
+  const at = Date.parse(text);
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(text) &&
+    !Number.isNaN(at) &&
+    new Date(at).toISOString().startsWith(text)
+  );
+}
+
 const reportMaxDays = 366;
 const reportTopProducts = 20;
 
 // dashboard-and-reports R7, R8, as the API works them out: both ends included, this month so far
 // when `from` and `to` are left out, and 422 for a range that ends first or is over 366 days.
 function salesReportOf(from: string | null, to: string | null): SalesReportOutputBody {
+  for (const [name, value] of [
+    ["from", from],
+    ["to", to],
+  ] as const) {
+    if (value !== null && !isDate(value)) {
+      throw problem({
+        status: 422,
+        title: "Unprocessable Entity",
+        detail: "The date is malformed.",
+        errors: [{ location: `query.${name}`, message: "must be a date, YYYY-MM-DD", value }],
+      });
+    }
+  }
   const last = to ?? bangkokDay(Date.now());
   const first = from ?? `${last.slice(0, 8)}01`;
   if (last < first) {
@@ -749,7 +782,7 @@ export const handlers = [
     const search = (query.get("search") ?? "").trim().toLowerCase();
     const states = query.getAll("stock");
     const status = query.get("status") ?? "active";
-    const limit = Number(query.get("limit") ?? productsDefaultLimit);
+    const limit = limitOf(query);
     const offset = Number(query.get("offset") ?? 0);
     // products R13, R14: sorted by name, the filters narrow together, Active unless asked.
     const matching = mockApi.products
@@ -818,7 +851,7 @@ export const handlers = [
     const from = query.get("from");
     const to = query.get("to");
     const before = query.get("before");
-    const limit = Number(query.get("limit") ?? stockMovementsDefaultLimit);
+    const limit = limitOf(query);
     // stock-movements R10: newest first; the filters narrow together; the days are the Shop's,
     // Bangkok time (dashboard-and-reports R1), so a day ends at Bangkok midnight.
     const matching = mockApi.stockMovements
@@ -854,7 +887,7 @@ export const handlers = [
     const query = new URL(request.url).searchParams;
     const search = (query.get("search") ?? "").trim().toLowerCase();
     const status = query.get("status");
-    const limit = Number(query.get("limit") ?? ordersDefaultLimit);
+    const limit = limitOf(query);
     const offset = Number(query.get("offset") ?? 0);
     // orders R15, R16: newest first; the Order with that number and the customers containing the
     // text, in any letter case; the status narrows both.
@@ -935,7 +968,7 @@ export const handlers = [
     const userId = query.get("userId");
     const result = query.get("result");
     const before = query.get("before");
-    const limit = Number(query.get("limit") ?? loginLogDefaultLimit);
+    const limit = limitOf(query);
     // users-and-access R38: newest first, and the filters narrow together.
     const matching = mockApi.loginLog
       .filter((entry) => userId === null || entry.user?.id === Number(userId))

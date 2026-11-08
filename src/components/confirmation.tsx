@@ -23,6 +23,8 @@ export function Confirmation({
   dismiss = "Cancel",
   pending,
   error,
+  whenForbidden,
+  onCloseAutoFocus,
   onConfirm,
 }: {
   open: boolean;
@@ -34,18 +36,22 @@ export function Confirmation({
   dismiss?: string;
   pending: boolean;
   error: unknown;
+  // What a 403 says, when the Role may not do this.
+  whenForbidden?: string;
+  // Where focus goes once the question closes; the default is the button that opened it.
+  onCloseAutoFocus?: (event: Event) => void;
   onConfirm: () => void;
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         {error != null && (
           <Alert variant="destructive">
-            <AlertDescription>{errorMessage(error)}</AlertDescription>
+            <AlertDescription>{errorMessage(error, whenForbidden)}</AlertDescription>
           </Alert>
         )}
         <AlertDialogFooter>

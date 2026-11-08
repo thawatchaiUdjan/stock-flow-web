@@ -1,28 +1,9 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
 
-// The people and state key of src/mocks, the install every test starts from.
-const stateKey = "stock-flow-mock-api";
+import { install, logIn } from "./support";
+
+// The people of src/mocks.
 const people = { owner: "nok@example.com", admin: "anan@example.com" };
-
-// An install where everyone already has this password, and where the Shop already has these.
-async function install(page: Page, password: string, state: object) {
-  await page.addInitScript(
-    ({ key, saved }) => {
-      if (!sessionStorage.getItem(key)) sessionStorage.setItem(key, saved);
-    },
-    { key: stateKey, saved: JSON.stringify({ password, ...state }) },
-  );
-}
-
-async function logIn(page: Page, email: string, password: string) {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Log in" }).click();
-  // The session is live only once the app has left Log in; a `goto` before that reloads logged out.
-  await expect(page).not.toHaveURL(/\/login/);
-}
 
 function helmet(name: string) {
   return {

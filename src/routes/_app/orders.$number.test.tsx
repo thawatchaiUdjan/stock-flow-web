@@ -77,6 +77,17 @@ function fieldOf(label: string) {
   return screen.getByText(label, { selector: "dt" }).nextElementSibling;
 }
 
+// The question of Cancel order, open on Order 12.
+async function askCancel(role: "owner" | "admin" = "admin") {
+  signedIn(role);
+  mockApi.products = [helmet, gloves];
+  mockApi.orders = [order()];
+  const sent = writes();
+  const view = renderApp("/orders/12");
+  await view.user.click(await screen.findByRole("button", { name: "Cancel order" }));
+  return { ...view, sent, dialog: await screen.findByRole("alertdialog") };
+}
+
 describe("the Order detail", () => {
   // orders R17
   it("shows the lines with quantity, price and amount, the total, the customer, the note and who created it", async () => {
@@ -177,6 +188,21 @@ describe("the Order detail", () => {
     expect(await screen.findByText("No order has this number.")).toBeInTheDocument();
   });
 
+  // A number past what JavaScript holds exactly would name another Order once sent.
+  it("says no Order has a number too large to be exact, without asking the API", async () => {
+    signedIn("owner");
+    mockApi.orders = [order()];
+    const asked: string[] = [];
+    server.events.on("request:start", ({ request }) => {
+      asked.push(new URL(request.url).pathname);
+    });
+    renderApp("/orders/99999999999999999999");
+
+    expect(await screen.findByText("No order has this number.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Order not found" })).toBeInTheDocument();
+    expect(asked.filter((path) => path.startsWith("/api/orders"))).toEqual([]);
+  });
+
   it("says when the API fails, and tries again", async () => {
     signedIn("owner");
     mockApi.orders = [order()];
@@ -245,6 +271,8 @@ describe("the Order detail", () => {
 
       expect(await screen.findByText("Order completed")).toBeInTheDocument();
       await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+      // The buttons are gone: focus goes to the Order, not the page.
+      await waitFor(() => expect(screen.getByRole("heading", { name: "Order #12" })).toHaveFocus());
       expect(sent).toEqual([{ method: "POST", path: "/api/orders/12/complete", body: undefined }]);
       expect(screen.getByText("Completed", { selector: "span" })).toBeInTheDocument();
       expect(fieldOf("Completed")).toHaveTextContent("by Suda Prasert");
@@ -267,15 +295,7 @@ describe("the Order detail", () => {
   });
 
   describe("Cancel order", () => {
-    async function ask(role: "owner" | "admin" = "admin") {
-      signedIn(role);
-      mockApi.products = [helmet, gloves];
-      mockApi.orders = [order()];
-      const sent = writes();
-      const view = renderApp("/orders/12");
-      await view.user.click(await screen.findByRole("button", { name: "Cancel order" }));
-      return { ...view, sent, dialog: await screen.findByRole("alertdialog") };
-    }
+    const ask = askCancel;
 
     // orders R12: cancelling gives stock back, which is why it is asked about.
     it("asks first, naming the Order and the consequence", async () => {
@@ -307,6 +327,9 @@ describe("the Order detail", () => {
 
         expect(await screen.findByText("Order cancelled")).toBeInTheDocument();
         await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+        await waitFor(() =>
+          expect(screen.getByRole("heading", { name: "Order #12" })).toHaveFocus(),
+        );
         expect(sent).toEqual([{ method: "POST", path: "/api/orders/12/cancel", body: undefined }]);
         expect(screen.getByText("Cancelled", { selector: "span" })).toBeInTheDocument();
         expect(fieldOf("Cancelled")).toHaveTextContent(
@@ -322,6 +345,24 @@ describe("the Order detail", () => {
         ]);
       },
     );
+  });
+
+  // orders R12: the Role can change during the session, past what the screen offered.
+  describe("a Cancel the Role may not make", () => {
+    it("says the person may not cancel Orders, and keeps the question open", async () => {
+      const { user, dialog, sent } = await askCancel();
+      // The Owner made this Admin a Staff while the question was open.
+      mockApi.role = "staff";
+
+      await user.click(within(dialog).getByRole("button", { name: "Cancel order" }));
+
+      expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+        "Your role can't cancel orders. Only the Owner and Admins can.",
+      );
+      expect(sent).toEqual([{ method: "POST", path: "/api/orders/12/cancel", body: undefined }]);
+      expect(screen.queryByText("Order cancelled")).not.toBeInTheDocument();
+      expect(screen.getByText("Pending")).toBeInTheDocument();
+    });
   });
 
   // orders R13: someone else got there first.

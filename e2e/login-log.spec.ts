@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-// The people and state key of src/mocks, the install every test starts from.
-const stateKey = "stock-flow-mock-api";
+import { install, logIn } from "./support";
+
+// The people of src/mocks.
 const people = {
   owner: "nok@example.com",
   admin: "anan@example.com",
@@ -55,8 +56,7 @@ function time(id: number) {
   return `${String(Math.floor(id / 60)).padStart(2, "0")}:${String(id % 60).padStart(2, "0")}`;
 }
 
-// An install where everyone already has this password, as if their Setup links were used, and
-// where the Login log already holds entries.
+// An install where the Shop's users are these three and the Login log already holds entries.
 async function installWithLog(page: Page, password: string) {
   const users = [
     { id: 1, name: "Nok Srisuk", email: people.owner, role: "owner" },
@@ -64,19 +64,7 @@ async function installWithLog(page: Page, password: string) {
     { id: somchai.id, name: somchai.name, email: somchai.email, role: "staff" },
   ].map((user) => ({ ...user, status: "active", passwordSet: true }));
 
-  await page.addInitScript(
-    ({ key, state }) => {
-      if (!sessionStorage.getItem(key)) sessionStorage.setItem(key, state);
-    },
-    { key: stateKey, state: JSON.stringify({ password, users, loginLog }) },
-  );
-}
-
-async function logIn(page: Page, email: string, password: string) {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Log in" }).click();
+  await install(page, password, { users, loginLog });
 }
 
 // Every request the page makes to the Login log, as the API would see it.
