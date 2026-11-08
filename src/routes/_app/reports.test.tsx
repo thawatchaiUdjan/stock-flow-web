@@ -289,18 +289,61 @@ describe("Reports", () => {
     expect(sent.map((url) => url.search)).toEqual(["?from=2025-11-07&to=2026-11-07"]);
   });
 
-  // dashboard-and-reports R7: with an end left out, only the API knows the day; its 422 is shown.
-  it("shows the refusal when the API says the range is too long", async () => {
+  // dashboard-and-reports R7: an end left out is the day the API would use, so the range is
+  // checked before sending all the same. Today is 7 Nov.
+  it("says when a From alone makes the range over 366 days, and asks nothing", async () => {
     signedIn("owner");
     const sent = requestsTo("/api/reports/sales");
     renderApp("/reports?from=2020-01-01");
+
+    expect(
+      await screen.findByText("This range is over 366 days. Choose 366 days or fewer."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Total sales")).not.toBeInTheDocument();
+    expect(sent).toEqual([]);
+  });
+
+  it("says when a From alone is after today, and asks nothing", async () => {
+    signedIn("owner");
+    const sent = requestsTo("/api/reports/sales");
+    renderApp("/reports?from=2026-11-08");
+
+    expect(
+      await screen.findByText("From is after To. Choose a From day on or before To."),
+    ).toBeInTheDocument();
+    expect(sent).toEqual([]);
+  });
+
+  it("asks for a From alone that the API would accept, and a To alone", async () => {
+    signedIn("owner");
+    const sent = requestsTo("/api/reports/sales");
+    const { router } = renderApp("/reports?from=2025-11-07");
+    await screen.findByText("Total sales");
+
+    await router.navigate({ to: "/reports", search: { to: "2026-10-15" } });
+    await screen.findByText("1 Oct to 15 Oct");
+
+    expect(sent.map((url) => url.search)).toEqual(["?from=2025-11-07", "?to=2026-10-15"]);
+  });
+
+  // The API's 422 is still shown, should it refuse what the page let through.
+  it("shows the refusal when the API says the range is too long", async () => {
+    signedIn("owner");
+    server.use(
+      getGetSalesReportMockHandler422({
+        status: 422,
+        title: "Unprocessable Entity",
+        detail: "The range is too long.",
+        errors: [{ location: "query.from", message: "range must not be over 366 days" }],
+      }),
+    );
+    renderApp("/reports?from=2026-11-01");
 
     expect(
       await screen.findByText(
         "This range isn't valid. Choose a From day on or before To, and 366 days or fewer.",
       ),
     ).toBeInTheDocument();
-    expect(sent.map((url) => url.search)).toEqual(["?from=2020-01-01"]);
     expect(screen.queryByText("Total sales")).not.toBeInTheDocument();
   });
 

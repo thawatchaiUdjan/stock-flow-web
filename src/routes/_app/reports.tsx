@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { bangkokDay } from "@/lib/bangkok-day";
 import { formatBaht, formatDay } from "@/lib/format";
 
 // dashboard-and-reports R7: the longest range, both ends included.
@@ -26,7 +27,7 @@ const maxDays = 366;
 const dayLength = 24 * 60 * 60 * 1000;
 
 // ADR 0008: the range lives in the address, so a reload or a shared link keeps it. A value the API
-// wouldn't accept is dropped rather than sent. An end left out is the API's to work out (R7).
+// wouldn't accept is dropped rather than sent.
 const searchSchema = z.object({
   from: z.iso.date().optional().catch(undefined),
   to: z.iso.date().optional().catch(undefined),
@@ -38,10 +39,12 @@ export const Route = createFileRoute("/_app/reports")({
   component: ReportsPage,
 });
 
-// The API's own checks (R7), made before sending when both ends are known. With one end left out,
-// only the API knows the day, so it decides and its 422 is shown.
-function rangeProblem({ from, to }: ReportsSearch) {
-  if (from === undefined || to === undefined) return undefined;
+// The API's own checks (R7), made before sending. An end left out is the day the API would use
+// (openapi.yaml, the Sales report's `from` and `to`): `to` is today, `from` is the first of the
+// month of `to`. The API's 422 is still shown, should it ever refuse what this let through.
+function rangeProblem(search: ReportsSearch) {
+  const to = search.to ?? bangkokDay(Date.now());
+  const from = search.from ?? `${to.slice(0, 8)}01`;
   if (from > to) return "From is after To. Choose a From day on or before To.";
   if ((Date.parse(to) - Date.parse(from)) / dayLength + 1 > maxDays) {
     return `This range is over ${maxDays} days. Choose ${maxDays} days or fewer.`;

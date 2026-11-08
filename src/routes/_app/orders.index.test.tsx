@@ -231,6 +231,35 @@ describe("the Orders List", () => {
       expect(sent.at(-1)?.searchParams.get("status")).toBe("completed");
     });
 
+    // ADR 0008: the box keeps what was typed; the router's JSON reading would make 1e3 the number 1000.
+    it.each(["1e3", "1.50", "12345678901234567890"])(
+      "keeps a search of %s exactly as it is written in the address",
+      async (text) => {
+        signedIn("owner");
+        mockApi.orders = [order(12)];
+        const sent = requestsTo("/api/orders");
+        renderApp(`/orders?search=${text}`);
+
+        await screen.findByText("No orders match these filters.");
+        expect(screen.getByLabelText("Search")).toHaveValue(text);
+        expect(sent.at(-1)?.searchParams.get("search")).toBe(text);
+      },
+    );
+
+    it("keeps a search of 1e3 that the person types", async () => {
+      signedIn("owner");
+      mockApi.orders = [order(12)];
+      const sent = requestsTo("/api/orders");
+      const { user, router } = renderApp("/orders");
+      await screen.findByRole("link", { name: "#12" });
+
+      await user.type(screen.getByLabelText("Search"), "1e3");
+
+      await waitFor(() => expect(sent.at(-1)?.searchParams.get("search")).toBe("1e3"));
+      expect(router.state.location.search).toEqual({ search: "1e3" });
+      expect(screen.getByLabelText("Search")).toHaveValue("1e3");
+    });
+
     it("drops a status the API wouldn't accept instead of sending it", async () => {
       signedIn("owner");
       mockApi.orders = [order(12)];

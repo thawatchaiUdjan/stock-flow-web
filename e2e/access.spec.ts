@@ -1,30 +1,13 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
 
-// The people and state key of src/mocks, the install every test starts from.
-const stateKey = "stock-flow-mock-api";
+import { install, logIn } from "./support";
+
+// The people of src/mocks.
 const people = { owner: "nok@example.com", staff: "suda@example.com" };
-
-// An install where everyone already has this password, as if their Setup links were used.
-async function installWithPassword(page: Page, password: string) {
-  await page.addInitScript(
-    ({ key, state }) => {
-      if (!sessionStorage.getItem(key)) sessionStorage.setItem(key, state);
-    },
-    { key: stateKey, state: JSON.stringify({ password }) },
-  );
-}
-
-async function logIn(page: Page, email: string, password: string) {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Log in" }).click();
-}
 
 test("the Owner logs in and lands on the Dashboard", async ({ page }) => {
   const password = `correct-horse-${test.info().testId}`;
-  await installWithPassword(page, password);
+  await install(page, password);
 
   await logIn(page, people.owner, password);
 
@@ -38,7 +21,7 @@ test("the Owner logs in and lands on the Dashboard", async ({ page }) => {
 
 test("Staff log in, land on the Orders List and cannot reach Reports", async ({ page }) => {
   const password = `correct-horse-${test.info().testId}`;
-  await installWithPassword(page, password);
+  await install(page, password);
 
   await logIn(page, people.staff, password);
 

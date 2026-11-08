@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { z } from "zod";
 
@@ -53,7 +53,8 @@ function BackToOrders() {
 
 function OrderDetailPage() {
   const { number } = Route.useParams();
-  const orderNumber = /^\d+$/.test(number) ? Number(number) : undefined;
+  const orderNumber =
+    /^\d+$/.test(number) && Number.isSafeInteger(Number(number)) ? Number(number) : undefined;
   const order = useGetOrder(orderNumber ?? 0, { query: { enabled: orderNumber !== undefined } });
   const notFound = orderNumber === undefined || (order.isError && order.error.status === 404);
 
@@ -102,6 +103,7 @@ function OrderDetail({ order }: { order: Order }) {
   const { role } = useCurrentUser();
   const queryClient = useQueryClient();
   const [asking, setAsking] = useState<Question>();
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const { created } = Route.useSearch();
   const [notice, setNotice] = useState<Notice | undefined>(() =>
     created
@@ -179,12 +181,22 @@ function OrderDetail({ order }: { order: Order }) {
     setAsking(question);
   };
 
+  // The buttons are gone once the Order has changed, and focus would fall to the page: put it on
+  // the Order, whose notice says what happened. A question dismissed leaves focus where it was.
+  const keepFocus = (event: Event) => {
+    if (!notice) return;
+    event.preventDefault();
+    headingRef.current?.focus();
+  };
+
   return (
     <>
       <BackToOrders />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-title">Order #{order.number}</h1>
+          <h1 ref={headingRef} tabIndex={-1} className="text-title">
+            Order #{order.number}
+          </h1>
           <OrderStatusBadge status={order.status} />
         </div>
         {pending && (
@@ -220,6 +232,7 @@ function OrderDetail({ order }: { order: Order }) {
         dismiss="Go back"
         pending={complete.isPending}
         error={asking === "complete" ? request.error : undefined}
+        onCloseAutoFocus={keepFocus}
         onConfirm={() => complete.mutate({ number: order.number })}
       />
       <Confirmation
@@ -231,6 +244,8 @@ function OrderDetail({ order }: { order: Order }) {
         dismiss="Go back"
         pending={cancel.isPending}
         error={asking === "cancel" ? request.error : undefined}
+        whenForbidden="Your role can't cancel orders. Only the Owner and Admins can."
+        onCloseAutoFocus={keepFocus}
         onConfirm={() => cancel.mutate({ number: order.number })}
       />
     </>
