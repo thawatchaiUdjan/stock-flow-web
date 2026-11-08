@@ -99,6 +99,25 @@ describe("the Product Form, adding", () => {
     ]);
   });
 
+  // products R2, R4: a name or unit of only whitespace is empty, in any script, as the API says.
+  it.each([
+    ["no-break spaces", "  "],
+    ["ideographic spaces", "　　"],
+  ])("refuses a name and unit of only %s, and sends nothing", async (_, blank) => {
+    signedIn();
+    const sent = recordCreateRequests();
+    const { user } = renderApp("/products/new");
+
+    await fillIn(user, { name: blank, sku: "HLM-001", unit: blank, price: "10" });
+    await user.click(screen.getByRole("button", { name: "Add product" }));
+
+    expect(await screen.findByText("Enter a name of up to 120 characters.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Name")).toBeInvalid();
+    expect(screen.getByText(/^Enter the unit/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Unit")).toBeInvalid();
+    expect(sent).toEqual([]);
+  });
+
   it("lets the Owner add another, or go back to the list", async () => {
     signedIn();
     const { user } = renderApp("/products/new");

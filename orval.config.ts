@@ -22,7 +22,29 @@ function arraysOnly(spec: any) {
   return spec;
 }
 
-const input = { target: "./openapi/openapi.yaml", override: { transformer: arraysOnly } };
+// The contract's patterns are Go regular expressions, where a code point is `\x{85}`. JavaScript
+// reads that as an invalid escape and the client would not load; its form is `\u{85}` (the
+// generated RegExp carries the `u` flag). The meaning is the same, so it is translated here.
+function jsPatterns(node: any) {
+  if (Array.isArray(node)) {
+    node.forEach(jsPatterns);
+  } else if (node && typeof node === "object") {
+    for (const [key, value] of Object.entries<any>(node)) {
+      if (key === "pattern" && typeof value === "string") {
+        node[key] = value.replace(/\\x\{([0-9a-fA-F]+)\}/g, "\\u{$1}");
+      } else {
+        jsPatterns(value);
+      }
+    }
+  }
+}
+
+function forTheClient(spec: any) {
+  jsPatterns(spec);
+  return arraysOnly(spec);
+}
+
+const input = { target: "./openapi/openapi.yaml", override: { transformer: forTheClient } };
 
 export default defineConfig({
   client: {

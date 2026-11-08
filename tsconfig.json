@@ -17,5 +17,5 @@
     "noFallthroughCasesInSwitch": true,
     "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["src", "e2e", "*.config.ts"]
+  "include": ["src", "e2e", "e2e-smoke", "*.config.ts"]
 }
