@@ -61,7 +61,7 @@ export const ListStockMovementsResponse = zod.object({
 export const adjustStockBodyNoteMax = 200;
 
 
-export const adjustStockBodyNoteRegExp = new RegExp('\\S');
+export const adjustStockBodyNoteRegExp = new RegExp('[^\\t-\\r    - \u2028\u2029  　]');
 
 
 export const AdjustStockBody = zod.object({
