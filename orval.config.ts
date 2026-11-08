@@ -22,9 +22,7 @@ function arraysOnly(spec: any) {
   return spec;
 }
 
-// The contract's patterns are Go regular expressions, where a code point is `\x{85}`. JavaScript
-// reads that as an invalid escape and the client would not load; its form is `\u{85}` (the
-// generated RegExp carries the `u` flag). The meaning is the same, so it is translated here.
+// The contract's patterns are Go regexes (`\x{85}`); JavaScript's `u` flag spells that `\u{85}`.
 function jsPatterns(node: any) {
   if (Array.isArray(node)) {
     node.forEach(jsPatterns);
@@ -39,12 +37,12 @@ function jsPatterns(node: any) {
   }
 }
 
-function forTheClient(spec: any) {
+function toClientSpec(spec: any) {
   jsPatterns(spec);
   return arraysOnly(spec);
 }
 
-const input = { target: "./openapi/openapi.yaml", override: { transformer: forTheClient } };
+const input = { target: "./openapi/openapi.yaml", override: { transformer: toClientSpec } };
 
 export default defineConfig({
   client: {

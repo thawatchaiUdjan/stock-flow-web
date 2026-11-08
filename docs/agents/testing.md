@@ -41,7 +41,7 @@ The fast and slow layers both run against the contract's mocks, and `stock-flow-
 A fast layer is only as good as its fakes. A fake more permissive than the real dependency hides exactly the defects a real one would catch (a missing uniqueness or concurrency guard, an ordering that only holds by accident).
 
 - **The fakes are Orval's generated MSW handlers**, with responses pinned to what the real API can return: real empty lists, real paging, real error codes from the published list. Orval's defaults are random, so never leave one unpinned. A fake that never fails tests nothing.
-- Nothing automated runs against the real API (ADR 0011): the Orval diff guards the contract.
+- Nothing in these two layers runs against the real API (ADR 0011): the Orval diff guards the contract, and the smoke suite (above) is the one place the web meets the real api.
 
 ## Keep the slow layer cheap
 

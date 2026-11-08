@@ -1,9 +1,8 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-// The happy path through the real stack: the web, its `/api` proxy, stock-flow-api and Postgres.
-// Every other case is the mocked suite's (e2e/). It starts from a freshly migrated database whose
-// Owner has an unused Setup link: `cmd/install` prints its token.
+// The happy path through the real stack; every other case is the mocked suite's (e2e/).
+// It starts from a freshly migrated database whose Owner has an unused Setup link.
 const email = requiredEnv("SMOKE_OWNER_EMAIL");
 const token = requiredEnv("SMOKE_SETUP_LINK_TOKEN");
 
@@ -14,7 +13,7 @@ function requiredEnv(name: string) {
   return value;
 }
 
-// Unique, so that a second run against the same database finds its own Product.
+// Unique, so a second run finds its own Product.
 const run = Date.now().toString(36);
 const password = `correct-horse-${run}`;
 const product = { name: `Smoke helmet ${run}`, sku: `SMK-${run}`.toUpperCase() };

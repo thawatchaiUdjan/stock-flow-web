@@ -1,8 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// The built app, without MSW, whose `/api` proxy (vite.config.ts) points at a real stock-flow-api
-// (`API_PROXY_TARGET`, default http://localhost:8080). Its own port, so it never meets the mocked
-// suite's server.
+// The built app, without MSW, proxying `/api` to a real api (API_PROXY_TARGET); its own port.
 const baseURL = "http://localhost:4174";
 
 export default defineConfig({

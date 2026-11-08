@@ -103,6 +103,8 @@ describe("the Product Form, adding", () => {
   it.each([
     ["no-break spaces", "  "],
     ["ideographic spaces", "　　"],
+    // JavaScript's trim() keeps it, so only the contract's pattern refuses it.
+    ["next-line characters", "\u0085\u0085"],
   ])("refuses a name and unit of only %s, and sends nothing", async (_, blank) => {
     signedIn();
     const sent = recordCreateRequests();

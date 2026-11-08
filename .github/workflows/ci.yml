@@ -64,8 +64,7 @@ jobs:
       - run: bunx playwright install --with-deps chromium
       - run: bun run e2e
 
-  # The web against the real stock-flow-api and Postgres, one happy path (e2e-smoke/). It proves
-  # the two agree, which neither the mocked e2e suite nor the api's own tests can.
+  # The web against the real stock-flow-api and Postgres, one happy path (e2e-smoke/).
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
