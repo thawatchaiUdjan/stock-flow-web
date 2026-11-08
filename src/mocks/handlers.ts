@@ -54,6 +54,7 @@ import {
   getResetPasswordMockHandler200,
   getUpdateUserMockHandler200,
 } from "@/api/generated/users/users.msw";
+import { bangkokDay } from "@/lib/bangkok-day";
 import { characters, int32Max } from "@/lib/format";
 
 export const owner = { name: "Nok Srisuk", email: "nok@example.com", role: "owner" } as const;
@@ -517,13 +518,6 @@ function limitOf(query: URLSearchParams) {
 }
 
 const day = 24 * 60 * 60 * 1000;
-
-// dashboard-and-reports R1: the Shop's days are Bangkok days, UTC+7 all year.
-const bangkokOffset = 7 * 60 * 60 * 1000;
-
-function bangkokDay(at: number | string) {
-  return new Date(new Date(at).getTime() + bangkokOffset).toISOString().slice(0, 10);
-}
 
 // dashboard-and-reports R2 to R6, as the API works them out when asked.
 function dashboardOf(): DashboardOutputBody {

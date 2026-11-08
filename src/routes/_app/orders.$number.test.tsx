@@ -295,11 +295,9 @@ describe("the Order detail", () => {
   });
 
   describe("Cancel order", () => {
-    const ask = askCancel;
-
     // orders R12: cancelling gives stock back, which is why it is asked about.
     it("asks first, naming the Order and the consequence", async () => {
-      const { dialog, sent } = await ask();
+      const { dialog, sent } = await askCancel();
 
       expect(within(dialog).getByText("Cancel order #12?")).toBeInTheDocument();
       expect(dialog).toHaveTextContent(
@@ -309,7 +307,7 @@ describe("the Order detail", () => {
     });
 
     it("sends nothing when the question is dismissed", async () => {
-      const { user, dialog, sent } = await ask();
+      const { user, dialog, sent } = await askCancel();
 
       await user.click(within(dialog).getByRole("button", { name: "Go back" }));
 
@@ -321,7 +319,7 @@ describe("the Order detail", () => {
     it.each(["owner", "admin"] as const)(
       "cancels the Order once %s confirms, and says so",
       async (role) => {
-        const { user, dialog, sent } = await ask(role);
+        const { user, dialog, sent } = await askCancel(role);
 
         await user.click(within(dialog).getByRole("button", { name: "Cancel order" }));
 

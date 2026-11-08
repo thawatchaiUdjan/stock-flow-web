@@ -19,13 +19,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { bangkokDay } from "@/lib/bangkok-day";
 import { formatBaht, formatDay } from "@/lib/format";
 
 // dashboard-and-reports R7: the longest range, both ends included.
 const maxDays = 366;
 const dayLength = 24 * 60 * 60 * 1000;
-// dashboard-and-reports R1: the Shop's days are Bangkok's, which is UTC+7 all year.
-const bangkokOffset = 7 * 60 * 60 * 1000;
 
 // ADR 0008: the range lives in the address, so a reload or a shared link keeps it. A value the API
 // wouldn't accept is dropped rather than sent.
@@ -44,7 +43,7 @@ export const Route = createFileRoute("/_app/reports")({
 // (openapi.yaml, the Sales report's `from` and `to`): `to` is today, `from` is the first of the
 // month of `to`. The API's 422 is still shown, should it ever refuse what this let through.
 function rangeProblem(search: ReportsSearch) {
-  const to = search.to ?? new Date(Date.now() + bangkokOffset).toISOString().slice(0, 10);
+  const to = search.to ?? bangkokDay(Date.now());
   const from = search.from ?? `${to.slice(0, 8)}01`;
   if (from > to) return "From is after To. Choose a From day on or before To.";
   if ((Date.parse(to) - Date.parse(from)) / dayLength + 1 > maxDays) {
