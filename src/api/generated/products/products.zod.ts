@@ -55,7 +55,7 @@ export const createProductBodyMinimumStockMin = 0;
 export const createProductBodyNameMax = 120;
 
 
-export const createProductBodyNameRegExp = new RegExp('\\S');
+export const createProductBodyNameRegExp = new RegExp('[^\\t-\\r\\p{Z}\\u{85}]', 'u');
 export const createProductBodyPriceMin = 0;
 export const createProductBodyPriceMax = 999999999;
 
@@ -66,7 +66,7 @@ export const createProductBodySkuRegExp = new RegExp('^[A-Za-z0-9-]+$');
 export const createProductBodyUnitMax = 20;
 
 
-export const createProductBodyUnitRegExp = new RegExp('\\S');
+export const createProductBodyUnitRegExp = new RegExp('[^\\t-\\r\\p{Z}\\u{85}]', 'u');
 
 
 export const CreateProductBody = zod.object({
@@ -124,7 +124,7 @@ export const updateProductBodyMinimumStockMin = 0;
 export const updateProductBodyNameMax = 120;
 
 
-export const updateProductBodyNameRegExp = new RegExp('\\S');
+export const updateProductBodyNameRegExp = new RegExp('[^\\t-\\r\\p{Z}\\u{85}]', 'u');
 export const updateProductBodyPriceMin = 0;
 export const updateProductBodyPriceMax = 999999999;
 
@@ -135,7 +135,7 @@ export const updateProductBodySkuRegExp = new RegExp('^[A-Za-z0-9-]+$');
 export const updateProductBodyUnitMax = 20;
 
 
-export const updateProductBodyUnitRegExp = new RegExp('\\S');
+export const updateProductBodyUnitRegExp = new RegExp('[^\\t-\\r\\p{Z}\\u{85}]', 'u');
 
 
 export const UpdateProductBody = zod.object({

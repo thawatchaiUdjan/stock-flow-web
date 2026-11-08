@@ -22,7 +22,27 @@ function arraysOnly(spec: any) {
   return spec;
 }
 
-const input = { target: "./openapi/openapi.yaml", override: { transformer: arraysOnly } };
+// The contract's patterns are Go regexes (`\x{85}`); JavaScript's `u` flag spells that `\u{85}`.
+function jsPatterns(node: any) {
+  if (Array.isArray(node)) {
+    node.forEach(jsPatterns);
+  } else if (node && typeof node === "object") {
+    for (const [key, value] of Object.entries<any>(node)) {
+      if (key === "pattern" && typeof value === "string") {
+        node[key] = value.replace(/\\x\{([0-9a-fA-F]+)\}/g, "\\u{$1}");
+      } else {
+        jsPatterns(value);
+      }
+    }
+  }
+}
+
+function toClientSpec(spec: any) {
+  jsPatterns(spec);
+  return arraysOnly(spec);
+}
+
+const input = { target: "./openapi/openapi.yaml", override: { transformer: toClientSpec } };
 
 export default defineConfig({
   client: {

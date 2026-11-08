@@ -40,6 +40,7 @@ Project goal: a practice project for frontend development ([`stock-flow-context`
 | Run the fast layer | `bun run test`, never `bun test` (ADR 0012) |
 | Run one end-to-end test by name | `bun run e2e -g "<name>"` (once per machine: `bunx playwright install chromium`) |
 | Run everything (CI) | `bun run ci` |
+| Smoke suite against the real api (CI only; needs Postgres, `docs/agents/testing.md`) | `bun run smoke` |
 | Lint / format | `bun run lint`; `bun run format` fixes, `bun run format:check` only checks |
 | Regenerate the API client | `bun run api:sync` refreshes the contract, `bun run api:generate` regenerates; commit both (`bun run api:check` is CI's diff) |
 
