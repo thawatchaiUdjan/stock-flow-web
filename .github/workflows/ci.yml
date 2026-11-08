@@ -86,7 +86,7 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
+          --health-interval 1s
           --health-timeout 5s
           --health-retries 10
     env:
@@ -97,6 +97,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/checkout@v7
+        id: api
         with:
           repository: thawatchaiUdjan/stock-flow-api
           ref: main
@@ -122,8 +123,17 @@ jobs:
           restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
 
+      # The binaries depend only on the api's commit: a hit skips Go, and its caches, entirely.
+      - name: Cache the api's binaries
+        id: api-bin
+        uses: actions/cache@v6
+        with:
+          path: ${{ runner.temp }}/bin
+          key: api-bin-${{ runner.os }}-${{ steps.api.outputs.commit }}
+
       # Caches the Go modules and the build cache by default.
       - uses: actions/setup-go@v7
+        if: steps.api-bin.outputs.cache-hit != 'true'
         with:
           go-version-file: stock-flow-api/go.mod
           cache-dependency-path: stock-flow-api/go.sum
@@ -141,6 +151,7 @@ jobs:
 
       # One build for the three tools, so the steps below run binaries, not the compiler.
       - name: Build the api, its installer and goose
+        if: steps.api-bin.outputs.cache-hit != 'true'
         working-directory: stock-flow-api
         run: go build -o "$RUNNER_TEMP/bin/" github.com/pressly/goose/v3/cmd/goose ./cmd/api ./cmd/install
 
