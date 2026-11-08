@@ -13,7 +13,7 @@ export interface AdjustStockBody {
   /**
      * Why the stock is wrong, up to 200 characters.
      * @maxLength 200
-     * @pattern \S
+     * @pattern [^\t-\r    -   　]
      */
   note: string;
   /** The Product whose stock is wrong. It must be Active. */

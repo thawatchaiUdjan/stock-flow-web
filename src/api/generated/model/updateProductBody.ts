@@ -17,7 +17,7 @@ export interface UpdateProductBody {
   /**
      * The Product's name, in any language.
      * @maxLength 120
-     * @pattern [^\t-\r\p{Z}\u{85}]
+     * @pattern [^\t-\r    -   　]
      */
   name?: string;
   /**
@@ -37,7 +37,7 @@ export interface UpdateProductBody {
   /**
      * The word the Product is counted in.
      * @maxLength 20
-     * @pattern [^\t-\r\p{Z}\u{85}]
+     * @pattern [^\t-\r    -   　]
      */
   unit?: string;
 }

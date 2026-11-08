@@ -61,7 +61,16 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: bun-${{ runner.os }}-
       - run: bun install --frozen-lockfile
+      - name: Cache the Playwright browser
+        id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      # A miss installs the browser and its system packages; a hit needs only the browser's files,
+      # which the cache restored (the runner image carries the shared libraries).
       - run: bunx playwright install --with-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
       - run: bun run e2e
 
   # The web against the real stock-flow-api and Postgres, one happy path (e2e-smoke/).
@@ -125,19 +134,24 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      # A miss installs the browser and its system packages; a hit needs only the browser's files,
+      # which the cache restored (the runner image carries the shared libraries).
       - run: bunx playwright install --with-deps chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-      - run: bunx playwright install-deps chromium
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
+
+      # One build for the three tools, so the steps below run binaries, not the compiler.
+      - name: Build the api, its installer and goose
+        working-directory: stock-flow-api
+        run: go build -o "$RUNNER_TEMP/bin/" github.com/pressly/goose/v3/cmd/goose ./cmd/api ./cmd/install
 
       - name: Migrate the api's database
         working-directory: stock-flow-api
-        run: go tool goose -dir db/migrations postgres "$POSTGRES_URL" up
+        run: $RUNNER_TEMP/bin/goose -dir db/migrations postgres "$POSTGRES_URL" up
 
       - name: Issue the Owner's Setup link
         working-directory: stock-flow-api
         run: |
-          go run ./cmd/install -name "Smoke Owner" -email "$SMOKE_OWNER_EMAIL" > install.out
+          "$RUNNER_TEMP/bin/install" -name "Smoke Owner" -email "$SMOKE_OWNER_EMAIL" > install.out
           token="$(tail -n 1 install.out)"
           echo "::add-mask::$token"
           echo "SMOKE_SETUP_LINK_TOKEN=$token" >> "$GITHUB_ENV"
@@ -145,8 +159,7 @@ jobs:
       - name: Start the api
         working-directory: stock-flow-api
         run: |
-          go build -o "$RUNNER_TEMP/api" ./cmd/api
-          "$RUNNER_TEMP/api" > "$RUNNER_TEMP/api.log" 2>&1 &
+          "$RUNNER_TEMP/bin/api" > "$RUNNER_TEMP/api.log" 2>&1 &
           curl --silent --show-error --fail --retry 30 --retry-delay 1 --retry-connrefused \
             http://localhost:8080/health
 

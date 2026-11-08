@@ -16,7 +16,7 @@ export interface CreateProductBody {
   /**
      * The Product's name, in any language.
      * @maxLength 120
-     * @pattern [^\t-\r\p{Z}\u{85}]
+     * @pattern [^\t-\r    -   　]
      */
   name: string;
   /**
@@ -34,7 +34,7 @@ export interface CreateProductBody {
   /**
      * The word the Product is counted in, such as pcs or box.
      * @maxLength 20
-     * @pattern [^\t-\r\p{Z}\u{85}]
+     * @pattern [^\t-\r    -   　]
      */
   unit: string;
 }

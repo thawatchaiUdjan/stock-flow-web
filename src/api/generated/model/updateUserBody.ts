@@ -12,7 +12,7 @@ export interface UpdateUserBody {
   readonly $schema?: string;
   /**
      * The User's name, in any language.
-     * @pattern \S
+     * @pattern [^\t-\r    -   　]
      */
   name?: string;
   /** Applies at once to the sessions the User has open. */

@@ -28,7 +28,7 @@ export const ListUsersResponse = zod.object({
  * Issues the new User's Setup link and answers its token, which is not shown again. Answers 409 `email-taken` when a User has the email already, in any letter case. Owner only: answers 403 to an Admin or Staff. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
  * @summary Create a User
  */
-export const createUserBodyNameRegExp = new RegExp('\\S');
+export const createUserBodyNameRegExp = new RegExp('[^\\t-\\r    - \u2028\u2029  　]');
 
 
 export const CreateUserBody = zod.object({
@@ -63,7 +63,7 @@ export const UpdateUserParams = zod.object({
   "id": zod.int().describe('The User\'s id.')
 })
 
-export const updateUserBodyNameRegExp = new RegExp('\\S');
+export const updateUserBodyNameRegExp = new RegExp('[^\\t-\\r    - \u2028\u2029  　]');
 
 
 export const UpdateUserBody = zod.object({

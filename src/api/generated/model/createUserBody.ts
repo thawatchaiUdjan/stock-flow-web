@@ -13,7 +13,7 @@ export interface CreateUserBody {
   email: string;
   /**
      * The User's name, in any language.
-     * @pattern \S
+     * @pattern [^\t-\r    -   　]
      */
   name: string;
   /** The Role of the new User. There is one Owner, and it is not made here. */
