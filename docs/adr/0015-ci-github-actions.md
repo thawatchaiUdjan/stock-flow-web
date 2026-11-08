@@ -5,7 +5,7 @@ Date: 2026-11-05
 
 ## What it is for
 
-`ci.yml` runs on pull requests and pushes to `main`, with `concurrency` + `cancel-in-progress` and the Bun cache. Job `check`: oxlint, `oxfmt --check`, typecheck, Vitest, Orval regenerate-and-diff, build. Job `e2e`: Playwright. A ruleset on `main` requires both, requires a pull request, and blocks force pushes and deletion.
+`ci.yml` runs on pull requests and pushes to `main`, with `concurrency` + `cancel-in-progress` and the Bun cache. Job `check`: oxlint, `oxfmt --check`, typecheck, Vitest, Orval regenerate-and-diff, build. Job `e2e`: Playwright. Job `smoke`: the web against the real api and Postgres (`docs/agents/testing.md`). The Playwright browser is cached by `bun.lock`, and `smoke` caches the api's built binaries by the api's commit. A ruleset on `main` requires `check` and `e2e`, requires a pull request, and blocks force pushes and deletion.
 
 ## Why it was chosen
 

@@ -4,21 +4,26 @@ import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 
 import { CreateProductBody } from "./generated/products/products.zod";
+import { AdjustStockBody } from "./generated/stock-movements/stock-movements.zod";
+import { CreateUserBody } from "./generated/users/users.zod";
 
-// products R2, R4: a Product's name is refused when it is blank in any script.
-const patterns: string[] = [];
-(function collect(node: unknown) {
-  if (Array.isArray(node)) {
-    node.forEach(collect);
-  } else if (node && typeof node === "object") {
-    for (const [key, value] of Object.entries(node)) {
-      if (key === "pattern" && typeof value === "string") patterns.push(value);
-      else collect(value);
-    }
-  }
-})(parse(readFileSync("openapi/openapi.yaml", "utf8")));
+function collectPatterns(node: unknown): string[] {
+  if (Array.isArray(node)) return node.flatMap(collectPatterns);
+  if (!node || typeof node !== "object") return [];
+  return Object.entries(node).flatMap(([key, value]) =>
+    key === "pattern" && typeof value === "string" ? [value] : collectPatterns(value),
+  );
+}
 
-const nameAccepts = (name: string) => CreateProductBody.shape.name.safeParse(name).success;
+const patterns = collectPatterns(parse(readFileSync("openapi/openapi.yaml", "utf8")));
+
+// The text fields whose pattern refuses a value that is blank in any script (products R2, R4).
+const blankRefusing = {
+  "Product name": CreateProductBody.shape.name,
+  "Product unit": CreateProductBody.shape.unit,
+  "User name": CreateUserBody.shape.name,
+  "Adjustment note": AdjustStockBody.shape.note,
+};
 
 describe("the contract's patterns, read the way the generated client reads them", () => {
   it("finds the contract's patterns", () => {
@@ -29,17 +34,19 @@ describe("the contract's patterns, read the way the generated client reads them"
     expect(() => new RegExp(pattern)).not.toThrow();
   });
 
-  it.each(["p", "Z", "{", "}", "x{85}", "pZ{}"])("accepts a name containing %j", (name) => {
-    expect(nameAccepts(name)).toBe(true);
-  });
+  describe.each(Object.entries(blankRefusing))("%s", (_field, schema) => {
+    it.each(["p", "Z", "{", "}", "x{85}", "pZ{}"])("accepts %j", (value) => {
+      expect(schema.safeParse(value).success).toBe(true);
+    });
 
-  it.each([
-    ["U+00A0", " "],
-    ["U+3000", "　"],
-    ["U+0085", "\u0085"],
-    ["U+2028", " "],
-    ["a space", " "],
-  ])("refuses a name of only %s", (_label, name) => {
-    expect(nameAccepts(name)).toBe(false);
+    it.each([
+      ["U+00A0", " "],
+      ["U+3000", "　"],
+      ["U+0085", "\u0085"],
+      ["U+2028", " "],
+      ["a space", " "],
+    ])("refuses only %s", (_label, value) => {
+      expect(schema.safeParse(value).success).toBe(false);
+    });
   });
 });
