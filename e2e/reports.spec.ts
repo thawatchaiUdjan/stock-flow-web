@@ -28,7 +28,7 @@ function completedOrder(name: string) {
 
 // dashboard-and-reports R7, R8, docs/design.md, *Breakpoints*: the longest range fits every width.
 for (const width of [375, 768, 1024, 1440]) {
-  test(`Reports for 366 days fit ${width} px`, async ({ page }) => {
+  test(`Reports for 366 days fit ${width} px`, async ({ page }, info) => {
     const password = `correct-horse-${test.info().testId}`;
     const name = "Safety helmet with a very long name that goes on and on past the edge";
     await install(page, password, { orders: [completedOrder(name)] });
@@ -48,5 +48,7 @@ for (const width of [375, 768, 1024, 1440]) {
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(sideways).toBe(0);
+    await page.getByRole("navigation", { name: "Pages" }).scrollIntoViewIfNeeded();
+    await page.screenshot({ path: info.outputPath(`reports-${width}.png`) });
   });
 }

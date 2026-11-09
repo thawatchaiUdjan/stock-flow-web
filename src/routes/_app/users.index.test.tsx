@@ -499,7 +499,7 @@ it("pages the complete Users response, keeping actions and whole-list empty mean
     }),
   );
   const { user } = renderApp("/users?size=25&page=2");
-  await screen.findByText("Page 2 of 2 ? 26 matching");
+  await screen.findByText("Page 2 of 2 \u00b7 26 matching");
   expect(screen.queryByText(/No other Users yet/)).not.toBeInTheDocument();
   expect(screen.queryByText("Staff 0")).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();

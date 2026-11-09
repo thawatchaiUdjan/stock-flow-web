@@ -1,7 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react";
+import { delay } from "msw";
 import { describe, expect, it } from "vitest";
 
-import { getListProductsMockHandler500 } from "@/api/generated/products/products.msw";
+import {
+  getListProductsMockHandler200,
+  getListProductsMockHandler500,
+} from "@/api/generated/products/products.msw";
 import { mockApi, productOf, serverFailure } from "@/mocks/handlers";
 import { renderApp } from "@/test/render-app";
 import { server } from "@/test/server";
@@ -277,13 +281,13 @@ describe("the Product List", () => {
     await screen.findByText("Item 01");
     expect(screen.getByText("Item 50")).toBeInTheDocument();
     expect(screen.queryByText("Item 51")).not.toBeInTheDocument();
-    expect(screen.getByText("Page 1 of 2 ? 55 matching")).toBeInTheDocument();
+    expect(screen.getByText("Page 1 of 2 \u00b7 55 matching")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Next page" }));
 
     expect(await screen.findByText("Item 51")).toBeInTheDocument();
     expect(screen.queryByText("Item 01")).not.toBeInTheDocument();
-    expect(screen.getByText("Page 2 of 2 ? 55 matching")).toBeInTheDocument();
+    expect(screen.getByText("Page 2 of 2 \u00b7 55 matching")).toBeInTheDocument();
     expect(sent.at(-1)?.searchParams.get("offset")).toBe("50");
   });
 
@@ -311,7 +315,7 @@ it("keeps paging visible on a single page with the default size", async () => {
   expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
   expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
   expect(screen.getByLabelText("Rows per page")).toHaveValue("25");
-  expect(screen.getByText("Page 1 of 1 ? 1 matching")).toBeInTheDocument();
+  expect(screen.getByText("Page 1 of 1 \u00b7 1 matching")).toBeInTheDocument();
   expect(sent.at(-1)?.searchParams.get("limit")).toBe("25");
 });
 
@@ -323,19 +327,44 @@ it("reloads a chosen size and filter, resets size and search to page one, and re
   );
   const sent = recordListRequests();
   const { user, router } = renderApp("/products?size=10&page=2&search=Item");
-  await screen.findByText("Page 2 of 4 ? 31 matching");
+  await screen.findByText("Page 2 of 4 \u00b7 31 matching");
   expect(sent.at(-1)?.searchParams.get("limit")).toBe("10");
   expect(sent.at(-1)?.searchParams.get("offset")).toBe("10");
   expect(sent.at(-1)?.searchParams.get("search")).toBe("Item");
   await user.selectOptions(screen.getByLabelText("Rows per page"), "25");
-  await screen.findByText("Page 1 of 2 ? 31 matching");
+  await screen.findByText("Page 1 of 2 \u00b7 31 matching");
   expect(router.state.location.search).toMatchObject({ size: 25, search: "Item" });
   await user.click(screen.getByRole("button", { name: "Next page" }));
-  await screen.findByText("Page 2 of 2 ? 31 matching");
+  await screen.findByText("Page 2 of 2 \u00b7 31 matching");
   await user.type(screen.getByLabelText("Search"), " 1");
   await waitFor(() => expect(sent.at(-1)?.searchParams.get("offset")).toBe("0"));
   await router.navigate({ to: "/products", search: { page: 999, size: 10, search: "Item" } });
   await screen.findByText("This page is no longer available.");
   await user.click(screen.getByRole("button", { name: "First page" }));
-  await screen.findByText("Page 1 of 4 ? 31 matching");
+  await screen.findByText("Page 1 of 4 \u00b7 31 matching");
+});
+
+// navigation-and-lists R4-R5: a pending page must never use the preceding total.
+it("disables forward paging while the chosen server page loads and on errors", async () => {
+  signedIn("owner");
+  mockApi.products = [helmet];
+  const { user, router } = renderApp("/products");
+  await screen.findByText("Safety helmet");
+  server.use(
+    getListProductsMockHandler200(async () => {
+      await delay(150);
+      return { products: [], total: 0 };
+    }),
+  );
+  await router.navigate({ to: "/products", search: { page: 2 } });
+  expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+  expect(screen.queryByText("Safety helmet")).not.toBeInTheDocument();
+  await screen.findByText("This page is no longer available.");
+  server.use(getListProductsMockHandler500(serverFailure));
+  await router.navigate({ to: "/products", search: { page: 3 } });
+  await screen.findByRole("button", { name: "Try again" });
+  expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "First page" })).toBeEnabled();
+  await user.click(screen.getByRole("button", { name: "First page" }));
+  expect(router.state.location.search.page).toBeUndefined();
 });

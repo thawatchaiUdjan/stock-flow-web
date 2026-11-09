@@ -142,6 +142,7 @@ function reportError(error: unknown) {
 
 const surface = "flex min-w-0 flex-col gap-3 rounded-lg border bg-card p-4";
 
+// navigation-and-lists R7: only the daily table pages within the selected range.
 function ReportFigures({
   report,
   page,

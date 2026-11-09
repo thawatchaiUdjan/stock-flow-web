@@ -295,14 +295,14 @@ describe("the Orders List", () => {
       const sent = requestsTo("/api/orders");
       const { user, router } = renderApp("/orders?size=50");
 
-      expect(await screen.findByText("Page 1 of 2 ? 60 matching")).toBeInTheDocument();
+      expect(await screen.findByText("Page 1 of 2 \u00b7 60 matching")).toBeInTheDocument();
       expect(screen.getAllByRole("link", { name: /^#/ })).toHaveLength(50);
       expect(screen.getByRole("link", { name: "#60" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
 
       await user.click(screen.getByRole("button", { name: "Next page" }));
 
-      expect(await screen.findByText("Page 2 of 2 ? 60 matching")).toBeInTheDocument();
+      expect(await screen.findByText("Page 2 of 2 \u00b7 60 matching")).toBeInTheDocument();
       expect(screen.getAllByRole("link", { name: /^#/ }).map((one) => one.textContent)).toEqual(
         Array.from({ length: 10 }, (_, i) => `#${10 - i}`),
       );
@@ -312,7 +312,7 @@ describe("the Orders List", () => {
 
       await user.click(screen.getByRole("button", { name: "Previous page" }));
 
-      expect(await screen.findByText("Page 1 of 2 ? 60 matching")).toBeInTheDocument();
+      expect(await screen.findByText("Page 1 of 2 \u00b7 60 matching")).toBeInTheDocument();
     });
 
     it("keeps disabled paging when one page holds every Order", async () => {

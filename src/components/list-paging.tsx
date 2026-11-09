@@ -27,7 +27,7 @@ export function ListPaging({
             ? "Page unavailable"
             : outside
               ? "This page is no longer available."
-              : `Page ${page} of ${pages} ? ${total} matching`}
+              : `Page ${page} of ${pages} \u00b7 ${total} matching`}
       </p>
       {onSize && (
         <label className="flex items-center gap-2">

@@ -170,7 +170,7 @@ test("the Owner opens the Login log, filters it by User and by result, and pages
   await page.getByLabel("Result").selectOption({ label: "Logout" });
   await expect(page).toHaveURL(`/login-log?userId=${mali.id}&result=logout`);
   await expect(rows.filter({ hasNotText: "Logout" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Newest entries" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Newest entries" })).toBeDisabled();
 });
 
 for (const role of ["admin", "staff"] as const) {

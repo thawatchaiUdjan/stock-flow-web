@@ -29,6 +29,7 @@ export function SalesByDay({
   tableOpen?: boolean;
   tablePage?: number;
 }) {
+  // navigation-and-lists R7: table paging never truncates the chart.
   const highest = Math.max(...days.map(({ sales }) => sales), 0);
   const first = days[0];
   const last = days[days.length - 1];
