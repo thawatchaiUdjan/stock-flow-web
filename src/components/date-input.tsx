@@ -45,7 +45,7 @@ export function DateInput({
           id={id}
           type="button"
           variant="outline"
-          className="w-full justify-between shell:w-52"
+          className="w-full justify-between text-base font-normal shell:w-52 shell:text-body"
         >
           {value
             ? formatFullDay(value)
@@ -83,7 +83,7 @@ export function DateInput({
         <div className="flex justify-between gap-2">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={() =>
               setMonth(new TZDate(month.getFullYear() - 1, month.getMonth(), 1, "Asia/Bangkok"))
             }
@@ -92,7 +92,7 @@ export function DateInput({
           </Button>
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={() =>
               setMonth(new TZDate(month.getFullYear() + 1, month.getMonth(), 1, "Asia/Bangkok"))
             }

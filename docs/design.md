@@ -63,6 +63,10 @@ Numbers are always tabular (`font-variant-numeric: tabular-nums`, set on `body`)
 
 Inputs are 16 px on a phone, so the browser doesn't zoom on focus. Nothing is smaller than 12 px. Headings get `-0.015em` tracking; nothing is set in capitals.
 
+Date trigger prompts and selected values use the same Figtree regular (400) type as Kind / All kinds: 15 px on desktop and 16 px below the shell breakpoint. Calendar month/year captions use the existing 15 px body size at medium (500) weight.
+
+Calendar columns have a 4 px gap between day backgrounds, with weekday headings aligned to those columns. Keep the complete day targets at 44 px on phones and 40 px on desktop. Previous year and Next year use the existing outline button variant with the Control border, Page background, Hover feedback and shared visible focus; their affordance stays visible before interaction. These shared treatments apply to both bounds on Stock movements and Reports (#45).
+
 ## Layout
 
 A white sidebar on the left and the work on the page beside it. Everything is left-aligned, except numbers.
