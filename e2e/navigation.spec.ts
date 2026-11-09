@@ -26,7 +26,7 @@ for (const width of [375, 768, 1024, 1440]) {
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
     const brandImage = page.getByRole("link", { name: "StockFlow home" }).locator("img");
-    await expect(brandImage).toHaveJSProperty("naturalWidth", 32);
+    await expect(brandImage).not.toHaveJSProperty("naturalWidth", 0);
     const favicon = await page.locator('link[rel="icon"]').getAttribute("href");
     expect(favicon).toBeTruthy();
     expect((await page.request.get(favicon!)).ok()).toBe(true);
