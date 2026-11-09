@@ -22,12 +22,14 @@ export function SalesByDay({
   focus,
   tableOpen,
   tablePage,
+  showChart = true,
 }: {
   title: string;
   days: SalesDay[];
   focus?: string;
   tableOpen?: boolean;
   tablePage?: number;
+  showChart?: boolean;
 }) {
   // navigation-and-lists R7: table paging never truncates the chart.
   const highest = Math.max(...days.map(({ sales }) => sales), 0);
@@ -37,7 +39,7 @@ export function SalesByDay({
 
   return (
     <div className="flex flex-col gap-3">
-      {first && last && (
+      {showChart && first && last && (
         <>
           <p className="text-small text-muted-foreground">Highest day {formatBaht(highest)}</p>
           <figure

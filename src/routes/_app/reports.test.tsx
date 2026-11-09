@@ -98,6 +98,65 @@ afterEach(() => {
 });
 
 describe("Reports", () => {
+  // navigation-and-lists R4, R7: no-sales ranges still have paging.
+  it("keeps daily paging visible when the range has no sales", async () => {
+    signedIn("owner");
+    renderApp("/reports");
+    await screen.findByText(/No sales from/);
+    expect(screen.getByRole("navigation", { name: "Pages" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+    expect(screen.getByRole("table", { name: "Sales for each day of the range" })).toBeVisible();
+  });
+
+  // #41 coordinator clarification: tolerate missing daily entries defensively.
+  // The contract normally includes every day, even when sales are zero.
+  it("explains an unexpectedly empty daily response and disables paging", async () => {
+    signedIn("owner");
+    server.use(getGetSalesReportMockHandler200(response({ salesByDay: [] })));
+    renderApp("/reports");
+    expect(await screen.findByText("No daily sales entries in this range.")).toBeVisible();
+    expect(screen.getByRole("navigation", { name: "Pages" })).toHaveTextContent("0 matching");
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+  });
+
+  it("keeps unavailable paging visible while daily sales load", async () => {
+    signedIn("owner");
+    let release = () => {};
+    const pending = new Promise<SalesReportOutputBody>((resolve) => {
+      release = () => resolve(response());
+    });
+    server.use(getGetSalesReportMockHandler200(() => pending));
+    renderApp("/reports");
+    expect(await screen.findByText("Loading report")).toBeVisible();
+    expect(screen.getByRole("navigation", { name: "Pages" })).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+    release();
+    await screen.findByText("Total sales");
+  });
+
+  it("pages zero-sale days and recovers from an out-of-range daily page", async () => {
+    signedIn("owner");
+    const days = Array.from({ length: 31 }, (_, i) => ({
+      date: `2026-10-${String(i + 1).padStart(2, "0")}`,
+      sales: 0,
+      ordersCompleted: 0,
+    }));
+    server.use(
+      getGetSalesReportMockHandler200(
+        response({ from: "2026-10-01", to: "2026-10-31", salesByDay: days }),
+      ),
+    );
+    const { user, router } = renderApp("/reports?from=2026-10-01&to=2026-10-31&page=99");
+    await screen.findByText("This page is no longer available.");
+    await user.click(screen.getByRole("button", { name: "First page" }));
+    const table = screen.getByRole("table", { name: "Sales for each day of the range" });
+    expect(within(table).getAllByRole("row")).toHaveLength(26);
+    await user.click(screen.getByRole("button", { name: "Next page" }));
+    expect(within(table).getAllByRole("row")).toHaveLength(7);
+    expect(router.state.location.search).toEqual({ from: "2026-10-01", to: "2026-10-31", page: 2 });
+    expect(screen.queryByRole("figure")).not.toBeInTheDocument();
+  });
+
   // dashboard-and-reports R7: this month so far by default, and the API is left to work it out.
   it("opens on this month so far, and shows the range", async () => {
     signedIn("owner");
@@ -381,7 +440,8 @@ describe("Reports", () => {
     expect(within(figure("Orders completed")).getByText("0")).toBeInTheDocument();
     expect(within(figure("Average sales per order")).getByText("฿0.00")).toBeInTheDocument();
     expect(screen.queryByRole("figure")).not.toBeInTheDocument();
-    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    // #41 clarification: zero-sale days remain readable and pageable.
+    expect(screen.getByRole("table", { name: "Sales for each day of the range" })).toBeVisible();
   });
 
   // users-and-access R11
@@ -410,6 +470,8 @@ describe("Reports", () => {
     const { user } = renderApp("/reports");
 
     expect(await screen.findByText("Something went wrong. Try again.")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Pages" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
     server.resetHandlers();
     mockApi.products = [helmet];
     mockApi.orders = [order(1, helmet, 3, "2026-11-02T03:00:00Z")];

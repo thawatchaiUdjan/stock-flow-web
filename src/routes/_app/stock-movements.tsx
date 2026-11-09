@@ -17,6 +17,7 @@ import {
   useListStockMovements,
   useReceiveStock,
 } from "@/api/generated/stock-movements/stock-movements";
+import { DateInput } from "@/components/date-input";
 import { CursorPaging } from "@/components/list-paging";
 import { ProductSelect, useActiveProducts } from "@/components/product-select";
 import { StockChangeForm } from "@/components/stock-change-form";
@@ -24,7 +25,6 @@ import type { StockChangeMode } from "@/components/stock-change-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import {
   Table,
@@ -302,20 +302,20 @@ function Filters({
       </Field>
       <Field className="w-auto max-shell:w-full">
         <FieldLabel htmlFor="movements-from">From</FieldLabel>
-        <Input
+        <DateInput
           id="movements-from"
-          type="date"
+          label="From"
           value={search.from ?? ""}
-          onChange={(event) => onChange({ from: event.target.value || undefined })}
+          onValueChange={(value) => onChange({ from: value || undefined })}
         />
       </Field>
       <Field className="w-auto max-shell:w-full">
         <FieldLabel htmlFor="movements-to">To</FieldLabel>
-        <Input
+        <DateInput
           id="movements-to"
-          type="date"
+          label="To"
           value={search.to ?? ""}
-          onChange={(event) => onChange({ to: event.target.value || undefined })}
+          onValueChange={(value) => onChange({ to: value || undefined })}
         />
       </Field>
     </div>
@@ -327,9 +327,8 @@ function formatChange(change: number) {
   return change > 0 ? `+${change}` : `−${Math.abs(change)}`;
 }
 
-// On a phone the time, Product, kind and change stay: they say what happened. The rest drops
-// (docs/design.md, *Tables*).
-const phoneRow = "max-shell:grid max-shell:grid-cols-[1fr_auto]";
+// docs/design.md: phone rows retain time, Product, kind, change and the full note.
+const phoneRow = "max-shell:grid max-shell:grid-cols-[minmax(0,1fr)_auto]";
 const secondary = "max-shell:hidden";
 
 function MovementsTable({ movements }: { movements: StockMovement[] }) {
@@ -339,12 +338,12 @@ function MovementsTable({ movements }: { movements: StockMovement[] }) {
         <TableHeader className="max-shell:hidden">
           <TableRow className="hover:bg-background">
             <TableHead>Time</TableHead>
-            <TableHead>Product</TableHead>
+            <TableHead className="w-1/3 min-w-48">Product</TableHead>
             <TableHead>Kind</TableHead>
             <TableHead className="text-right">Change</TableHead>
             <TableHead className="text-right">Stock after</TableHead>
             <TableHead>User</TableHead>
-            <TableHead className="w-full">Note</TableHead>
+            <TableHead className="w-1/3 min-w-48">Note</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -353,7 +352,7 @@ function MovementsTable({ movements }: { movements: StockMovement[] }) {
               <TableCell className="whitespace-nowrap max-shell:col-span-2 max-shell:pb-0 max-shell:text-small max-shell:text-muted-foreground">
                 {formatDateTime(movement.at)}
               </TableCell>
-              <TableCell className="whitespace-normal">
+              <TableCell className="min-w-0 whitespace-normal shell:max-w-80 shell:min-w-48">
                 <p className="font-medium wrap-anywhere">{movement.product.name}</p>
                 <p className="text-small break-all text-muted-foreground">{movement.product.sku}</p>
               </TableCell>
@@ -379,7 +378,7 @@ function MovementsTable({ movements }: { movements: StockMovement[] }) {
               <TableCell className={cn(secondary, "whitespace-nowrap")}>
                 {movement.user.name}
               </TableCell>
-              <TableCell className={cn(secondary, "wrap-anywhere whitespace-normal")}>
+              <TableCell className="wrap-anywhere whitespace-normal max-shell:col-span-2 max-shell:pt-0 max-shell:text-small max-shell:text-muted-foreground shell:max-w-80 shell:min-w-48">
                 {movement.note}
               </TableCell>
             </TableRow>

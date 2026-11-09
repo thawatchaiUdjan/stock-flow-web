@@ -68,7 +68,7 @@ Inputs are 16 px on a phone, so the browser doesn't zoom on focus. Nothing is sm
 A white sidebar on the left and the work on the page beside it. Everything is left-aligned, except numbers.
 
 ```
-Desktop                                  Phone (below 800 px)
+Desktop                                  Phone (below 800 px, navigation above content)
 ┌────────┬──────────────────────────┐    ┌──────────────────┐
 │ Stock  │ Title         [+ Action] │    │ Name    [Log out]│
 │ Flow   │ ┌──────────────────────┐ │    ├──────────────────┤
@@ -81,17 +81,19 @@ Desktop                                  Phone (below 800 px)
 │ ▢ Order│ └────────────┘ └───────┘ │    │ │ Name     233 │ │
 │ ▢ Repo │ ┌──────────────────────┐ │    │ └──────────────┘ │
 │        │ │ table                │ │    ├──────────────────┤
-│ Owner  │ └──────────────────────┘ │    │ ▣  ▢  ▢  ▢  ▢    │
+│ Owner  │ └──────────────────────┘ │    │ End of content   │
 └────────┴──────────────────────────┘    └──────────────────┘
 ```
 
-- **Sidebar:** 216 px, sticky, with an icon and a word for each item, and the User's name, Role and Log out at its foot. On a phone it becomes a bottom bar, still with words, and the name, Role and Log out move to a white strip below the home link.
+- **Sidebar:** 216 px, sticky, with an icon and a word for each item, and the User's name, Role and Log out at its foot. Below 800 px, show every permitted destination in a two-column grid between the home link and account strip, above the content. Links have full labels, a minimum 44 px height and 8 px gaps on an opaque White surface. Navigation scrolls with the page; there is no bottom overlay to obscure content or paging. The shell pads all four device safe areas.
 - **Content:** 32 px side padding (12 px on a phone), up to 1280 px wide.
 - **Spacing:** a 4 px base: 4, 8, 12, 16, 24, 32. Gaps between surfaces are 16 px.
 - **Surfaces:** white, a 1 px Line border, 8 px radius, no shadow, no gradient. Related figures share one surface, split by rules, rather than sitting in separate cards.
 - **Radius by size:** surfaces and buttons 8 px, inputs and selects 6 px, badges fully round.
 - **Tables:** 42 px rows at most for one line of text. A product row carries its SKU under the name. On a phone, drop secondary columns; stock and its state stay.
+- **Stock movements:** reserve at least 192 px each for Product and Note on desktop and share spare width between them. Long names and notes wrap inside bounded cells; when seven columns cannot fit, scroll the table horizontally inside its surface. On phones, show the complete note beneath the movement; the grid's product column may shrink without pushing the page sideways.
 - **Controls:** 38 px tall on a desktop, 44 px on a phone. shadcn's sizes are smaller, so set them when a screen first uses the component.
+- **Dates:** use native keyboard/calendar date inputs at a readable 208 px desktop width, full width on phones. Beneath each, show the selected day as `5 Nov 2026`; keep From/To labels above and provide Today and Clear buttons. Today means the Bangkok calendar day. Unset history filters say "Any date" and stay unbounded; Reports explains its defaults (start of the To month / today in Bangkok) without writing them into the URL. Clear removes that bound; Reports' "This month so far" resets both. Native date entry remains browser-localized, while the accompanying full-year display is consistent.
 - **Forms:** one column, up to 640 px wide, on a surface. Labels sit above their fields, and errors below them.
 - **Login and Set password:** the screens without a sidebar, because nobody is logged in: a single 400 px surface, centered on Page.
 - **This page didn't open:** the same surface, with Try again, when the check for a session fails with anything but a 401.

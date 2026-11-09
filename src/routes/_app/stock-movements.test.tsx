@@ -1,5 +1,5 @@
 import { screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { StockMovement } from "@/api/generated/model";
 import { getListStockMovementsMockHandler500 } from "@/api/generated/stock-movements/stock-movements.msw";
@@ -577,4 +577,24 @@ describe("Adjust stock", () => {
     await user.type(screen.getByLabelText("Change"), "-18");
     expect(screen.queryByText("Only 18 in stock.")).not.toBeInTheDocument();
   });
+});
+// dashboard-and-reports R1; history dates remain optional and unbounded.
+it("uses the Bangkok day near midnight and clears it without keeping a cursor", async () => {
+  signedIn("owner");
+  const sent = requestsTo("/api/stock-movements");
+  const { user, router } = renderApp("/stock-movements?before=99");
+  await screen.findByRole("heading", { name: "Stock movements" });
+  const now = vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-11-09T18:30:00Z"));
+  try {
+    await user.click(screen.getByRole("button", { name: "Use today for From" }));
+    expect(screen.getByLabelText("From")).toHaveValue("2026-11-10");
+    expect(screen.getByLabelText("From")).toHaveAccessibleDescription("10 Nov 2026");
+    await waitFor(() => expect(sent.at(-1)?.url.searchParams.get("from")).toBe("2026-11-10"));
+    expect(router.state.location.search.before).toBeUndefined();
+    await user.click(screen.getByRole("button", { name: "Clear From" }));
+    await waitFor(() => expect(sent.at(-1)?.url.searchParams.has("from")).toBe(false));
+    expect(screen.getByLabelText("From")).toHaveAccessibleDescription("Any date");
+  } finally {
+    now.mockRestore();
+  }
 });

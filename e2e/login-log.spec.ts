@@ -199,7 +199,7 @@ for (const role of ["admin", "staff"] as const) {
 }
 
 // docs/design.md, *Layout* and *Tables*: it is checked at 375, 768, 1024 and 1440 px; the sidebar
-// becomes a bottom bar below 800 px; controls are 44 px tall on a phone and 38 px on a desktop;
+// becomes an in-flow grid above the content below 800 px; controls are 44 px tall on a phone and 38 px on a desktop;
 // inputs are 16 px on a phone; rows of one line are 42 px at most; no page scrolls sideways.
 for (const { width, phone } of [
   { width: 375, phone: true },
@@ -234,11 +234,37 @@ for (const { width, phone } of [
     const paging = page.getByRole("button", { name: "Older entries" });
     expect((await paging.boundingBox())!.height).toBe(phone ? 44 : 38);
 
-    // The sidebar is a bottom bar on a phone, still with words.
+    // navigation-and-lists R3: every phone destination fits above the work, without an overlay.
     const navigation = page.getByRole("navigation", { name: "Main" });
     const bar = (await navigation.boundingBox())!;
-    if (phone) expect(bar.y + bar.height).toBeGreaterThan(900 - 1);
-    else expect(bar.x + bar.width).toBeLessThanOrEqual(216);
+    if (phone) {
+      await expect(navigation).toBeInViewport();
+      await expect(navigation).toHaveCSS("background-color", "rgb(255, 255, 255)");
+      await expect(navigation).toHaveCSS("opacity", "1");
+      await expect(navigation.getByRole("link")).toHaveText([
+        "Dashboard",
+        "Products",
+        "Stock movements",
+        "Orders",
+        "Reports",
+        "Users",
+        "Login log",
+      ]);
+      const content = (await page.getByRole("main").boundingBox())!;
+      expect(bar.y + bar.height).toBeLessThanOrEqual(content.y);
+      expect(await navigation.evaluate((nav) => nav.scrollWidth <= nav.clientWidth)).toBe(true);
+      for (const link of await navigation.getByRole("link").all()) {
+        await expect(link).toBeInViewport();
+        const target = (await link.boundingBox())!;
+        expect(target.width).toBeGreaterThanOrEqual(44);
+        expect(target.height).toBeGreaterThanOrEqual(44);
+        expect(target.x).toBeGreaterThanOrEqual(0);
+        expect(target.x + target.width).toBeLessThanOrEqual(width);
+      }
+      await expect(
+        navigation.getByRole("link", { name: "Login log", exact: true }),
+      ).toHaveAttribute("aria-current", "page");
+    } else expect(bar.x + bar.width).toBeLessThanOrEqual(216);
 
     // Entry 119 is Mali's, with a short email and a long browser string.
     const row = rows.filter({ hasText: time(119) });
@@ -266,5 +292,16 @@ for (const { width, phone } of [
       await expect(row).toContainText("Mozilla/5.0");
       expect((await row.boundingBox())!.height).toBeLessThanOrEqual(42);
     }
+
+    // The last paging action remains visible and receives clicks after scrolling through the log.
+    await paging.scrollIntoViewIfNeeded();
+    await expect(paging).toBeInViewport();
+    await paging.click({ trial: true });
+    if (phone) await expect(navigation).not.toBeInViewport();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      ),
+    ).toBe(0);
   });
 }
