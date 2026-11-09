@@ -108,7 +108,9 @@ describe("Reports", () => {
     expect(screen.getByRole("table", { name: "Sales for each day of the range" })).toBeVisible();
   });
 
-  it("explains an empty daily response and disables paging", async () => {
+  // #41 coordinator clarification: tolerate missing daily entries defensively.
+  // The contract normally includes every day, even when sales are zero.
+  it("explains an unexpectedly empty daily response and disables paging", async () => {
     signedIn("owner");
     server.use(getGetSalesReportMockHandler200(response({ salesByDay: [] })));
     renderApp("/reports");

@@ -21,6 +21,9 @@ zero-sales chart are preserved.
 - Reports previously omitted paging during loading, failure and no-sales states.
   Paging now stays visible, zero-sale daily rows page normally, and an actual empty
   daily response has explicit guidance and disabled unavailable directions.
+  That empty-array case is defensive fault injection: the published contract
+  normally returns every day, including zero-sale days. It is not presented as
+  a valid no-sales response.
 
 ## Full-list inventory
 
@@ -39,6 +42,10 @@ MSW handlers for each list at 375 px; unavailable forward controls were disabled
 and the pending response was released to verify recovery. The shared shell and
 paging controls had no page-level horizontal overflow. Populated fixtures contain
 60 Products/Orders/Users and 110 history entries, with contract-shaped long content.
+The loading harness additionally released an unexpectedly empty Reports array to
+check the coordinator-requested defensive fallback; normal no-sales checks use
+the API's zero-valued daily rows. The Users loading harness used a missing-users
+fault response after verifying its pending state; valid installs retain the Owner.
 
 ### Bounded exceptions
 
