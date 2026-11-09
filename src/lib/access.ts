@@ -15,7 +15,8 @@ import type { UserRole } from "@/api/generated/model";
 
 // users-and-access R11, the one place it lives: navigation and page access both read this table.
 // A route under `_app` that is not here has no rule, so `_app.access.test.tsx` fails until it is added.
-// `path` is where the navigation leads; `also` are further addresses of the same R11 row,
+// `parent` groups forms and details beneath their list (navigation-and-lists R2, R3).
+// `path` identifies an address,
 // where `$name` stands for any one segment.
 export const pages = [
   {
@@ -33,7 +34,14 @@ export const pages = [
   {
     title: "New product",
     path: "/products/new",
-    also: ["/products/$id/edit"],
+    parent: "/products",
+    icon: PackagePlus,
+    roles: ["owner", "admin"],
+  },
+  {
+    title: "Edit product",
+    path: "/products/$id/edit",
+    parent: "/products",
     icon: PackagePlus,
     roles: ["owner", "admin"],
   },
@@ -46,14 +54,21 @@ export const pages = [
   {
     title: "Orders",
     path: "/orders",
-    also: ["/orders/$number"],
     icon: ClipboardList,
     roles: ["owner", "admin", "staff"],
   },
   {
     title: "New order",
     path: "/orders/new",
+    parent: "/orders",
     icon: ClipboardPlus,
+    roles: ["owner", "admin", "staff"],
+  },
+  {
+    title: "Order details",
+    path: "/orders/$number",
+    parent: "/orders",
+    icon: ClipboardList,
     roles: ["owner", "admin", "staff"],
   },
   {
@@ -65,7 +80,20 @@ export const pages = [
   {
     title: "Users",
     path: "/users",
-    also: ["/users/new", "/users/$id/edit"],
+    icon: Users,
+    roles: ["owner"],
+  },
+  {
+    title: "Create User",
+    path: "/users/new",
+    parent: "/users",
+    icon: Users,
+    roles: ["owner"],
+  },
+  {
+    title: "Edit User",
+    path: "/users/$id/edit",
+    parent: "/users",
     icon: Users,
     roles: ["owner"],
   },
@@ -80,7 +108,7 @@ export const pages = [
 interface Page {
   title: string;
   path: string;
-  also?: readonly string[];
+  parent?: string;
   icon: LucideIcon;
   roles: readonly UserRole[];
 }
@@ -93,7 +121,8 @@ function allows(page: Page, role: UserRole) {
 }
 
 export function pagesOf(role: UserRole): AppPage[] {
-  return pages.filter((page) => allows(page, role));
+  // navigation-and-lists R2: hidden shortcuts keep their route permissions.
+  return pages.filter((page) => allows(page, role) && !("parent" in page));
 }
 
 function withoutTrailingSlash(pathname: string) {
@@ -106,7 +135,7 @@ export function pageAt(pathname: string): AppPage | undefined {
   // An exact address wins over a pattern: `/orders/new` is New order, not an Order numbered "new".
   return (
     pages.find((page) => page.path === path) ??
-    pages.find((page) => (page as Page).also?.some((one) => matchesPattern(one, path)))
+    pages.find((page) => matchesPattern(page.path, path))
   );
 }
 

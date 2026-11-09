@@ -11,6 +11,44 @@ import { renderApp } from "@/test/render-app";
 import { server } from "@/test/server";
 
 describe("the app shell", () => {
+  // navigation-and-lists R1; users-and-access R12
+  it.each([
+    ["owner", "/dashboard", "Dashboard"],
+    ["admin", "/dashboard", "Dashboard"],
+    ["staff", "/orders", "Orders"],
+  ] as const)("takes %s home through the StockFlow brand", async (role, path, title) => {
+    mockApi.session = "live";
+    mockApi.role = role;
+    const { user, router } = renderApp("/products");
+    const home = await screen.findByRole("link", { name: "StockFlow home" });
+    expect(home).toHaveAttribute("href", path);
+    await user.click(home);
+    expect(await screen.findByRole("heading", { name: title })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(path);
+  });
+
+  // navigation-and-lists R2, R3
+  it.each([
+    ["/products/new", "New product", "Products", "/products"],
+    ["/products/2/edit", "Edit product", "Products", "/products"],
+    ["/orders/new", "New order", "Orders", "/orders"],
+    ["/orders/12", "Order details", "Orders", "/orders"],
+    ["/users/new", "Create User", "Users", "/users"],
+    ["/users/2/edit", "Edit User", "Users", "/users"],
+  ])("identifies %s and links back to its selected parent", async (path, title, parent, list) => {
+    mockApi.session = "live";
+    const { user, router } = renderApp(path);
+    const context = within(await screen.findByRole("navigation", { name: "Current page" }));
+    expect(context.getByText(title)).toHaveAttribute("aria-current", "page");
+    const main = within(screen.getByRole("navigation", { name: "Main" }));
+    expect(main.getByRole("link", { name: parent })).toHaveAttribute("aria-current", "page");
+    expect(main.queryByRole("link", { name: "New product" })).not.toBeInTheDocument();
+    expect(main.queryByRole("link", { name: "New order" })).not.toBeInTheDocument();
+    await user.click(context.getByRole("link", { name: parent }));
+    expect(await screen.findByRole("heading", { name: parent })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(list);
+  });
+
   it("shows the User's name and Role and a Log out action", async () => {
     mockApi.session = "live";
     renderApp("/dashboard");

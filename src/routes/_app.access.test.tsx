@@ -6,6 +6,7 @@ import { mockApi, people } from "@/mocks/handlers";
 import { renderApp } from "@/test/render-app";
 
 // users-and-access R11, copied from the record as its table reads, not from the app's own table.
+// navigation-and-lists R2 excludes create shortcuts; R11 still controls direct access.
 // `heading` is what the page shows when the Role reaches it; `label` is its link in the navigation.
 const r11 = [
   {
@@ -29,7 +30,7 @@ const r11 = [
   {
     page: "Product Form",
     path: "/products/new",
-    label: "New product",
+    label: undefined,
     heading: "New product",
     owner: true,
     admin: true,
@@ -77,7 +78,7 @@ const r11 = [
   {
     page: "Create Order",
     path: "/orders/new",
-    label: "New order",
+    label: undefined,
     heading: "New order",
     owner: true,
     admin: true,

@@ -49,12 +49,23 @@ const activeNavLink = "bg-accent text-accent-foreground hover:bg-accent";
 function AppShell() {
   const user = useCurrentUser();
   const pathname = useLocation({ select: (location) => location.pathname });
-  const current = pageAt(pathname);
+  const reachable = canReach(user.role, pathname);
+  const current = reachable ? pageAt(pathname) : undefined;
+  const parent = current && "parent" in current ? pageAt(current.parent) : undefined;
+  const selected = parent ?? current;
 
   return (
     <div className="flex min-h-dvh flex-col shell:flex-row">
       <aside className="contents shell:sticky shell:top-0 shell:flex shell:h-dvh shell:w-54 shell:shrink-0 shell:flex-col shell:gap-6 shell:border-r shell:bg-sidebar shell:p-3">
-        <p className="hidden px-3 pt-2 font-semibold shell:block">StockFlow</p>
+        {/* navigation-and-lists R1; users-and-access R12 */}
+        <Link
+          to={landingPageOf(user.role).path}
+          aria-label="StockFlow home"
+          className="flex min-h-11 items-center gap-2 border-b bg-sidebar px-3 py-2 font-semibold hover:text-primary shell:border-0 shell:py-0"
+        >
+          <img src="/stockflow.svg" alt="" className="size-8 shrink-0" />
+          StockFlow
+        </Link>
         <nav
           aria-label="Main"
           className="sticky bottom-0 order-last flex overflow-x-auto border-t bg-sidebar p-1 shell:static shell:order-none shell:flex-1 shell:flex-col shell:overflow-visible shell:border-t-0 shell:p-0"
@@ -64,8 +75,8 @@ function AppShell() {
             <Link
               key={page.path}
               to={page.path}
-              className={cn(navLinkClass, page === current && activeNavLink)}
-              aria-current={page === current ? "page" : undefined}
+              className={cn(navLinkClass, page === selected && activeNavLink)}
+              aria-current={page === selected ? "page" : undefined}
             >
               <page.icon aria-hidden size={18} />
               {page.title}
@@ -74,14 +85,34 @@ function AppShell() {
         </nav>
         <UserPanel user={user} />
       </aside>
-      <main className="mx-auto w-full max-w-320 min-w-0 flex-1 px-3 py-6 shell:px-8 shell:py-8">
-        {/* users-and-access R22: said on the page, not a silent redirect. */}
-        {canReach(user.role, pathname) ? (
-          <Outlet />
-        ) : (
-          <NoAccess landingPage={landingPageOf(user.role)} />
-        )}
-      </main>
+      <div className="min-w-0 flex-1">
+        {/* navigation-and-lists R3 */}
+        <nav
+          aria-label="Current page"
+          className="flex min-h-14 flex-wrap items-center gap-x-2 border-b bg-sidebar px-3 py-2 shell:px-8"
+        >
+          {parent && (
+            <>
+              <Link
+                to={parent.path}
+                className="flex min-h-11 items-center rounded-md text-primary underline-offset-4 hover:underline shell:min-h-0"
+              >
+                {parent.title}
+              </Link>
+              <span aria-hidden className="text-muted-foreground">
+                /
+              </span>
+            </>
+          )}
+          <span aria-current="page" className="font-medium">
+            {reachable ? (current?.title ?? "Page not found") : "No access"}
+          </span>
+        </nav>
+        <main className="mx-auto w-full max-w-320 min-w-0 flex-1 px-3 py-6 shell:px-8 shell:py-8">
+          {/* users-and-access R22: said on the page, not a silent redirect. */}
+          {reachable ? <Outlet /> : <NoAccess landingPage={landingPageOf(user.role)} />}
+        </main>
+      </div>
     </div>
   );
 }
@@ -100,7 +131,7 @@ function UserPanel({ user }: { user: CurrentUser }) {
   });
 
   return (
-    <div className="order-first flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-sidebar px-3 py-2 shell:order-none shell:flex-col shell:items-stretch shell:border-t shell:border-b-0 shell:px-0 shell:pt-3 shell:pb-0">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-sidebar px-3 py-2 shell:order-none shell:flex-col shell:items-stretch shell:border-t shell:border-b-0 shell:px-0 shell:pt-3 shell:pb-0">
       <div className="min-w-0 flex-1 shell:flex-none shell:px-3">
         <p className="truncate font-medium">{user.name}</p>
         <p className="text-small text-muted-foreground">{roleNames[user.role]}</p>
