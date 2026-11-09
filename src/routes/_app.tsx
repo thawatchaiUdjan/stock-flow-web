@@ -14,6 +14,7 @@ import { LogOut } from "lucide-react";
 import { errorMessage } from "@/api/errors";
 import type { CurrentUser } from "@/api/generated/model";
 import { getGetCurrentUserQueryOptions, useEndSession } from "@/api/generated/sessions/sessions";
+import stockflowMark from "@/assets/stockflow.svg";
 import { CenteredSurface } from "@/components/centered-surface";
 import { NoAccess } from "@/components/no-access";
 import { Button } from "@/components/ui/button";
@@ -61,9 +62,9 @@ function AppShell() {
         <Link
           to={landingPageOf(user.role).path}
           aria-label="StockFlow home"
-          className="flex min-h-11 items-center gap-2 border-b bg-sidebar px-3 py-2 font-semibold hover:text-primary shell:border-0 shell:py-0"
+          className="flex min-h-11 items-center gap-2 border-b bg-sidebar px-3 py-2 font-semibold transition-colors duration-150 hover:text-primary shell:border-0 shell:py-0"
         >
-          <img src="/stockflow.svg" alt="" className="size-8 shrink-0" />
+          <img src={stockflowMark} alt="" className="size-8 shrink-0" />
           StockFlow
         </Link>
         <nav
@@ -95,7 +96,7 @@ function AppShell() {
             <>
               <Link
                 to={parent.path}
-                className="flex min-h-11 items-center rounded-md text-primary underline-offset-4 hover:underline shell:min-h-0"
+                className="flex min-h-11 items-center rounded-md text-primary underline decoration-transparent underline-offset-4 transition-colors duration-150 hover:decoration-current shell:min-h-0"
               >
                 {parent.title}
               </Link>

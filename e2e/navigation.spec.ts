@@ -25,6 +25,11 @@ for (const width of [375, 768, 1024, 1440]) {
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
+    const brandImage = page.getByRole("link", { name: "StockFlow home" }).locator("img");
+    await expect(brandImage).toHaveJSProperty("naturalWidth", 32);
+    const favicon = await page.locator('link[rel="icon"]').getAttribute("href");
+    expect(favicon).toBeTruthy();
+    expect((await page.request.get(favicon!)).ok()).toBe(true);
     await page.screenshot({ path: testInfo.outputPath(`navigation-${width}.png`), fullPage: true });
     await testInfo.attach(`navigation-${width}`, {
       path: testInfo.outputPath(`navigation-${width}.png`),
