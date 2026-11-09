@@ -45,7 +45,7 @@ export function DateInput({
           id={id}
           type="button"
           variant="outline"
-          className="w-full justify-between text-base font-normal shell:w-52 shell:text-body"
+          className="w-full justify-between font-normal max-shell:text-base shell:w-52"
         >
           {value
             ? formatFullDay(value)
