@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -8,6 +8,7 @@ import {
 } from "@/api/generated/dashboard-and-reports/dashboard-and-reports.msw";
 import type { SalesReportOutputBody } from "@/api/generated/model";
 import { mockApi, orderOf, productOf, serverFailure } from "@/mocks/handlers";
+import { chooseDate } from "@/test/date-picker";
 import { renderApp } from "@/test/render-app";
 import { server } from "@/test/server";
 
@@ -166,9 +167,9 @@ describe("Reports", () => {
     expect(await screen.findByRole("heading", { name: "Reports" })).toBeInTheDocument();
     await screen.findByText("Total sales");
     // Nothing chosen: the fields stay empty and the line says which days are shown.
-    expect(screen.getByLabelText("From")).toHaveValue("");
-    expect(screen.getByLabelText("To")).toHaveValue("");
-    expect(screen.getByText("1 Nov to 7 Nov")).toBeInTheDocument();
+    expect(screen.getByLabelText("From")).toHaveTextContent("Start date");
+    expect(screen.getByLabelText("To")).toHaveTextContent("End date");
+    expect(screen.getByText("Reported range: 1 Nov 2026 to 7 Nov 2026")).toBeInTheDocument();
     expect(sent.map((url) => url.search)).toEqual([""]);
   });
 
@@ -279,8 +280,8 @@ describe("Reports", () => {
     renderApp("/reports?from=2026-10-01&to=2026-10-31");
 
     await screen.findByText("Total sales");
-    expect(screen.getByLabelText("From")).toHaveValue("2026-10-01");
-    expect(screen.getByLabelText("To")).toHaveValue("2026-10-31");
+    expect(screen.getByLabelText("From")).toHaveTextContent("1 Oct 2026");
+    expect(screen.getByLabelText("To")).toHaveTextContent("31 Oct 2026");
     expect(sent.map((url) => url.search)).toEqual(["?from=2026-10-01&to=2026-10-31"]);
   });
 
@@ -290,10 +291,8 @@ describe("Reports", () => {
     const { user, router } = renderApp("/reports");
     await screen.findByText("Total sales");
 
-    await user.clear(screen.getByLabelText("From"));
-    await user.type(screen.getByLabelText("From"), "2026-10-01");
-    await user.clear(screen.getByLabelText("To"));
-    await user.type(screen.getByLabelText("To"), "2026-10-31");
+    await chooseDate(user, "From", "2026-10-01");
+    await chooseDate(user, "To", "2026-10-31");
 
     await vi.waitFor(() => expect(sent.at(-1)?.search).toBe("?from=2026-10-01&to=2026-10-31"));
     expect(router.state.location.search).toEqual({ from: "2026-10-01", to: "2026-10-31" });
@@ -380,7 +379,7 @@ describe("Reports", () => {
     await screen.findByText("Total sales");
 
     await router.navigate({ to: "/reports", search: { to: "2026-10-15" } });
-    await screen.findByText("1 Oct to 15 Oct");
+    await screen.findByText("Reported range: 1 Oct 2026 to 15 Oct 2026");
 
     expect(sent.map((url) => url.search)).toEqual(["?from=2025-11-07", "?to=2026-10-15"]);
   });
@@ -511,6 +510,101 @@ it("pages daily rows without shrinking the chart or total and resets on date cha
   expect(screen.getByText("฿31.00")).toBeInTheDocument();
   expect(screen.getByRole("figure")).toHaveAccessibleName(/31 Oct/);
   expect(sent.every((url) => !url.searchParams.has("page"))).toBe(true);
-  await user.clear(screen.getByLabelText("From"));
+  await chooseDate(user, "From", "2026-10-01");
   expect(router.state.location.search.page).toBeUndefined();
+});
+
+// date-controls R2, R7-R8: effective defaults explain empty controls without selecting them.
+it("explains effective defaults while the report is loading and when it fails", async () => {
+  signedIn("owner");
+  let release = () => {};
+  const pending = new Promise<typeof serverFailure>((resolve) => {
+    release = () => resolve(serverFailure);
+  });
+  server.use(getGetSalesReportMockHandler500(() => pending));
+  const { user, router } = renderApp("/reports?to=2024-02-29&page=2");
+  await screen.findByRole("heading", { name: "Reports" });
+  expect(screen.getByLabelText("From")).toHaveTextContent("Start date");
+  expect(screen.getByLabelText("To")).toHaveTextContent("29 Feb 2024");
+  expect(screen.getByText("Effective range: 1 Feb 2024 to 29 Feb 2024")).toBeInTheDocument();
+  expect(screen.getByText(/An empty To uses today in Bangkok/)).toBeInTheDocument();
+  expect(screen.getByText("Loading report")).toBeVisible();
+  release();
+  await screen.findByRole("button", { name: "Try again" });
+  expect(screen.getByText("Effective range: 1 Feb 2024 to 29 Feb 2024")).toBeInTheDocument();
+  await user.click(screen.getByLabelText("From"));
+  await user.keyboard("{Escape}");
+  expect(router.state.location.search).toEqual({ to: "2024-02-29", page: 2 });
+});
+
+// date-controls R7-R9: every combination keeps defaults out of explicit URL state.
+it.each([
+  ["", "Start date", "End date", "1 Nov 2026 to 7 Nov 2026", {}],
+  [
+    "?from=2026-11-03",
+    "3 Nov 2026",
+    "End date",
+    "3 Nov 2026 to 7 Nov 2026",
+    { from: "2026-11-03" },
+  ],
+  [
+    "?to=2024-02-29",
+    "Start date",
+    "29 Feb 2024",
+    "1 Feb 2024 to 29 Feb 2024",
+    { to: "2024-02-29" },
+  ],
+  [
+    "?from=2025-12-31&to=2026-01-01",
+    "31 Dec 2025",
+    "1 Jan 2026",
+    "31 Dec 2025 to 1 Jan 2026",
+    { from: "2025-12-31", to: "2026-01-01" },
+  ],
+])("shows effective defaults for /reports%s", async (query, from, to, range, explicit) => {
+  signedIn("owner");
+  const sent = requestsTo("/api/reports/sales");
+  const { user, router } = renderApp(`/reports${query}`);
+  await screen.findByText("Total sales");
+  expect(screen.getByLabelText("From")).toHaveTextContent(from);
+  expect(screen.getByLabelText("To")).toHaveTextContent(to);
+  expect(screen.getByText(`Effective range: ${range}`)).toBeInTheDocument();
+  expect(Object.fromEntries(sent.at(-1)!.searchParams)).toEqual(explicit);
+  await user.click(screen.getByLabelText("To"));
+  await user.keyboard("{Escape}");
+  expect(router.state.location.search).toEqual(explicit);
+  expect(screen.getByLabelText("To")).toHaveFocus();
+});
+
+it.each(["From", "To"])("removes only Reports' %s selection and resets paging", async (label) => {
+  signedIn("owner");
+  const sent = requestsTo("/api/reports/sales");
+  const { user, router } = renderApp("/reports?from=2026-11-01&to=2026-11-03&page=2");
+  await screen.findByText("Total sales");
+  await chooseDate(user, label, label === "From" ? "2026-11-01" : "2026-11-03");
+  const remaining = label === "From" ? { to: "2026-11-03" } : { from: "2026-11-01" };
+  await vi.waitFor(() => expect(Object.fromEntries(sent.at(-1)!.searchParams)).toEqual(remaining));
+  expect(router.state.location.search).toEqual(remaining);
+});
+
+it("keeps returned figures paired with their returned range", async () => {
+  signedIn("owner");
+  server.use(getGetSalesReportMockHandler200(response()));
+  renderApp("/reports");
+  await screen.findByText("Total sales");
+  expect(screen.getByText("Effective range: 1 Nov 2026 to 7 Nov 2026")).toBeInTheDocument();
+  expect(screen.getByText("Reported range: 1 Nov 2026 to 3 Nov 2026")).toBeInTheDocument();
+});
+
+// date-controls R7, R9: a tab resumed across Bangkok midnight must explain the new defaults.
+it("refreshes effective default days when the tab resumes after Bangkok New Year", async () => {
+  signedIn("owner");
+  vi.setSystemTime(new Date("2026-12-31T16:59:00Z"));
+  const { router } = renderApp("/reports");
+  await screen.findByText("Total sales");
+  expect(screen.getByText("Effective range: 1 Dec 2026 to 31 Dec 2026")).toBeInTheDocument();
+  vi.setSystemTime(new Date("2026-12-31T17:01:00Z"));
+  fireEvent.focus(window);
+  expect(screen.getByText("Effective range: 1 Jan 2027 to 1 Jan 2027")).toBeInTheDocument();
+  expect(router.state.location.search).toEqual({});
 });

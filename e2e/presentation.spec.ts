@@ -3,6 +3,8 @@ import { expect, test } from "@playwright/test";
 import { presentationInstall } from "./presentation.fixture";
 import { install, logIn } from "./support";
 
+test.use({ timezoneId: "America/Los_Angeles", hasTouch: true });
+
 // #41; navigation-and-lists R3-R7: rendered width, cursor interaction and readable dates.
 for (const width of [375, 768, 1024, 1440]) {
   test(`Long histories, navigation and dates remain usable at ${width}px`, async ({
@@ -28,12 +30,29 @@ for (const width of [375, 768, 1024, 1440]) {
     await expect(page.getByText("Viewing older entries")).toBeVisible();
     await page.reload();
     await expect(page.getByLabel("Kind")).toHaveValue("receive");
-    await page.getByRole("button", { name: "Use today for From" }).focus();
+    const from = page.getByLabel("From", { exact: true });
+    await expect(from).toHaveText("Start date");
+    await from.focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByLabel("From", { exact: true })).toHaveValue("2026-11-10");
+    const day = page.getByRole("button", { name: /Tuesday, November 10th, 2026/ });
+    await expect(day).toBeFocused();
+    await expect(page).toHaveURL(/before=/);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await page.screenshot({ path: info.outputPath(`stock-calendar-open-${width}.png`) });
+    await page.keyboard.press("Enter");
+    await expect(from).toHaveText("10 Nov 2026");
     await expect(page).not.toHaveURL(/before=/);
-    await page.getByRole("button", { name: "Clear From" }).click();
-    await expect(page.getByLabel("From", { exact: true })).toHaveValue("");
+    await page.reload();
+    await expect(from).toHaveText("10 Nov 2026");
+    await from.tap();
+    await expect(day).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText("Select the selected day again to remove it")).toBeVisible();
+    await day.tap();
+    await expect(from).toHaveText("Start date");
+    await expect(page.getByLabel("Kind")).toHaveValue("receive");
+    await expect(from).toBeFocused();
     await page.getByRole("button", { name: "Older entries", exact: true }).scrollIntoViewIfNeeded();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),

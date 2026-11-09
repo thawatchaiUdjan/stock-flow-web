@@ -43,3 +43,15 @@ export function bahtTextToSatang(text: string) {
   const satang = Number(match[1]) * 100 + Number((match[2] ?? "").padEnd(2, "0"));
   return Number.isSafeInteger(satang) ? satang : undefined;
 }
+
+const fullDay = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+// date-controls R3, R9: display the whole Shop date without a device-zone shift.
+export function formatFullDay(date: string) {
+  return fullDay.format(new Date(`${date}T00:00:00Z`));
+}
