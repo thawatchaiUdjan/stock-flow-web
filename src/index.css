@@ -125,3 +125,9 @@
     }
   }
 }
+
+/* The phone layout has no overlay; every edge clears the device's safe area. */
+.app-shell {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}

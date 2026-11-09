@@ -5,13 +5,13 @@ import { errorMessage } from "@/api/errors";
 import { ApiError } from "@/api/fetcher";
 import { useGetSalesReport } from "@/api/generated/dashboard-and-reports/dashboard-and-reports";
 import type { ReportProduct, SalesReportOutputBody } from "@/api/generated/model";
+import { DateInput } from "@/components/date-input";
 import { Figure } from "@/components/figure";
 import { ListPaging } from "@/components/list-paging";
 import { SalesByDay } from "@/components/sales-by-day";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -72,26 +72,28 @@ function ReportsPage() {
       <div className="flex flex-wrap items-end gap-x-4 gap-y-4">
         <Field className="w-auto max-shell:w-full">
           <FieldLabel htmlFor="reports-from">From</FieldLabel>
-          <Input
+          <DateInput
             id="reports-from"
-            type="date"
+            label="From"
+            emptyLabel="Default: start of the To month"
             value={search.from ?? ""}
-            onChange={(event) =>
+            onValueChange={(value) =>
               void navigate({
-                search: { ...search, page: undefined, from: event.target.value || undefined },
+                search: { ...search, page: undefined, from: value || undefined },
               })
             }
           />
         </Field>
         <Field className="w-auto max-shell:w-full">
           <FieldLabel htmlFor="reports-to">To</FieldLabel>
-          <Input
+          <DateInput
             id="reports-to"
-            type="date"
+            label="To"
+            emptyLabel="Default: today in Bangkok"
             value={search.to ?? ""}
-            onChange={(event) =>
+            onValueChange={(value) =>
               void navigate({
-                search: { ...search, page: undefined, to: event.target.value || undefined },
+                search: { ...search, page: undefined, to: value || undefined },
               })
             }
           />
@@ -124,6 +126,14 @@ function ReportsPage() {
         <ReportFigures
           report={report.data}
           page={search.page ?? 1}
+          onPage={(page) => void navigate({ search: { ...search, page } })}
+        />
+      )}
+      {(problem || !report.isSuccess) && (
+        <ListPaging
+          page={search.page ?? 1}
+          size={25}
+          busy={!problem && report.isFetching}
           onPage={(page) => void navigate({ search: { ...search, page } })}
         />
       )}
@@ -167,39 +177,43 @@ function ReportFigures({
         <Figure label="Orders completed" value={String(report.ordersCompleted)} />
         <Figure label="Average sales per order" value={formatBaht(report.averageSales)} />
       </dl>
-      {report.ordersCompleted === 0 ? (
+      {report.ordersCompleted === 0 && (
         <p className="text-muted-foreground">
           No sales from {formatDay(report.from)} to {formatDay(report.to)}. Complete an order, or
           choose another range.
         </p>
-      ) : (
-        <>
-          <section aria-labelledby="by-day-heading" className={surface}>
-            <h2 id="by-day-heading" className="text-body font-semibold">
-              Sales by day
-            </h2>
-            <SalesByDay
-              title="Sales for each day of the range"
-              days={report.salesByDay}
-              tablePage={page}
-              tableOpen
-            />
-            <ListPaging
-              page={page}
-              size={25}
-              total={report.salesByDay.length}
-              busy={false}
-              onPage={onPage}
-            />
-          </section>
-          {/* R8 */}
-          <section aria-labelledby="top-heading" className="flex flex-col gap-3">
-            <h2 id="top-heading" className="text-body font-semibold">
-              Top products
-            </h2>
-            <TopProducts products={report.topProducts} />
-          </section>
-        </>
+      )}
+      <section aria-labelledby="by-day-heading" className={surface}>
+        <h2 id="by-day-heading" className="text-body font-semibold">
+          Sales by day
+        </h2>
+        {report.salesByDay.length === 0 ? (
+          <p className="text-muted-foreground">No daily sales entries in this range.</p>
+        ) : (
+          <SalesByDay
+            title="Sales for each day of the range"
+            days={report.salesByDay}
+            tablePage={page}
+            tableOpen
+            showChart={report.ordersCompleted > 0}
+          />
+        )}
+        <ListPaging
+          page={page}
+          size={25}
+          total={report.salesByDay.length}
+          busy={false}
+          onPage={onPage}
+        />
+      </section>
+      {/* R8 */}
+      {report.ordersCompleted > 0 && (
+        <section aria-labelledby="top-heading" className="flex flex-col gap-3">
+          <h2 id="top-heading" className="text-body font-semibold">
+            Top products
+          </h2>
+          <TopProducts products={report.topProducts} />
+        </section>
       )}
     </>
   );

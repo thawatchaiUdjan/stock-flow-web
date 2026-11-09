@@ -43,10 +43,10 @@ export const Route = createFileRoute("/_app")({
 });
 
 const navLinkClass =
-  "flex min-h-11 min-w-18 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-small font-medium transition-colors hover:bg-muted shell:h-9.5 shell:min-h-0 shell:min-w-0 shell:flex-none shell:flex-row shell:justify-start shell:gap-2 shell:px-3 shell:text-body";
+  "flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-3 text-body font-medium transition-colors hover:bg-muted shell:h-9.5 shell:min-h-0 shell:flex-none";
 const activeNavLink = "bg-accent text-accent-foreground hover:bg-accent";
 
-// One markup for both layouts: on a phone the sidebar dissolves into a top strip and a bottom bar.
+// navigation-and-lists R3: the phone's navigation stays in flow, clear of the work.
 function AppShell() {
   const user = useCurrentUser();
   const pathname = useLocation({ select: (location) => location.pathname });
@@ -56,7 +56,7 @@ function AppShell() {
   const selected = parent ?? current;
 
   return (
-    <div className="flex min-h-dvh flex-col shell:flex-row">
+    <div className="app-shell flex min-h-dvh flex-col shell:flex-row">
       <aside className="contents shell:sticky shell:top-0 shell:flex shell:h-dvh shell:w-54 shell:shrink-0 shell:flex-col shell:gap-6 shell:border-r shell:bg-sidebar shell:p-3">
         {/* navigation-and-lists R1; users-and-access R12 */}
         <Link
@@ -69,7 +69,7 @@ function AppShell() {
         </Link>
         <nav
           aria-label="Main"
-          className="sticky bottom-0 order-last flex overflow-x-auto border-t bg-sidebar p-1 shell:static shell:order-none shell:flex-1 shell:flex-col shell:overflow-visible shell:border-t-0 shell:p-0"
+          className="grid grid-cols-2 gap-2 border-b bg-sidebar p-3 shell:flex shell:flex-1 shell:flex-col shell:border-b-0 shell:p-0"
         >
           {/* users-and-access R11, R22: only the pages of the User's Role. */}
           {pagesOf(user.role).map((page) => (
@@ -79,7 +79,7 @@ function AppShell() {
               className={cn(navLinkClass, page === selected && activeNavLink)}
               aria-current={page === selected ? "page" : undefined}
             >
-              <page.icon aria-hidden size={18} />
+              <page.icon aria-hidden size={18} className="shrink-0" />
               {page.title}
             </Link>
           ))}
