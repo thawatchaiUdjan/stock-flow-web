@@ -272,18 +272,18 @@ describe("the Product List", () => {
       }),
     );
     const sent = recordListRequests();
-    const { user } = renderApp("/products");
+    const { user } = renderApp("/products?size=50");
 
     await screen.findByText("Item 01");
     expect(screen.getByText("Item 50")).toBeInTheDocument();
     expect(screen.queryByText("Item 51")).not.toBeInTheDocument();
-    expect(screen.getByText("1 to 50 of 55")).toBeInTheDocument();
+    expect(screen.getByText("Page 1 of 2 ? 55 matching")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("link", { name: "Next page" }));
+    await user.click(screen.getByRole("button", { name: "Next page" }));
 
     expect(await screen.findByText("Item 51")).toBeInTheDocument();
     expect(screen.queryByText("Item 01")).not.toBeInTheDocument();
-    expect(screen.getByText("51 to 55 of 55")).toBeInTheDocument();
+    expect(screen.getByText("Page 2 of 2 ? 55 matching")).toBeInTheDocument();
     expect(sent.at(-1)?.searchParams.get("offset")).toBe("50");
   });
 
@@ -299,4 +299,43 @@ describe("the Product List", () => {
 
     expect(await screen.findByText("Safety helmet")).toBeInTheDocument();
   });
+});
+
+// navigation-and-lists R4-R5
+it("keeps paging visible on a single page with the default size", async () => {
+  signedIn("owner");
+  mockApi.products = [helmet];
+  const sent = recordListRequests();
+  renderApp("/products");
+  await screen.findByText("Safety helmet");
+  expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+  expect(screen.getByLabelText("Rows per page")).toHaveValue("25");
+  expect(screen.getByText("Page 1 of 1 ? 1 matching")).toBeInTheDocument();
+  expect(sent.at(-1)?.searchParams.get("limit")).toBe("25");
+});
+
+// navigation-and-lists R5
+it("reloads a chosen size and filter, resets size and search to page one, and recovers an absent page", async () => {
+  signedIn("owner");
+  mockApi.products = Array.from({ length: 31 }, (_, i) =>
+    productOf({ id: i + 1, name: `Item ${i + 1}`, sku: `SKU-${i + 1}`, price: 100, unit: "pcs" }),
+  );
+  const sent = recordListRequests();
+  const { user, router } = renderApp("/products?size=10&page=2&search=Item");
+  await screen.findByText("Page 2 of 4 ? 31 matching");
+  expect(sent.at(-1)?.searchParams.get("limit")).toBe("10");
+  expect(sent.at(-1)?.searchParams.get("offset")).toBe("10");
+  expect(sent.at(-1)?.searchParams.get("search")).toBe("Item");
+  await user.selectOptions(screen.getByLabelText("Rows per page"), "25");
+  await screen.findByText("Page 1 of 2 ? 31 matching");
+  expect(router.state.location.search).toMatchObject({ size: 25, search: "Item" });
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  await screen.findByText("Page 2 of 2 ? 31 matching");
+  await user.type(screen.getByLabelText("Search"), " 1");
+  await waitFor(() => expect(sent.at(-1)?.searchParams.get("offset")).toBe("0"));
+  await router.navigate({ to: "/products", search: { page: 999, size: 10, search: "Item" } });
+  await screen.findByText("This page is no longer available.");
+  await user.click(screen.getByRole("button", { name: "First page" }));
+  await screen.findByText("Page 1 of 4 ? 31 matching");
 });

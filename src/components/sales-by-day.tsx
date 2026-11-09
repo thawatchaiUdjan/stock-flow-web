@@ -21,11 +21,13 @@ export function SalesByDay({
   days,
   focus,
   tableOpen,
+  tablePage,
 }: {
   title: string;
   days: SalesDay[];
   focus?: string;
   tableOpen?: boolean;
+  tablePage?: number;
 }) {
   const highest = Math.max(...days.map(({ sales }) => sales), 0);
   const first = days[0];
@@ -93,7 +95,10 @@ export function SalesByDay({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {days.map((one) => (
+              {(tablePage === undefined
+                ? days
+                : days.slice((tablePage - 1) * 25, tablePage * 25)
+              ).map((one) => (
                 <TableRow key={one.date}>
                   <TableCell>{formatDay(one.date)}</TableCell>
                   <TableCell className="text-right">{one.ordersCompleted}</TableCell>

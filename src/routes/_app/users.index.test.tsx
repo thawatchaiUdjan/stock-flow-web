@@ -471,3 +471,39 @@ describe("the actions on the Users list", () => {
     });
   });
 });
+
+// navigation-and-lists R4-R5: whole-list meaning survives a page containing only the Owner.
+it("pages the complete Users response, keeping actions and whole-list empty meaning", async () => {
+  mockApi.session = "live";
+  const others: User[] = Array.from({ length: 25 }, (_, i) => ({
+    id: i + 2,
+    name: `Staff ${i}`,
+    email: `staff${i}@example.com`,
+    role: "staff",
+    status: "active",
+    passwordSet: true,
+  }));
+  server.use(
+    getListUsersMockHandler200({
+      users: [
+        ...others,
+        {
+          id: 1,
+          name: "Owner",
+          email: "owner@example.com",
+          role: "owner",
+          status: "active",
+          passwordSet: true,
+        },
+      ],
+    }),
+  );
+  const { user } = renderApp("/users?size=25&page=2");
+  await screen.findByText("Page 2 of 2 ? 26 matching");
+  expect(screen.queryByText(/No other Users yet/)).not.toBeInTheDocument();
+  expect(screen.queryByText("Staff 0")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+  await user.click(screen.getByRole("button", { name: "First page" }));
+  await screen.findByText("Staff 0");
+  expect(screen.getAllByRole("button", { name: "Reset password" })).toHaveLength(25);
+});

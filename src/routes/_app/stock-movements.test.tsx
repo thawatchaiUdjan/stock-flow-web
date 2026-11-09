@@ -197,13 +197,13 @@ describe("the Stock Movements list", () => {
 
     await screen.findByText("n51");
     expect(screen.queryByText("n1")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("link", { name: "Older entries" }));
+    await user.click(screen.getByRole("button", { name: "Older entries" }));
 
     await screen.findByText("n1");
     expect(screen.queryByText("n51")).not.toBeInTheDocument();
     expect(sent.at(-1)!.url.searchParams.get("before")).toBe("2");
     expect(sent.at(-1)!.url.searchParams.get("kind")).toBe("receive");
-    expect(screen.queryByRole("link", { name: "Older entries" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Older entries" })).toBeDisabled();
   });
 
   it("offers to try again when the list fails", async () => {

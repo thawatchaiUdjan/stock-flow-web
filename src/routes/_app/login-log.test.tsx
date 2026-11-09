@@ -274,18 +274,18 @@ describe("the Login log", () => {
       expect(firstAndLast().count).toBe(50);
       expect(firstAndLast().first).toContain("entry-130@example.com");
       expect(firstAndLast().last).toContain("entry-81@example.com");
-      expect(screen.queryByRole("link", { name: "Newest entries" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Newest entries" })).toBeDisabled();
 
-      await user.click(screen.getByRole("link", { name: "Older entries" }));
+      await user.click(screen.getByRole("button", { name: "Older entries" }));
       await waitFor(() => expect(firstAndLast().first).toContain("entry-80@example.com"));
       expect(firstAndLast().last).toContain("entry-31@example.com");
 
-      await user.click(screen.getByRole("link", { name: "Older entries" }));
+      await user.click(screen.getByRole("button", { name: "Older entries" }));
       await waitFor(() => expect(firstAndLast().first).toContain("entry-30@example.com"));
       expect(firstAndLast().count).toBe(30);
-      expect(screen.queryByRole("link", { name: "Older entries" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Older entries" })).toBeDisabled();
 
-      await user.click(screen.getByRole("link", { name: "Newest entries" }));
+      await user.click(screen.getByRole("button", { name: "Newest entries" }));
       await waitFor(() => expect(firstAndLast().first).toContain("entry-130@example.com"));
     });
 
@@ -297,7 +297,7 @@ describe("the Login log", () => {
       await user.selectOptions(screen.getByLabelText("Result"), "Failed login");
       await waitFor(() => expect(firstAndLast().first).toContain("entry-130@example.com"));
 
-      await user.click(await screen.findByRole("link", { name: "Older entries" }));
+      await user.click(await screen.findByRole("button", { name: "Older entries" }));
 
       await waitFor(() => expect(firstAndLast().first).toContain("entry-30@example.com"));
       expect(firstAndLast().count).toBe(15);

@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
 
 import { errorMessage } from "@/api/errors";
 import type { SetupLink, User } from "@/api/generated/model";
@@ -11,6 +12,7 @@ import {
   useUpdateUser,
 } from "@/api/generated/users/users";
 import { Confirmation } from "@/components/confirmation";
+import { ListPaging } from "@/components/list-paging";
 import { SetupLinkDisplay } from "@/components/setup-link-display";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { pagingSearch } from "@/lib/paging";
 import { roleNames, statusNames } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
@@ -32,10 +35,17 @@ interface IssuedLink {
   setupLink: SetupLink;
 }
 
-export const Route = createFileRoute("/_app/users/")({ component: UsersPage });
+export const Route = createFileRoute("/_app/users/")({
+  validateSearch: z.object(pagingSearch),
+  component: UsersPage,
+});
 
 function UsersPage() {
   const users = useListUsers();
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const page = search.page ?? 1;
+  const size = search.size ?? 25;
   // users-and-access R28: the Setup link of a reset, shown once and gone when the Owner leaves it.
   const [issued, setIssued] = useState<IssuedLink | null>(null);
 
@@ -69,7 +79,23 @@ function UsersPage() {
           </Button>
         </>
       )}
-      {users.isSuccess && <UsersTable users={users.data.users} onSetupLink={setIssued} />}
+      {users.isSuccess && (
+        <UsersTable
+          users={users.data.users.slice((page - 1) * size, page * size)}
+          hasOthers={users.data.users.some(({ role }) => role !== "owner")}
+          onSetupLink={setIssued}
+        />
+      )}
+      <ListPaging
+        page={page}
+        size={size}
+        total={users.data?.users.length}
+        busy={users.isFetching}
+        onPage={(next) =>
+          void navigate({ search: { ...search, page: next === 1 ? undefined : next } })
+        }
+        onSize={(size) => void navigate({ search: { size, page: undefined } })}
+      />
     </div>
   );
 }
@@ -80,12 +106,13 @@ const phoneRow = "max-shell:grid max-shell:grid-cols-[1fr_auto]";
 function UsersTable({
   users,
   onSetupLink,
+  hasOthers,
 }: {
+  hasOthers: boolean;
   users: User[];
   onSetupLink: (issued: IssuedLink) => void;
 }) {
   // users-and-access R9: the Owner is a User, so this is how a new install looks.
-  const hasOthers = users.some(({ role }) => role !== "owner");
 
   return (
     <>

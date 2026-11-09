@@ -6,6 +6,7 @@ import { ApiError } from "@/api/fetcher";
 import { useGetSalesReport } from "@/api/generated/dashboard-and-reports/dashboard-and-reports";
 import type { ReportProduct, SalesReportOutputBody } from "@/api/generated/model";
 import { Figure } from "@/components/figure";
+import { ListPaging } from "@/components/list-paging";
 import { SalesByDay } from "@/components/sales-by-day";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { bangkokDay } from "@/lib/bangkok-day";
 import { formatBaht, formatDay } from "@/lib/format";
+import { pagingSearch } from "@/lib/paging";
 
 // dashboard-and-reports R7: the longest range, both ends included.
 const maxDays = 366;
@@ -29,6 +31,7 @@ const dayLength = 24 * 60 * 60 * 1000;
 // ADR 0008: the range lives in the address, so a reload or a shared link keeps it. A value the API
 // wouldn't accept is dropped rather than sent.
 const searchSchema = z.object({
+  page: pagingSearch.page,
   from: z.iso.date().optional().catch(undefined),
   to: z.iso.date().optional().catch(undefined),
 });
@@ -57,7 +60,10 @@ function ReportsPage() {
   const navigate = Route.useNavigate();
   const problem = rangeProblem(search);
   // dashboard-and-reports R9: dropped when the page closes, so it never opens on the last figures.
-  const report = useGetSalesReport(search, { query: { enabled: !problem, gcTime: 0 } });
+  const report = useGetSalesReport(
+    { from: search.from, to: search.to },
+    { query: { enabled: !problem, gcTime: 0 } },
+  );
   const chosen = search.from !== undefined || search.to !== undefined;
 
   return (
@@ -71,7 +77,9 @@ function ReportsPage() {
             type="date"
             value={search.from ?? ""}
             onChange={(event) =>
-              void navigate({ search: { ...search, from: event.target.value || undefined } })
+              void navigate({
+                search: { ...search, page: undefined, from: event.target.value || undefined },
+              })
             }
           />
         </Field>
@@ -82,7 +90,9 @@ function ReportsPage() {
             type="date"
             value={search.to ?? ""}
             onChange={(event) =>
-              void navigate({ search: { ...search, to: event.target.value || undefined } })
+              void navigate({
+                search: { ...search, page: undefined, to: event.target.value || undefined },
+              })
             }
           />
         </Field>
@@ -110,7 +120,13 @@ function ReportsPage() {
           </Button>
         </>
       )}
-      {!problem && report.isSuccess && <ReportFigures report={report.data} />}
+      {!problem && report.isSuccess && (
+        <ReportFigures
+          report={report.data}
+          page={search.page ?? 1}
+          onPage={(page) => void navigate({ search: { ...search, page } })}
+        />
+      )}
     </div>
   );
 }
@@ -126,7 +142,15 @@ function reportError(error: unknown) {
 
 const surface = "flex min-w-0 flex-col gap-3 rounded-lg border bg-card p-4";
 
-function ReportFigures({ report }: { report: SalesReportOutputBody }) {
+function ReportFigures({
+  report,
+  page,
+  onPage,
+}: {
+  report: SalesReportOutputBody;
+  page: number;
+  onPage: (page: number) => void;
+}) {
   return (
     <>
       <p className="text-muted-foreground">
@@ -156,7 +180,15 @@ function ReportFigures({ report }: { report: SalesReportOutputBody }) {
             <SalesByDay
               title="Sales for each day of the range"
               days={report.salesByDay}
+              tablePage={page}
               tableOpen
+            />
+            <ListPaging
+              page={page}
+              size={25}
+              total={report.salesByDay.length}
+              busy={false}
+              onPage={onPage}
             />
           </section>
           {/* R8 */}

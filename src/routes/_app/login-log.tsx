@@ -6,6 +6,7 @@ import { useListLoginLog } from "@/api/generated/login-log/login-log";
 import { LoginLogEntryBodyResult } from "@/api/generated/model";
 import type { LoginLogEntryBody, LoginLogUser } from "@/api/generated/model";
 import { useListUsers } from "@/api/generated/users/users";
+import { CursorPaging } from "@/components/list-paging";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -80,9 +81,11 @@ function LoginLogPage() {
       {log.isSuccess && log.data.entries.length === 0 && (
         <div className="flex flex-col items-start gap-3">
           <p className="text-muted-foreground">
-            {filtered
-              ? "No entries match these filters."
-              : "No logins yet. Entries appear here when someone logs in, fails to log in or logs out."}
+            {search.before !== undefined
+              ? "No older entries on this page. Return to newest entries."
+              : filtered
+                ? "No entries match these filters."
+                : "No logins yet. Entries appear here when someone logs in, fails to log in or logs out."}
           </p>
           {filtered && (
             <Button variant="outline" asChild>
@@ -94,13 +97,18 @@ function LoginLogPage() {
       {log.isSuccess && log.data.entries.length > 0 && (
         <>
           <EntriesTable entries={log.data.entries} />
-          <Paging
-            search={search}
-            newest={search.before === undefined}
-            nextBefore={log.data.nextBefore}
-          />
         </>
       )}
+      <CursorPaging
+        older={search.before !== undefined}
+        busy={log.isFetching}
+        canOlder={log.isSuccess && log.data.nextBefore !== null}
+        onNewest={() => void navigate({ search: { ...search, before: undefined } })}
+        onOlder={() => {
+          if (log.data?.nextBefore != null)
+            void navigate({ search: { ...search, before: log.data.nextBefore } });
+        }}
+      />
     </div>
   );
 }
@@ -221,38 +229,5 @@ function EntriesTable({ entries }: { entries: LoginLogEntryBody[] }) {
         </TableBody>
       </Table>
     </div>
-  );
-}
-
-// The API pages by cursor: it knows where the next page starts, not the previous one.
-// The filters ride along in the address, so they survive the move (users-and-access R38).
-function Paging({
-  search,
-  newest,
-  nextBefore,
-}: {
-  search: z.infer<typeof searchSchema>;
-  newest: boolean;
-  nextBefore: number | null;
-}) {
-  if (newest && nextBefore === null) return null;
-
-  return (
-    <nav aria-label="Pages" className="flex gap-2">
-      {!newest && (
-        <Button variant="outline" asChild>
-          <Link to="/login-log" search={{ ...search, before: undefined }}>
-            Newest entries
-          </Link>
-        </Button>
-      )}
-      {nextBefore !== null && (
-        <Button variant="outline" asChild>
-          <Link to="/login-log" search={{ ...search, before: nextBefore }}>
-            Older entries
-          </Link>
-        </Button>
-      )}
-    </nav>
   );
 }
