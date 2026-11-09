@@ -1,4 +1,3 @@
-import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
@@ -7,6 +6,7 @@ import { errorMessage } from "@/api/errors";
 import { ListProductsStockItem } from "@/api/generated/model";
 import type { Product } from "@/api/generated/model";
 import { useListProducts } from "@/api/generated/products/products";
+import { ListPaging } from "@/components/list-paging";
 import { StockLevelBar, StockStateBadge, stockStateNames } from "@/components/stock-level";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { useCurrentUser } from "@/lib/current-user";
 import { formatBaht } from "@/lib/format";
+import { pagingSearch } from "@/lib/paging";
 import { cn } from "@/lib/utils";
 
 // ADR 0008: the filters and the page live in the address, so a reload or a shared link keeps them
@@ -30,7 +31,7 @@ const searchSchema = z.object({
   search: z.coerce.string().optional().catch(undefined),
   stock: z.array(z.enum(ListProductsStockItem)).optional().catch(undefined),
   status: z.literal("archived").optional().catch(undefined),
-  page: z.number().int().min(2).optional().catch(undefined),
+  ...pagingSearch,
 });
 type ProductsSearch = z.infer<typeof searchSchema>;
 
@@ -39,7 +40,6 @@ export const Route = createFileRoute("/_app/products/")({
   component: ProductListPage,
 });
 
-const pageSize = 50;
 const stockStates = Object.values(ListProductsStockItem);
 
 function ProductListPage() {
@@ -47,18 +47,16 @@ function ProductListPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const page = search.page ?? 1;
+  const pageSize = search.size ?? 25;
   // The box keeps its own text, so a slow address update never eats a keystroke.
   const [text, setText] = useState(search.search ?? "");
-  const products = useListProducts(
-    {
-      ...(search.search?.trim() && { search: search.search.trim() }),
-      ...(search.stock?.length && { stock: search.stock }),
-      status: search.status ?? "active",
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-    },
-    { query: { placeholderData: keepPreviousData } },
-  );
+  const products = useListProducts({
+    ...(search.search?.trim() && { search: search.search.trim() }),
+    ...(search.stock?.length && { stock: search.stock }),
+    status: search.status ?? "active",
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+  });
   // products R10: only the Owner and Admins change Products.
   const canChange = role !== "staff";
   const isEmpty = products.isSuccess && products.data.products.length === 0;
@@ -112,14 +110,18 @@ function ProductListPage() {
       {products.isSuccess && products.data.products.length > 0 && (
         <>
           <ProductsTable products={products.data.products} canChange={canChange} />
-          <Paging
-            search={search}
-            page={page}
-            shown={products.data.products.length}
-            total={products.data.total}
-          />
         </>
       )}
+      <ListPaging
+        page={page}
+        size={pageSize}
+        total={products.data?.total}
+        busy={products.isFetching}
+        onPage={(next) =>
+          void navigate({ search: { ...search, page: next === 1 ? undefined : next } })
+        }
+        onSize={(size) => void navigate({ search: { ...search, size, page: undefined } })}
+      />
     </div>
   );
 }
@@ -317,44 +319,5 @@ function StockFigure({ product }: { product: Product }) {
         state={product.stockState}
       />
     </div>
-  );
-}
-
-// The API pages by offset and says how many match.
-function Paging({
-  search,
-  page,
-  shown,
-  total,
-}: {
-  search: ProductsSearch;
-  page: number;
-  shown: number;
-  total: number;
-}) {
-  if (total <= pageSize) return null;
-  const first = (page - 1) * pageSize + 1;
-  const last = first + shown - 1;
-
-  return (
-    <nav aria-label="Pages" className="flex flex-wrap items-center gap-3">
-      <p className="text-muted-foreground">
-        {first} to {last} of {total}
-      </p>
-      {page > 1 && (
-        <Button variant="outline" asChild>
-          <Link to="/products" search={{ ...search, page: page > 2 ? page - 1 : undefined }}>
-            Previous page
-          </Link>
-        </Button>
-      )}
-      {last < total && (
-        <Button variant="outline" asChild>
-          <Link to="/products" search={{ ...search, page: page + 1 }}>
-            Next page
-          </Link>
-        </Button>
-      )}
-    </nav>
   );
 }

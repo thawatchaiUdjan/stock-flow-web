@@ -17,6 +17,7 @@ import {
   useListStockMovements,
   useReceiveStock,
 } from "@/api/generated/stock-movements/stock-movements";
+import { CursorPaging } from "@/components/list-paging";
 import { ProductSelect, useActiveProducts } from "@/components/product-select";
 import { StockChangeForm } from "@/components/stock-change-form";
 import type { StockChangeMode } from "@/components/stock-change-form";
@@ -147,9 +148,11 @@ function StockMovementsPage() {
       {movements.isSuccess && movements.data.movements.length === 0 && (
         <div className="flex flex-col items-start gap-3">
           <p className="text-muted-foreground">
-            {filtered
-              ? "No stock movements match these filters."
-              : "No stock movements yet. Receive stock to start the history of every change."}
+            {search.before !== undefined
+              ? "No older entries on this page. Return to newest entries."
+              : filtered
+                ? "No stock movements match these filters."
+                : "No stock movements yet. Receive stock to start the history of every change."}
           </p>
           {filtered && (
             <Button variant="outline" asChild>
@@ -161,13 +164,18 @@ function StockMovementsPage() {
       {movements.isSuccess && movements.data.movements.length > 0 && (
         <>
           <MovementsTable movements={movements.data.movements} />
-          <Paging
-            search={search}
-            newest={search.before === undefined}
-            nextBefore={movements.data.nextBefore}
-          />
         </>
       )}
+      <CursorPaging
+        older={search.before !== undefined}
+        busy={movements.isFetching}
+        canOlder={movements.isSuccess && movements.data.nextBefore !== null}
+        onNewest={() => void navigate({ search: { ...search, before: undefined } })}
+        onOlder={() => {
+          if (movements.data?.nextBefore != null)
+            void navigate({ search: { ...search, before: movements.data.nextBefore } });
+        }}
+      />
     </div>
   );
 }
@@ -379,38 +387,5 @@ function MovementsTable({ movements }: { movements: StockMovement[] }) {
         </TableBody>
       </Table>
     </div>
-  );
-}
-
-// The API pages by cursor: it knows where the next page starts, not the previous one.
-// The filters ride along in the address, so they survive the move.
-function Paging({
-  search,
-  newest,
-  nextBefore,
-}: {
-  search: MovementsSearch;
-  newest: boolean;
-  nextBefore: number | null;
-}) {
-  if (newest && nextBefore === null) return null;
-
-  return (
-    <nav aria-label="Pages" className="flex gap-2">
-      {!newest && (
-        <Button variant="outline" asChild>
-          <Link to="/stock-movements" search={{ ...search, before: undefined }}>
-            Newest entries
-          </Link>
-        </Button>
-      )}
-      {nextBefore !== null && (
-        <Button variant="outline" asChild>
-          <Link to="/stock-movements" search={{ ...search, before: nextBefore }}>
-            Older entries
-          </Link>
-        </Button>
-      )}
-    </nav>
   );
 }

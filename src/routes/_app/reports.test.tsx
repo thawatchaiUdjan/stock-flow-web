@@ -419,3 +419,36 @@ describe("Reports", () => {
     expect(within(figure("Total sales")).getByText("฿300.00")).toBeInTheDocument();
   });
 });
+
+// navigation-and-lists R7: table paging must not change full-range aggregates or chart.
+it("pages daily rows without shrinking the chart or total and resets on date changes", async () => {
+  signedIn("owner");
+  const days = Array.from({ length: 31 }, (_, i) => ({
+    date: `2026-10-${String(i + 1).padStart(2, "0")}`,
+    sales: 100,
+    ordersCompleted: 1,
+  }));
+  server.use(
+    getGetSalesReportMockHandler200({
+      from: "2026-10-01",
+      to: "2026-10-31",
+      sales: 3100,
+      ordersCompleted: 31,
+      averageSales: 100,
+      salesByDay: days,
+      topProducts: [],
+    }),
+  );
+  const sent = requestsTo("/api/reports/sales");
+  const { user, router } = renderApp("/reports?from=2026-10-01&to=2026-10-31");
+  const table = await screen.findByRole("table", { name: "Sales for each day of the range" });
+  expect(within(table).getAllByRole("row")).toHaveLength(26);
+  expect(screen.getByText("฿31.00")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Next page" }));
+  expect(within(table).getAllByRole("row")).toHaveLength(7);
+  expect(screen.getByText("฿31.00")).toBeInTheDocument();
+  expect(screen.getByRole("figure")).toHaveAccessibleName(/31 Oct/);
+  expect(sent.every((url) => !url.searchParams.has("page"))).toBe(true);
+  await user.clear(screen.getByLabelText("From"));
+  expect(router.state.location.search.page).toBeUndefined();
+});

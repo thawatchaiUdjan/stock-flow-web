@@ -133,3 +133,11 @@ One row per frame in `design/frames/`. A ticket's `Design:` line names rows here
 
 | Screen | Image | Figma frame | Exported |
 | --- | --- | --- | --- |
+
+## List paging
+
+Navigation & lists R4-R7: place paging directly below the list, including short or empty lists. Use the existing outline buttons, muted position text and native select. Wrap controls with 12 px gaps on narrow screens; retain the 44 px phone targets and visible keyboard focus.
+
+Products, Orders and Users show "Page n of m" and the matching count, with First page, Previous page, Next page and Last page always visible. Unavailable directions are disabled. Rows per page offers 10, 25 (default), and 50. URL state retains filters and size; changing either resets the page. Out-of-range pages explain the missing page and offer First page without discarding filters. Loading and error states keep controls visible; First page remains available for recovery.
+
+Histories show Viewing newest entries or Viewing older entries with Newest entries and Older entries, never totals or numbered pages. An empty older page offers return to newest. Reports uses the same numbered controls at 25 daily rows; the chart and totals describe the full range. Dashboard and Top products stay bounded as before.

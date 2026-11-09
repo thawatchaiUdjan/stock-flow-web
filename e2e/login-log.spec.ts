@@ -134,25 +134,25 @@ test("the Owner opens the Login log, filters it by User and by result, and pages
   await expect(page).toHaveURL("/login-log");
 
   // Page through all of it: 120 entries are three pages, and the oldest page is the short one.
-  await page.getByRole("link", { name: "Older entries" }).click();
+  await page.getByRole("button", { name: "Older entries" }).click();
   await expect(page).toHaveURL(`/login-log?before=${total - pageSize + 1}`);
   await expect(rows).toHaveCount(pageSize);
   await expect(rows.first()).toContainText(time(total - pageSize));
   await expect(rows.last()).toContainText(time(total - 2 * pageSize + 1));
   expect(requests.at(-1)!.searchParams.get("before")).toBe(String(total - pageSize + 1));
-  await page.getByRole("link", { name: "Older entries" }).click();
+  await page.getByRole("button", { name: "Older entries" }).click();
   await expect(rows).toHaveCount(total - 2 * pageSize);
   await expect(rows.last()).toContainText(time(1));
-  await expect(page.getByRole("link", { name: "Older entries" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Older entries" })).toBeDisabled();
 
-  await page.getByRole("link", { name: "Newest entries" }).click();
+  await page.getByRole("button", { name: "Newest entries" }).click();
   await expect(page).toHaveURL("/login-log");
   await expect(rows.first()).toContainText(time(total));
 
   // The filters ride along while paging, and are kept in the address: a reload shows the same.
   await page.getByLabel("User").selectOption({ label: `${mali.name} (${mali.email})` });
   await expect(page).toHaveURL(`/login-log?userId=${mali.id}`);
-  await page.getByRole("link", { name: "Older entries" }).click();
+  await page.getByRole("button", { name: "Older entries" }).click();
   await expect(page).toHaveURL(new RegExp(String.raw`/login-log\?userId=${mali.id}&before=\d+$`));
   const older = requests.at(-1)!.searchParams;
   expect([older.get("userId"), older.has("before")]).toEqual([String(mali.id), true]);
@@ -170,7 +170,7 @@ test("the Owner opens the Login log, filters it by User and by result, and pages
   await page.getByLabel("Result").selectOption({ label: "Logout" });
   await expect(page).toHaveURL(`/login-log?userId=${mali.id}&result=logout`);
   await expect(rows.filter({ hasNotText: "Logout" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Newest entries" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Newest entries" })).toBeDisabled();
 });
 
 for (const role of ["admin", "staff"] as const) {
@@ -231,7 +231,7 @@ for (const { width, phone } of [
       expect((await select.boundingBox())!.height).toBe(phone ? 44 : 38);
       await expect(select).toHaveCSS("font-size", phone ? "16px" : "15px");
     }
-    const paging = page.getByRole("link", { name: "Older entries" });
+    const paging = page.getByRole("button", { name: "Older entries" });
     expect((await paging.boundingBox())!.height).toBe(phone ? 44 : 38);
 
     // The sidebar is a bottom bar on a phone, still with words.

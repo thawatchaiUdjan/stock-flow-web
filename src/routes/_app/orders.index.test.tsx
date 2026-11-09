@@ -293,35 +293,56 @@ describe("the Orders List", () => {
       signedIn("owner");
       mockApi.orders = manyOrders(60);
       const sent = requestsTo("/api/orders");
-      const { user, router } = renderApp("/orders");
+      const { user, router } = renderApp("/orders?size=50");
 
-      expect(await screen.findByText("1 to 50 of 60")).toBeInTheDocument();
+      expect(await screen.findByText("Page 1 of 2 \u00b7 60 matching")).toBeInTheDocument();
       expect(screen.getAllByRole("link", { name: /^#/ })).toHaveLength(50);
       expect(screen.getByRole("link", { name: "#60" })).toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Previous page" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Previous page" })).toBeDisabled();
 
-      await user.click(screen.getByRole("link", { name: "Next page" }));
+      await user.click(screen.getByRole("button", { name: "Next page" }));
 
-      expect(await screen.findByText("51 to 60 of 60")).toBeInTheDocument();
+      expect(await screen.findByText("Page 2 of 2 \u00b7 60 matching")).toBeInTheDocument();
       expect(screen.getAllByRole("link", { name: /^#/ }).map((one) => one.textContent)).toEqual(
         Array.from({ length: 10 }, (_, i) => `#${10 - i}`),
       );
-      expect(router.state.location.search).toEqual({ page: 2 });
+      expect(router.state.location.search).toEqual({ page: 2, size: 50 });
       expect(sent.at(-1)?.searchParams.get("offset")).toBe("50");
-      expect(screen.queryByRole("link", { name: "Next page" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
 
-      await user.click(screen.getByRole("link", { name: "Previous page" }));
+      await user.click(screen.getByRole("button", { name: "Previous page" }));
 
-      expect(await screen.findByText("1 to 50 of 60")).toBeInTheDocument();
+      expect(await screen.findByText("Page 1 of 2 \u00b7 60 matching")).toBeInTheDocument();
     });
 
-    it("shows no paging when one page holds every Order", async () => {
+    it("keeps disabled paging when one page holds every Order", async () => {
       signedIn("owner");
       mockApi.orders = manyOrders(3);
       renderApp("/orders");
 
       await screen.findByRole("link", { name: "#3" });
-      expect(screen.queryByRole("navigation", { name: "Pages" })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
     });
   });
+});
+
+// navigation-and-lists R5: restored filters accompany the chosen server page.
+it("restores filters and size, and resets page on status and size changes", async () => {
+  signedIn("owner");
+  mockApi.orders = Array.from({ length: 31 }, (_, i) => order(i + 1));
+  const sent = requestsTo("/api/orders");
+  const { user } = renderApp("/orders?size=10&page=2&status=pending");
+  await screen.findByText("Page 2 of 4 \u00b7 31 matching");
+  expect(sent.at(-1)?.searchParams.get("limit")).toBe("10");
+  expect(sent.at(-1)?.searchParams.get("offset")).toBe("10");
+  expect(sent.at(-1)?.searchParams.get("status")).toBe("pending");
+  await user.selectOptions(screen.getByLabelText("Rows per page"), "50");
+  await screen.findByText("Page 1 of 1 \u00b7 31 matching");
+  expect(sent.at(-1)?.searchParams.get("limit")).toBe("50");
+  expect(sent.at(-1)?.searchParams.get("offset")).toBe("0");
+  await user.selectOptions(screen.getByLabelText("Status"), "completed");
+  await screen.findByText("No orders match these filters.");
+  expect(sent.at(-1)?.searchParams.get("status")).toBe("completed");
+  expect(sent.at(-1)?.searchParams.get("offset")).toBe("0");
+  expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
 });

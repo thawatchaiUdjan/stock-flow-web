@@ -1,4 +1,3 @@
-import { keepPreviousData } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
@@ -7,6 +6,7 @@ import { errorMessage } from "@/api/errors";
 import { ListOrdersStatus } from "@/api/generated/model";
 import type { OrderSummary } from "@/api/generated/model";
 import { useListOrders } from "@/api/generated/orders/orders";
+import { ListPaging } from "@/components/list-paging";
 import { orderStatusNames } from "@/components/order-status";
 import { OrdersTable } from "@/components/orders-table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -14,13 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { pagingSearch } from "@/lib/paging";
 
 // ADR 0008: the search, the status and the page live in the address, so a reload or a shared link
 // keeps them. A value the API wouldn't accept is dropped rather than sent.
 const searchSchema = z.object({
   search: z.coerce.string().optional().catch(undefined),
   status: z.enum(ListOrdersStatus).optional().catch(undefined),
-  page: z.number().int().min(2).optional().catch(undefined),
+  ...pagingSearch,
 });
 type OrdersSearch = z.infer<typeof searchSchema>;
 
@@ -29,23 +30,19 @@ export const Route = createFileRoute("/_app/orders/")({
   component: OrdersListPage,
 });
 
-const pageSize = 50;
-
 function OrdersListPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const page = search.page ?? 1;
+  const pageSize = search.size ?? 25;
   // The box keeps its own text, so a slow address update never eats a keystroke.
   const [text, setText] = useState(search.search ?? "");
-  const orders = useListOrders(
-    {
-      ...(search.search?.trim() && { search: search.search.trim() }),
-      ...(search.status && { status: search.status }),
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-    },
-    { query: { placeholderData: keepPreviousData } },
-  );
+  const orders = useListOrders({
+    ...(search.search?.trim() && { search: search.search.trim() }),
+    ...(search.status && { status: search.status }),
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+  });
   const isEmpty = orders.isSuccess && orders.data.orders.length === 0;
   const filtered = Boolean(search.search?.trim()) || search.status !== undefined || page > 1;
 
@@ -99,14 +96,18 @@ function OrdersListPage() {
       {orders.isSuccess && orders.data.orders.length > 0 && (
         <>
           <OrdersTable orders={orders.data.orders} />
-          <Paging
-            search={search}
-            page={page}
-            shown={orders.data.orders.length}
-            total={orders.data.total}
-          />
         </>
       )}
+      <ListPaging
+        page={page}
+        size={pageSize}
+        total={orders.data?.total}
+        busy={orders.isFetching}
+        onPage={(next) =>
+          void navigate({ search: { ...search, page: next === 1 ? undefined : next } })
+        }
+        onSize={(size) => void navigate({ search: { ...search, size, page: undefined } })}
+      />
     </div>
   );
 }
@@ -161,44 +162,5 @@ function Filters({
         </NativeSelect>
       </Field>
     </div>
-  );
-}
-
-// The API pages by offset and says how many match.
-function Paging({
-  search,
-  page,
-  shown,
-  total,
-}: {
-  search: OrdersSearch;
-  page: number;
-  shown: number;
-  total: number;
-}) {
-  if (total <= pageSize) return null;
-  const first = (page - 1) * pageSize + 1;
-  const last = first + shown - 1;
-
-  return (
-    <nav aria-label="Pages" className="flex flex-wrap items-center gap-3">
-      <p className="text-muted-foreground">
-        {first} to {last} of {total}
-      </p>
-      {page > 1 && (
-        <Button variant="outline" asChild>
-          <Link to="/orders" search={{ ...search, page: page > 2 ? page - 1 : undefined }}>
-            Previous page
-          </Link>
-        </Button>
-      )}
-      {last < total && (
-        <Button variant="outline" asChild>
-          <Link to="/orders" search={{ ...search, page: page + 1 }}>
-            Next page
-          </Link>
-        </Button>
-      )}
-    </nav>
   );
 }
