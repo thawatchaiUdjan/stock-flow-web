@@ -325,3 +325,24 @@ describe("the Orders List", () => {
     });
   });
 });
+
+// navigation-and-lists R5: restored filters accompany the chosen server page.
+it("restores filters and size, and resets page on status and size changes", async () => {
+  signedIn("owner");
+  mockApi.orders = Array.from({ length: 31 }, (_, i) => order(i + 1));
+  const sent = requestsTo("/api/orders");
+  const { user } = renderApp("/orders?size=10&page=2&status=pending");
+  await screen.findByText("Page 2 of 4 \u00b7 31 matching");
+  expect(sent.at(-1)?.searchParams.get("limit")).toBe("10");
+  expect(sent.at(-1)?.searchParams.get("offset")).toBe("10");
+  expect(sent.at(-1)?.searchParams.get("status")).toBe("pending");
+  await user.selectOptions(screen.getByLabelText("Rows per page"), "50");
+  await screen.findByText("Page 1 of 1 \u00b7 31 matching");
+  expect(sent.at(-1)?.searchParams.get("limit")).toBe("50");
+  expect(sent.at(-1)?.searchParams.get("offset")).toBe("0");
+  await user.selectOptions(screen.getByLabelText("Status"), "completed");
+  await screen.findByText("No orders match these filters.");
+  expect(sent.at(-1)?.searchParams.get("status")).toBe("completed");
+  expect(sent.at(-1)?.searchParams.get("offset")).toBe("0");
+  expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+});
