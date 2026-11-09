@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test";
 
 import { install, logIn } from "./support";
 
+test.use({ timezoneId: "America/Los_Angeles", hasTouch: true });
+
 // The people of src/mocks.
 const people = { owner: "nok@example.com" };
 
@@ -43,6 +45,21 @@ for (const width of [375, 768, 1024, 1440]) {
     await expect(
       page.getByRole("table", { name: "Sales for each day of the range" }),
     ).toBeVisible();
+
+    const to = page.getByLabel("To", { exact: true });
+    await expect(to).toHaveText("7 Nov 2026");
+    await to.click();
+    const selected = page.getByRole("button", { name: /Saturday, November 7th, 2026/ });
+    await expect(selected).toBeFocused();
+    await expect(selected).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText("Select the selected day again to remove it")).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await page.screenshot({ path: info.outputPath(`reports-calendar-open-${width}.png`) });
+    await page.keyboard.press("Escape");
+    await expect(to).toBeFocused();
+    await expect(page).toHaveURL(/to=2026-11-07/);
 
     const sideways = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

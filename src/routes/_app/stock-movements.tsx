@@ -318,6 +318,7 @@ function Filters({
           onValueChange={(value) => onChange({ to: value || undefined })}
         />
       </Field>
+      <p className="w-full text-small text-muted-foreground">Leave dates empty for all history</p>
     </div>
   );
 }

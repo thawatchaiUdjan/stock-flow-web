@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { StockMovement } from "@/api/generated/model";
 import { getListStockMovementsMockHandler500 } from "@/api/generated/stock-movements/stock-movements.msw";
 import { mockApi, productOf, serverFailure } from "@/mocks/handlers";
+import { chooseDate } from "@/test/date-picker";
 import { renderApp } from "@/test/render-app";
 import { server } from "@/test/server";
 
@@ -251,8 +252,8 @@ describe("the Stock Movements filters", () => {
     await waitFor(() => expect(product).toBeEnabled());
     await user.selectOptions(product, "2");
     await user.selectOptions(screen.getByLabelText("Kind"), "adjustment");
-    await user.type(screen.getByLabelText("From"), "2026-11-01");
-    await user.type(screen.getByLabelText("To"), "2026-11-07");
+    await chooseDate(user, "From", "2026-11-01");
+    await chooseDate(user, "To", "2026-11-07");
 
     await waitFor(() =>
       expect(router.state.location.search).toMatchObject({
@@ -578,23 +579,130 @@ describe("Adjust stock", () => {
     expect(screen.queryByText("Only 18 in stock.")).not.toBeInTheDocument();
   });
 });
-// dashboard-and-reports R1; history dates remain optional and unbounded.
-it("uses the Bangkok day near midnight and clears it without keeping a cursor", async () => {
+// date-controls R2-R6, R8-R9: calendar choices preserve Shop dates and independent filters.
+it("selects and removes the Bangkok day without keeping a cursor", async () => {
   signedIn("owner");
   const sent = requestsTo("/api/stock-movements");
-  const { user, router } = renderApp("/stock-movements?before=99");
+  const { user, router } = renderApp("/stock-movements?kind=receive&before=99");
   await screen.findByRole("heading", { name: "Stock movements" });
   const now = vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-11-09T18:30:00Z"));
   try {
-    await user.click(screen.getByRole("button", { name: "Use today for From" }));
-    expect(screen.getByLabelText("From")).toHaveValue("2026-11-10");
-    expect(screen.getByLabelText("From")).toHaveAccessibleDescription("10 Nov 2026");
+    const from = screen.getByLabelText("From", { exact: true });
+    expect(from).toHaveTextContent("Start date");
+    expect(screen.getByLabelText("To", { exact: true })).toHaveTextContent("End date");
+    expect(screen.getByText("Leave dates empty for all history")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Use today|Clear From|Clear To/ }),
+    ).not.toBeInTheDocument();
+    await user.click(from);
+    const day = screen.getByRole("button", { name: /Tuesday, November 10th, 2026/ });
+    await waitFor(() => expect(day).toHaveFocus());
+    expect(router.state.location.search).toEqual({ kind: "receive", before: 99 });
+    await user.keyboard("{Enter}");
+    expect(from).toHaveTextContent("10 Nov 2026");
+    expect(screen.getAllByText("10 Nov 2026")).toHaveLength(1);
     await waitFor(() => expect(sent.at(-1)?.url.searchParams.get("from")).toBe("2026-11-10"));
-    expect(router.state.location.search.before).toBeUndefined();
-    await user.click(screen.getByRole("button", { name: "Clear From" }));
+    expect(router.state.location.search).toEqual({ kind: "receive", from: "2026-11-10" });
+    await waitFor(() => expect(from).toHaveFocus());
+    await user.click(from);
+    expect(screen.getByText("Select the selected day again to remove it")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Tuesday, November 10th, 2026/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await user.keyboard("{Enter}");
     await waitFor(() => expect(sent.at(-1)?.url.searchParams.has("from")).toBe(false));
-    expect(screen.getByLabelText("From")).toHaveAccessibleDescription("Any date");
+    expect(from).toHaveTextContent("Start date");
+    expect(router.state.location.search).toEqual({ kind: "receive" });
   } finally {
     now.mockRestore();
+  }
+});
+
+it.each(["From", "To"])(
+  "removes only the %s history bound and preserves Product and kind",
+  async (label) => {
+    signedIn("owner");
+    mockApi.products = [helmet];
+    const sent = requestsTo("/api/stock-movements");
+    const { user, router } = renderApp(
+      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&before=99",
+    );
+    await screen.findByRole("heading", { name: "Stock movements" });
+    await chooseDate(user, label, label === "From" ? "2026-11-01" : "2026-11-07");
+    const remaining = label === "From" ? { to: "2026-11-07" } : { from: "2026-11-01" };
+    expect(router.state.location.search).toEqual({ productId: 1, kind: "receive", ...remaining });
+    await waitFor(() =>
+      expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toEqual({
+        productId: "1",
+        kind: "receive",
+        ...remaining,
+      }),
+    );
+  },
+);
+
+// date-controls R5, R9: navigating across a leap year changes no filter until selection.
+it("navigates month and year boundaries, selects leap day and dismisses without changing it", async () => {
+  signedIn("owner");
+  const { user, router } = renderApp("/stock-movements?from=2025-01-01");
+  await screen.findByRole("heading", { name: "Stock movements" });
+  const from = screen.getByLabelText("From", { exact: true });
+  await user.click(from);
+  await user.click(screen.getByRole("button", { name: "Previous year" }));
+  await user.click(screen.getByRole("button", { name: /previous month/i }));
+  expect(screen.getByRole("grid", { name: "December 2023" })).toBeInTheDocument();
+  expect(router.state.location.search).toEqual({ from: "2025-01-01" });
+  await user.keyboard("{Escape}");
+  await waitFor(() => expect(from).toHaveFocus());
+  await chooseDate(user, "From", "2024-02-29");
+  expect(from).toHaveTextContent("29 Feb 2024");
+  expect(router.state.location.search).toEqual({ from: "2024-02-29" });
+  await user.click(from);
+  const day = screen.getByRole("button", { name: /Thursday, February 29th, 2024/ });
+  await waitFor(() => expect(day).toHaveFocus());
+  await user.keyboard("{ArrowRight}");
+  expect(screen.getByRole("button", { name: /Friday, March 1st, 2024/ })).toHaveFocus();
+  await user.keyboard("{Escape}");
+  expect(router.state.location.search).toEqual({ from: "2024-02-29" });
+});
+
+// date-controls R5: the keyboard remains in the calendar after month navigation.
+it("keeps keyboard focus inside the open calendar when navigating months", async () => {
+  signedIn("owner");
+  const { user } = renderApp("/stock-movements?from=2024-02-29");
+  await screen.findByRole("heading", { name: "Stock movements" });
+  await user.click(screen.getByLabelText("From", { exact: true }));
+  await user.keyboard("{Shift>}{Tab}{/Shift}");
+  expect(screen.getByRole("button", { name: /next month/i })).toHaveFocus();
+  await user.keyboard("{Enter}");
+  expect(screen.getByRole("grid", { name: "March 2024" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("dialog", { name: "From calendar" }).contains(document.activeElement),
+  ).toBe(true);
+});
+
+it("announces optional selected-day removal when entering the calendar", async () => {
+  signedIn("owner");
+  const { user } = renderApp("/stock-movements?to=2024-02-29");
+  await screen.findByRole("heading", { name: "Stock movements" });
+  await user.click(screen.getByLabelText("To", { exact: true }));
+  expect(screen.getByRole("dialog", { name: "To calendar" })).toHaveAccessibleDescription(
+    "Select the selected day again to remove it",
+  );
+});
+
+it("focuses Bangkok today with a fixed application clock", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-11-09T18:30:00Z"));
+  try {
+    signedIn("owner");
+    const { user } = renderApp("/stock-movements");
+    await screen.findByRole("heading", { name: "Stock movements" });
+    screen.getByLabelText("From", { exact: true }).focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("button", { name: /Tuesday, November 10th, 2026/ })).toHaveFocus();
+  } finally {
+    vi.useRealTimers();
   }
 });

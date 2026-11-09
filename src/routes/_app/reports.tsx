@@ -21,8 +21,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { bangkokDay } from "@/lib/bangkok-day";
-import { formatBaht, formatDay } from "@/lib/format";
+import { formatBaht, formatDay, formatFullDay } from "@/lib/format";
 import { pagingSearch } from "@/lib/paging";
+import { useBangkokToday } from "@/lib/use-bangkok-today";
 
 // dashboard-and-reports R7: the longest range, both ends included.
 const maxDays = 366;
@@ -64,6 +65,10 @@ function ReportsPage() {
     { from: search.from, to: search.to },
     { query: { enabled: !problem, gcTime: 0 } },
   );
+  // date-controls R7-R8: defaults are guidance, never explicit URL selections.
+  const today = useBangkokToday();
+  const effectiveTo = search.to ?? today;
+  const effectiveFrom = search.from ?? `${effectiveTo.slice(0, 8)}01`;
   const chosen = search.from !== undefined || search.to !== undefined;
 
   return (
@@ -75,7 +80,6 @@ function ReportsPage() {
           <DateInput
             id="reports-from"
             label="From"
-            emptyLabel="Default: start of the To month"
             value={search.from ?? ""}
             onValueChange={(value) =>
               void navigate({
@@ -89,7 +93,6 @@ function ReportsPage() {
           <DateInput
             id="reports-to"
             label="To"
-            emptyLabel="Default: today in Bangkok"
             value={search.to ?? ""}
             onValueChange={(value) =>
               void navigate({
@@ -107,6 +110,15 @@ function ReportsPage() {
             This month so far
           </Link>
         )}
+      </div>
+      <div className="text-small text-muted-foreground">
+        <p>
+          An empty To uses today in Bangkok; an empty From uses the first day of the effective To
+          month.
+        </p>
+        <p>
+          Effective range: {formatFullDay(effectiveFrom)} to {formatFullDay(effectiveTo)}
+        </p>
       </div>
       {problem && <p className="text-muted-foreground">{problem}</p>}
       {!problem && report.isPending && (
@@ -165,7 +177,7 @@ function ReportFigures({
   return (
     <>
       <p className="text-muted-foreground">
-        {formatDay(report.from)} to {formatDay(report.to)}
+        Reported range: {formatFullDay(report.from)} to {formatFullDay(report.to)}
       </p>
       {/* R7: the figures are the API's (R9), never added up here. */}
       <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border shell:grid-cols-3">

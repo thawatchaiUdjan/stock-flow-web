@@ -1,59 +1,111 @@
+import { CalendarIcon } from "lucide-react";
+import { useState } from "react";
+import { TZDate } from "react-day-picker";
+
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { bangkokDay } from "@/lib/bangkok-day";
+import { formatFullDay } from "@/lib/format";
 
-const readableDay = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-});
+function calendarDay(value: string) {
+  return new TZDate(`${value}T12:00:00+07:00`, "Asia/Bangkok");
+}
 
-// dashboard-and-reports R1: date-only values stay on the Shop's calendar.
+// date-controls R2-R5, R9: only a day activation changes an optional Shop date.
 export function DateInput({
   id,
   label,
   value,
-  emptyLabel = "Any date",
   onValueChange,
 }: {
   id: string;
   label: string;
   value: string;
-  emptyLabel?: string;
   onValueChange: (value: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const [today, setToday] = useState(() => calendarDay(bangkokDay(Date.now())));
+  const selected = value ? calendarDay(value) : undefined;
+  const [month, setMonth] = useState<Date>(selected ?? today);
   return (
-    <div className="flex w-full min-w-0 flex-col gap-2 shell:w-52">
-      <Input
-        id={id}
-        type="date"
-        aria-describedby={`${id}-display`}
-        value={value}
-        onChange={(event) => onValueChange(event.target.value)}
-      />
-      <p id={`${id}-display`} className="text-small text-muted-foreground">
-        {value ? readableDay.format(new Date(`${value}T00:00:00Z`)) : emptyLabel}
-      </p>
-      <div className="flex gap-2">
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        if (next) {
+          const currentDay = calendarDay(bangkokDay(Date.now()));
+          setToday(currentDay);
+          setMonth(selected ?? currentDay);
+        }
+        setOpen(next);
+      }}
+    >
+      <PopoverTrigger asChild>
         <Button
+          id={id}
           type="button"
           variant="outline"
-          aria-label={`Use today for ${label}`}
-          onClick={() => onValueChange(bangkokDay(Date.now()))}
+          className="w-full justify-between shell:w-52"
         >
-          Today
+          {value
+            ? formatFullDay(value)
+            : label === "From"
+              ? "Start date"
+              : label === "To"
+                ? "End date"
+                : `Choose ${label.toLowerCase()}`}
+          <CalendarIcon aria-hidden="true" />
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          aria-label={`Clear ${label}`}
-          disabled={!value}
-          onClick={() => onValueChange("")}
-        >
-          Clear
-        </Button>
-      </div>
-    </div>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        collisionPadding={8}
+        className="w-auto max-w-[calc(100vw-1rem)] p-2"
+        aria-label={`${label} calendar`}
+        aria-describedby={value ? `${id}-instruction` : undefined}
+      >
+        <Calendar
+          mode="single"
+          timeZone="Asia/Bangkok"
+          today={today}
+          selected={selected}
+          month={month}
+          onMonthChange={setMonth}
+          // date-controls R5: this user-opened calendar must focus its selected/today cell.
+          // oxlint-disable-next-line jsx-a11y/no-autofocus
+          autoFocus
+          aria-label={`Choose ${label.toLowerCase()} date`}
+          onSelect={(day) => {
+            onValueChange(day ? bangkokDay(day.getTime()) : "");
+            setOpen(false);
+          }}
+        />
+        <div className="flex justify-between gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() =>
+              setMonth(new TZDate(month.getFullYear() - 1, month.getMonth(), 1, "Asia/Bangkok"))
+            }
+          >
+            Previous year
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() =>
+              setMonth(new TZDate(month.getFullYear() + 1, month.getMonth(), 1, "Asia/Bangkok"))
+            }
+          >
+            Next year
+          </Button>
+        </div>
+        {value && (
+          <p id={`${id}-instruction`} className="max-w-80 text-small text-muted-foreground">
+            Select the selected day again to remove it
+          </p>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }
