@@ -666,3 +666,43 @@ it("navigates month and year boundaries, selects leap day and dismisses without 
   await user.keyboard("{Escape}");
   expect(router.state.location.search).toEqual({ from: "2024-02-29" });
 });
+
+// date-controls R5: the keyboard remains in the calendar after month navigation.
+it("keeps keyboard focus inside the open calendar when navigating months", async () => {
+  signedIn("owner");
+  const { user } = renderApp("/stock-movements?from=2024-02-29");
+  await screen.findByRole("heading", { name: "Stock movements" });
+  await user.click(screen.getByLabelText("From", { exact: true }));
+  await user.keyboard("{Shift>}{Tab}{/Shift}");
+  expect(screen.getByRole("button", { name: /next month/i })).toHaveFocus();
+  await user.keyboard("{Enter}");
+  expect(screen.getByRole("grid", { name: "March 2024" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("dialog", { name: "From calendar" }).contains(document.activeElement),
+  ).toBe(true);
+});
+
+it("announces optional selected-day removal when entering the calendar", async () => {
+  signedIn("owner");
+  const { user } = renderApp("/stock-movements?to=2024-02-29");
+  await screen.findByRole("heading", { name: "Stock movements" });
+  await user.click(screen.getByLabelText("To", { exact: true }));
+  expect(screen.getByRole("dialog", { name: "To calendar" })).toHaveAccessibleDescription(
+    "Select the selected day again to remove it",
+  );
+});
+
+it("focuses Bangkok today with a fixed application clock", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-11-09T18:30:00Z"));
+  try {
+    signedIn("owner");
+    const { user } = renderApp("/stock-movements");
+    await screen.findByRole("heading", { name: "Stock movements" });
+    screen.getByLabelText("From", { exact: true }).focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("button", { name: /Tuesday, November 10th, 2026/ })).toHaveFocus();
+  } finally {
+    vi.useRealTimers();
+  }
+});

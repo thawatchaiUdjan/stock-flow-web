@@ -62,6 +62,7 @@ export function DateInput({
         collisionPadding={8}
         className="w-auto max-w-[calc(100vw-1rem)] p-2"
         aria-label={`${label} calendar`}
+        aria-describedby={value ? `${id}-instruction` : undefined}
       >
         <Calendar
           mode="single"
@@ -74,7 +75,6 @@ export function DateInput({
           // oxlint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           aria-label={`Choose ${label.toLowerCase()} date`}
-          aria-describedby={value ? `${id}-instruction` : undefined}
           onSelect={(day) => {
             onValueChange(day ? bangkokDay(day.getTime()) : "");
             setOpen(false);

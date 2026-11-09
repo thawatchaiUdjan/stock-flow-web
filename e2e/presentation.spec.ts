@@ -10,7 +10,10 @@ for (const width of [375, 768, 1024, 1440]) {
   test(`Long histories, navigation and dates remain usable at ${width}px`, async ({
     page,
   }, info) => {
-    await page.clock.setFixedTime(new Date("2026-11-09T18:30:00Z"));
+    // Keep native Date subclassing intact for the calendar's TZDate (date-controls R9).
+    await page.addInitScript(() => {
+      Date.now = () => 1794249000000; // 9 Nov 2026 18:30 UTC, 10 Nov in Bangkok.
+    });
     await page.setViewportSize({ width, height: 900 });
     const password = `presentation-${info.testId}`;
     await install(page, password, presentationInstall());
