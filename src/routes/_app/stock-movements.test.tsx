@@ -983,28 +983,35 @@ describe("numbered history", () => {
   it.each(["missing total", "501"])(
     "shows an error without an invented count for %s",
     async (failure) => {
-      signedIn("owner");
-      mockApi.products = [helmet];
-      server.use(
-        failure === "501"
-          ? getListStockMovementsMockHandler500(() => {
-              throw HttpResponse.json({ status: 501, type: "about:blank" }, { status: 501 });
-            })
-          : getListStockMovementsMockHandler200({ movements: [], nextBefore: null }),
-      );
-      const { user } = renderApp("/stock-movements?page=2&size=10");
-      await screen.findByText("Something went wrong. Try again.");
-      expect(screen.getByText("Page unavailable")).toBeInTheDocument();
-      expect(screen.queryByText(/matching$/)).not.toBeInTheDocument();
-      expect(await screen.findByRole("button", { name: "First page" })).toBeEnabled();
-      expect(screen.getByRole("button", { name: "Last page" })).toBeDisabled();
-      server.use(
-        getListStockMovementsMockHandler200({ movements: [], nextBefore: null, total: 0 }),
-      );
-      await user.click(screen.getByRole("button", { name: "Try again" }));
-      await screen.findByText("This page is no longer available.");
-      await user.click(screen.getByRole("button", { name: "First page" }));
-      await screen.findByText("Page 1 of 1 \u00b7 0 matching");
+      // A slow render advances the clock between snapshots; a selector error must not loop.
+      let tick = Date.now();
+      const clock = vi.spyOn(Date, "now").mockImplementation(() => tick++);
+      try {
+        signedIn("owner");
+        mockApi.products = [helmet];
+        server.use(
+          failure === "501"
+            ? getListStockMovementsMockHandler500(() => {
+                throw HttpResponse.json({ status: 501, type: "about:blank" }, { status: 501 });
+              })
+            : getListStockMovementsMockHandler200({ movements: [], nextBefore: null }),
+        );
+        const { user } = renderApp("/stock-movements?page=2&size=10");
+        await screen.findByText("Something went wrong. Try again.");
+        expect(screen.getByText("Page unavailable")).toBeInTheDocument();
+        expect(screen.queryByText(/matching$/)).not.toBeInTheDocument();
+        expect(await screen.findByRole("button", { name: "First page" })).toBeEnabled();
+        expect(screen.getByRole("button", { name: "Last page" })).toBeDisabled();
+        server.use(
+          getListStockMovementsMockHandler200({ movements: [], nextBefore: null, total: 0 }),
+        );
+        await user.click(screen.getByRole("button", { name: "Try again" }));
+        await screen.findByText("This page is no longer available.");
+        await user.click(screen.getByRole("button", { name: "First page" }));
+        await screen.findByText("Page 1 of 1 \u00b7 0 matching");
+      } finally {
+        clock.mockRestore();
+      }
     },
   );
 });

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { errorMessage } from "@/api/errors";
-import { useListLoginLog } from "@/api/generated/login-log/login-log";
+import { listLoginLog, useListLoginLog } from "@/api/generated/login-log/login-log";
 import { LoginLogEntryBodyResult } from "@/api/generated/model";
 import type { LoginLogEntryBody, LoginLogUser } from "@/api/generated/model";
 import { useListUsers } from "@/api/generated/users/users";
@@ -59,10 +59,11 @@ function LoginLogPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const { size = 25, page = 1, userId, result } = search;
-  const log = useListLoginLog(
-    { userId, result, limit: size, offset: (page - 1) * size },
-    { query: { select: numberedHistoryPage } },
-  );
+  const params = { userId, result, limit: size, offset: (page - 1) * size };
+  const log = useListLoginLog(params, {
+    // Validate before caching: a rejected request has stable error state and normal retry recovery.
+    query: { queryFn: ({ signal }) => listLoginLog(params, { signal }).then(numberedHistoryPage) },
+  });
   const filtered = search.userId !== undefined || search.result !== undefined;
 
   return (

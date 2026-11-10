@@ -3,7 +3,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { errorMessage } from "@/api/errors";
 import type { StockMovement } from "@/api/generated/model";
 import { useGetProduct } from "@/api/generated/products/products";
-import { useListStockMovements } from "@/api/generated/stock-movements/stock-movements";
+import {
+  listStockMovements,
+  useListStockMovements,
+} from "@/api/generated/stock-movements/stock-movements";
 import { DateInput } from "@/components/date-input";
 import { ListPaging } from "@/components/list-paging";
 import { ProductSelect, useActiveProducts } from "@/components/product-select";
@@ -47,10 +50,14 @@ function StockMovementsPage() {
   // A range that ends before it starts holds nothing, and is said so rather than asked of the API.
   const backwards = search.from !== undefined && search.to !== undefined && search.from > search.to;
   const { size = 25, page = 1, productId, kind, from, to } = search;
-  const movements = useListStockMovements(
-    { productId, kind, from, to, limit: size, offset: (page - 1) * size },
-    { query: { enabled: !backwards, select: numberedHistoryPage } },
-  );
+  const params = { productId, kind, from, to, limit: size, offset: (page - 1) * size };
+  const movements = useListStockMovements(params, {
+    // Validate before caching: a rejected request has stable error state and normal retry recovery.
+    query: {
+      enabled: !backwards,
+      queryFn: ({ signal }) => listStockMovements(params, { signal }).then(numberedHistoryPage),
+    },
+  });
   const filtered =
     search.productId !== undefined ||
     search.kind !== undefined ||

@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { delay, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   getListLoginLogMockHandler200,
@@ -552,26 +552,33 @@ describe("numbered history", () => {
   it.each(["missing total", "501"])(
     "shows an error without an invented count for %s",
     async (failure) => {
-      mockApi.session = "live";
-      addUsers();
-      server.use(
-        failure === "501"
-          ? getListLoginLogMockHandler500(() => {
-              throw HttpResponse.json({ status: 501, type: "about:blank" }, { status: 501 });
-            })
-          : getListLoginLogMockHandler200({ entries: [], nextBefore: null }),
-      );
-      const { user } = renderApp("/login-log?page=2&size=10");
-      await screen.findByText("Something went wrong. Try again.");
-      expect(screen.getByText("Page unavailable")).toBeInTheDocument();
-      expect(screen.queryByText(/matching$/)).not.toBeInTheDocument();
-      expect(await screen.findByRole("button", { name: "First page" })).toBeEnabled();
-      expect(screen.getByRole("button", { name: "Last page" })).toBeDisabled();
-      server.use(getListLoginLogMockHandler200({ entries: [], nextBefore: null, total: 0 }));
-      await user.click(screen.getByRole("button", { name: "Try again" }));
-      await screen.findByText("This page is no longer available.");
-      await user.click(screen.getByRole("button", { name: "First page" }));
-      await screen.findByText("Page 1 of 1 \u00b7 0 matching");
+      // A slow render advances the clock between snapshots; a selector error must not loop.
+      let tick = Date.now();
+      const clock = vi.spyOn(Date, "now").mockImplementation(() => tick++);
+      try {
+        mockApi.session = "live";
+        addUsers();
+        server.use(
+          failure === "501"
+            ? getListLoginLogMockHandler500(() => {
+                throw HttpResponse.json({ status: 501, type: "about:blank" }, { status: 501 });
+              })
+            : getListLoginLogMockHandler200({ entries: [], nextBefore: null }),
+        );
+        const { user } = renderApp("/login-log?page=2&size=10");
+        await screen.findByText("Something went wrong. Try again.");
+        expect(screen.getByText("Page unavailable")).toBeInTheDocument();
+        expect(screen.queryByText(/matching$/)).not.toBeInTheDocument();
+        expect(await screen.findByRole("button", { name: "First page" })).toBeEnabled();
+        expect(screen.getByRole("button", { name: "Last page" })).toBeDisabled();
+        server.use(getListLoginLogMockHandler200({ entries: [], nextBefore: null, total: 0 }));
+        await user.click(screen.getByRole("button", { name: "Try again" }));
+        await screen.findByText("This page is no longer available.");
+        await user.click(screen.getByRole("button", { name: "First page" }));
+        await screen.findByText("Page 1 of 1 \u00b7 0 matching");
+      } finally {
+        clock.mockRestore();
+      }
     },
   );
 });
