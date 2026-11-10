@@ -300,6 +300,32 @@ describe("the Stock Movements filters", () => {
   });
 });
 
+describe("stock action navigation", () => {
+  it.each([
+    ["Receive stock", "receive"],
+    ["Adjust stock", "adjust"],
+  ])("opens %s with a parent link and keeps the selected Product", async (title, action) => {
+    signedIn("owner");
+    mockApi.products = [helmet];
+    const { user, router } = renderApp("/stock-movements?productId=1&kind=receive");
+    await user.click(await screen.findByRole("link", { name: title }));
+    expect(router.state.location.pathname).toBe(`/stock-movements/${action}`);
+    expect(await screen.findByRole("heading", { name: title })).toBeInTheDocument();
+    const context = screen.getByRole("navigation", { name: "Current page" });
+    expect(within(context).getByText(title)).toHaveAttribute("aria-current", "page");
+    expect(
+      within(screen.getByRole("navigation", { name: "Main" })).getByRole("link", {
+        name: "Stock movements",
+      }),
+    ).toHaveAttribute("aria-current", "page");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Product", { selector: "#stock-product" })).toHaveValue("1"),
+    );
+    await user.click(within(context).getByRole("link", { name: "Stock movements" }));
+    expect(await screen.findByRole("heading", { name: "Stock movements" })).toBeInTheDocument();
+  });
+});
+
 describe("Receive stock", () => {
   // stock-movements R4, R12
   it.each(["owner", "admin", "staff"] as const)("is offered to the %s", async (role) => {
@@ -307,7 +333,7 @@ describe("Receive stock", () => {
     mockApi.products = [helmet];
     renderApp("/stock-movements");
 
-    expect(await screen.findByRole("button", { name: "Receive stock" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Receive stock" })).toBeInTheDocument();
   });
 
   // stock-movements R4: sends what was typed, shows the result, and the stock moved with it.
@@ -317,7 +343,7 @@ describe("Receive stock", () => {
     const sent = requestsTo("/api/stock-movements/receive");
     const { user } = renderApp("/stock-movements");
 
-    await user.click(await screen.findByRole("button", { name: "Receive stock" }));
+    await user.click(await screen.findByRole("link", { name: "Receive stock" }));
     const product = await screen.findByLabelText("Product", { selector: "#stock-product" });
     await waitFor(() => expect(product).toBeEnabled());
     await user.selectOptions(product, "1");
@@ -328,6 +354,7 @@ describe("Receive stock", () => {
     expect(await screen.findByText("Stock received")).toBeInTheDocument();
     expect(sent).toHaveLength(1);
     expect(sent[0]!.body).toEqual({ productId: 1, quantity: 12, note: "Delivery 4012" });
+    await user.click(screen.getByRole("link", { name: "Back to stock movements" }));
     expect(await screen.findByText("Delivery 4012")).toBeInTheDocument();
     expect(rowOf(/Delivery 4012/)).toHaveTextContent("Receive+1230");
     expect(mockApi.products.find(({ id }) => id === 1)!.stock).toBe(30);
@@ -338,7 +365,7 @@ describe("Receive stock", () => {
     mockApi.products = [helmet, gloves, goggles];
     const { user } = renderApp("/stock-movements");
 
-    await user.click(await screen.findByRole("button", { name: "Receive stock" }));
+    await user.click(await screen.findByRole("link", { name: "Receive stock" }));
     const product = await screen.findByLabelText("Product", { selector: "#stock-product" });
     await waitFor(() => expect(product).toBeEnabled());
     const options = within(product)
@@ -366,7 +393,7 @@ describe("Receive stock", () => {
     );
     const { user } = renderApp("/stock-movements");
 
-    await user.click(await screen.findByRole("button", { name: "Receive stock" }));
+    await user.click(await screen.findByRole("link", { name: "Receive stock" }));
     const product = await screen.findByLabelText("Product", { selector: "#stock-product" });
     await waitFor(() => expect(within(product).getAllByRole("option")).toHaveLength(102));
     expect(
@@ -380,7 +407,7 @@ describe("Receive stock", () => {
     const sent = requestsTo("/api/stock-movements/receive");
     const { user } = renderApp("/stock-movements?productId=2");
 
-    await user.click(await screen.findByRole("button", { name: "Receive stock" }));
+    await user.click(await screen.findByRole("link", { name: "Receive stock" }));
     const product = await screen.findByLabelText("Product", { selector: "#stock-product" });
     await waitFor(() => expect(product).toHaveValue("2"));
     await user.type(screen.getByLabelText("Quantity"), "5");
@@ -397,7 +424,7 @@ describe("Receive stock", () => {
     const sent = requestsTo("/api/stock-movements/receive");
     const { user } = renderApp("/stock-movements?productId=1");
 
-    await user.click(await screen.findByRole("button", { name: "Receive stock" }));
+    await user.click(await screen.findByRole("link", { name: "Receive stock" }));
     const quantity = await screen.findByLabelText("Quantity");
     for (const text of ["0", "1.5", "-2", "", "abc"]) {
       await user.clear(quantity);
@@ -414,7 +441,7 @@ describe("Receive stock", () => {
     const sent = requestsTo("/api/stock-movements/receive");
     const { user } = renderApp("/stock-movements");
 
-    await user.click(await screen.findByRole("button", { name: "Receive stock" }));
+    await user.click(await screen.findByRole("link", { name: "Receive stock" }));
     await user.type(await screen.findByLabelText("Quantity"), "3");
     await user.click(screen.getByRole("button", { name: "Receive stock" }));
 
@@ -428,7 +455,7 @@ describe("Receive stock", () => {
     mockApi.products = [helmet];
     const { user } = renderApp("/stock-movements?productId=1");
 
-    await user.click(await screen.findByRole("button", { name: "Receive stock" }));
+    await user.click(await screen.findByRole("link", { name: "Receive stock" }));
     const quantity = await screen.findByLabelText("Quantity");
     await waitFor(() =>
       expect(screen.getByLabelText("Product", { selector: "#stock-product" })).toHaveValue("1"),
@@ -454,7 +481,7 @@ describe("Adjust stock", () => {
     mockApi.products = [helmet];
     renderApp("/stock-movements");
 
-    expect(await screen.findByRole("button", { name: "Adjust stock" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Adjust stock" })).toBeInTheDocument();
   });
 
   it("is not offered to Staff", async () => {
@@ -462,8 +489,8 @@ describe("Adjust stock", () => {
     mockApi.products = [helmet];
     renderApp("/stock-movements");
 
-    await screen.findByRole("button", { name: "Receive stock" });
-    expect(screen.queryByRole("button", { name: "Adjust stock" })).not.toBeInTheDocument();
+    await screen.findByRole("link", { name: "Receive stock" });
+    expect(screen.queryByRole("link", { name: "Adjust stock" })).not.toBeInTheDocument();
   });
 
   // stock-movements R5: up or down, with a note.
@@ -473,7 +500,7 @@ describe("Adjust stock", () => {
     const sent = requestsTo("/api/stock-movements/adjust");
     const { user } = renderApp("/stock-movements?productId=1");
 
-    await user.click(await screen.findByRole("button", { name: "Adjust stock" }));
+    await user.click(await screen.findByRole("link", { name: "Adjust stock" }));
     await waitFor(() =>
       expect(screen.getByLabelText("Product", { selector: "#stock-product" })).toHaveValue("1"),
     );
@@ -484,6 +511,7 @@ describe("Adjust stock", () => {
 
     expect(await screen.findByText("Stock adjusted")).toBeInTheDocument();
     expect(sent[0]!.body).toEqual({ productId: 1, change: -3, note: "Three cracked" });
+    await user.click(screen.getByRole("link", { name: "Back to stock movements" }));
     expect(await screen.findByText("Three cracked")).toBeInTheDocument();
     expect(rowOf(/Three cracked/)).toHaveTextContent("Adjustment−315");
   });
@@ -494,7 +522,7 @@ describe("Adjust stock", () => {
     const sent = requestsTo("/api/stock-movements/adjust");
     const { user } = renderApp("/stock-movements?productId=1");
 
-    await user.click(await screen.findByRole("button", { name: "Adjust stock" }));
+    await user.click(await screen.findByRole("link", { name: "Adjust stock" }));
     await waitFor(() =>
       expect(screen.getByLabelText("Product", { selector: "#stock-product" })).toHaveValue("1"),
     );
@@ -513,7 +541,7 @@ describe("Adjust stock", () => {
     const sent = requestsTo("/api/stock-movements/adjust");
     const { user } = renderApp("/stock-movements?productId=1");
 
-    await user.click(await screen.findByRole("button", { name: "Adjust stock" }));
+    await user.click(await screen.findByRole("link", { name: "Adjust stock" }));
     await waitFor(() =>
       expect(screen.getByLabelText("Product", { selector: "#stock-product" })).toHaveValue("1"),
     );
@@ -544,7 +572,7 @@ describe("Adjust stock", () => {
     mockApi.products = [helmet];
     const { user } = renderApp("/stock-movements?productId=1");
 
-    await user.click(await screen.findByRole("button", { name: "Adjust stock" }));
+    await user.click(await screen.findByRole("link", { name: "Adjust stock" }));
     await waitFor(() =>
       expect(screen.getByLabelText("Product", { selector: "#stock-product" })).toHaveValue("1"),
     );
@@ -565,7 +593,7 @@ describe("Adjust stock", () => {
     mockApi.products = [helmet];
     const { user } = renderApp("/stock-movements?productId=1");
 
-    await user.click(await screen.findByRole("button", { name: "Adjust stock" }));
+    await user.click(await screen.findByRole("link", { name: "Adjust stock" }));
     await waitFor(() =>
       expect(screen.getByLabelText("Product", { selector: "#stock-product" })).toHaveValue("1"),
     );

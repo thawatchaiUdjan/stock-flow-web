@@ -67,10 +67,11 @@ test("the Owner receives stock for the Product", async () => {
   await expect(row).toContainText("0 of 5");
   await row.getByRole("link", { name: product.name, exact: true }).click();
   await expect(page).toHaveURL(/\/stock-movements\?productId=\d+/);
-  await page.getByRole("button", { name: "Receive stock" }).click();
+  await page.getByRole("link", { name: "Receive stock" }).click();
   await page.getByLabel("Quantity").fill("12");
   await page.getByRole("button", { name: "Receive stock" }).click();
   await expect(page.getByText("Stock received", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Back to stock movements" }).click();
   await expect(page.getByRole("row", { name: /Receive/ })).toContainText("+12");
 });
 

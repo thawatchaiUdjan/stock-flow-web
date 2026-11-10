@@ -40,8 +40,8 @@ test("Staff receive stock for a Product and see its new stock on the Product Lis
   await before.getByRole("link", { name }).click();
   await expect(page).toHaveURL(/\/stock-movements\?productId=1/);
   await expect(page.getByText("No stock movements match these filters.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Adjust stock" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Receive stock" }).click();
+  await expect(page.getByRole("link", { name: "Adjust stock" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Receive stock" }).click();
   await expect(page.getByLabel("Product", { exact: true }).last()).toHaveValue("1");
 
   const receive = page.waitForRequest((request) =>
@@ -57,6 +57,7 @@ test("Staff receive stock for a Product and see its new stock on the Product Lis
     note: "Delivery 4012",
   });
   await expect(page.getByText("Stock received", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Back to stock movements" }).click();
   const entry = page.getByRole("row", { name: /Delivery 4012/ });
   await expect(entry).toContainText("Receive");
   await expect(entry).toContainText("+12");

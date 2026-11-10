@@ -174,9 +174,9 @@ export function StockChangeForm({
         void form.handleSubmit();
       }}
     >
-      <h2 id="stock-change-title" className="text-body font-semibold">
+      <h1 id="stock-change-title" className="text-title">
         {words.title}
-      </h2>
+      </h1>
       {error != null && !refusedByFields && (
         <Alert variant="destructive">
           <AlertDescription>{errorMessage(error)}</AlertDescription>

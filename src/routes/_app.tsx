@@ -69,7 +69,7 @@ function AppShell() {
         </Link>
         <nav
           aria-label="Main"
-          className="grid grid-cols-2 gap-2 border-b bg-sidebar p-3 shell:flex shell:flex-1 shell:flex-col shell:border-b-0 shell:p-0"
+          className="grid grid-cols-1 gap-2 border-b bg-sidebar p-3 shell:flex shell:flex-1 shell:flex-col shell:border-b-0 shell:p-0"
         >
           {/* users-and-access R11, R22: only the pages of the User's Role. */}
           {pagesOf(user.role).map((page) => (
