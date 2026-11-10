@@ -1,11 +1,10 @@
 import { screen, waitFor, within } from "@testing-library/react";
-import { delay } from "msw";
+import { delay, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
 import {
   getListLoginLogMockHandler200,
   getListLoginLogMockHandler500,
-  getListLoginLogMockHandler501,
 } from "@/api/generated/login-log/login-log.msw";
 import type { LoginLogEntryBody, LoginLogUser } from "@/api/generated/model";
 import { mockApi, serverFailure } from "@/mocks/handlers";
@@ -557,10 +556,8 @@ describe("numbered history", () => {
       addUsers();
       server.use(
         failure === "501"
-          ? getListLoginLogMockHandler501({
-              status: 501,
-              title: "Not Implemented",
-              type: "about:blank",
+          ? getListLoginLogMockHandler500(() => {
+              throw HttpResponse.json({ status: 501, type: "about:blank" }, { status: 501 });
             })
           : getListLoginLogMockHandler200({ entries: [], nextBefore: null }),
       );

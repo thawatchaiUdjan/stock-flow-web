@@ -1,12 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react";
-import { delay } from "msw";
+import { delay, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import type { StockMovement } from "@/api/generated/model";
 import {
   getListStockMovementsMockHandler200,
   getListStockMovementsMockHandler500,
-  getListStockMovementsMockHandler501,
 } from "@/api/generated/stock-movements/stock-movements.msw";
 import { mockApi, productOf, serverFailure } from "@/mocks/handlers";
 import { chooseDate } from "@/test/date-picker";
@@ -988,10 +987,8 @@ describe("numbered history", () => {
       mockApi.products = [helmet];
       server.use(
         failure === "501"
-          ? getListStockMovementsMockHandler501({
-              status: 501,
-              title: "Not Implemented",
-              type: "about:blank",
+          ? getListStockMovementsMockHandler500(() => {
+              throw HttpResponse.json({ status: 501, type: "about:blank" }, { status: 501 });
             })
           : getListStockMovementsMockHandler200({ movements: [], nextBefore: null }),
       );
