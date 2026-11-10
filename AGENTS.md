@@ -82,6 +82,13 @@ Tickets arrive from `stock-flow-context` (see `docs/agents/issue-tracker.md`). A
 
 ## Design
 
+For every new UI, UI fix, or feature that changes UI, use this order:
+
+1. Load the `shadcn` skill. Check the repository's existing components and the shadcn/ui catalog before writing custom UI, including charts.
+2. Reuse an existing shadcn/ui component when it meets the requirements.
+3. If it does not fit directly, customize or compose shadcn/ui components to meet the requirements and `docs/design.md`, preserving accessibility.
+4. Use another library or a custom implementation only when shadcn/ui cannot reasonably meet the requirements through customization or composition. Explain the specific limitation and the chosen alternative in the pull request.
+
 Every screen follows the design direction in `docs/design.md`: its colors, type, layout and voice. Two skills, each with its own job; neither chooses a new direction while a ticket is being built:
 
 - **`ui-ux-pro-max`**: UX rules and the stack's UI guidelines while building every screen, and its pre-delivery checklist before the pull request. In "plan the design", it drafts the direction's tokens (colors, type, density).

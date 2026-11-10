@@ -22,6 +22,15 @@ afterAll(() => server.close());
 // jsdom has no scrollTo, and the router calls it on every navigation.
 window.scrollTo = vi.fn();
 
+// jsdom has no layout; give responsive charts a viewport without replacing their rendering or keyboard behavior.
+vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+  this: HTMLElement,
+) {
+  return this.classList.contains("recharts-responsive-container")
+    ? new DOMRect(0, 0, 320, 160)
+    : new DOMRect();
+});
+
 // jsdom has no ResizeObserver, and Radix's radio buttons measure themselves with one.
 globalThis.ResizeObserver = class {
   observe() {}
