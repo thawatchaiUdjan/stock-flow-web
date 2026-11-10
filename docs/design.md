@@ -142,7 +142,7 @@ One row per frame in `design/frames/`. A ticket's `Design:` line names rows here
 
 ## List paging
 
-Navigation & lists R4-R7: place paging directly below the list, including short or empty lists. Use the existing outline buttons, muted position text and native select. Wrap controls with 12 px gaps on narrow screens; retain the 44 px phone targets and visible keyboard focus.
+Navigation & lists R4-R7: place paging directly below the list, including short or empty lists. Follow the shadcn/ui Tasks table footer pattern: muted position text on the left, with the native rows-per-page select and outline icon buttons grouped on the right. Use Lucide first, previous, next and last chevrons with accessible names and hover titles. Keep all four buttons together when wrapping, with 12 px gaps; on narrow screens the controls occupy a full-width row and the selector may wrap separately. Retain the 44 px phone targets, 38 px desktop controls and visible keyboard focus.
 
 Products, Orders and Users show "Page n of m" and the matching count, with First page, Previous page, Next page and Last page always visible. Unavailable directions are disabled. Rows per page offers 10, 25 (default), and 50. URL state retains filters and size; changing either resets the page. Out-of-range pages explain the missing page and offer First page without discarding filters. Loading and error states keep controls visible; First page remains available for recovery.
 
