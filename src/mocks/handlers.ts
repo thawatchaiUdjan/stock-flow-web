@@ -855,6 +855,18 @@ export const handlers = [
       .filter((one) => to === null || Date.parse(one.at) < Date.parse(`${to}T00:00:00+07:00`) + day)
       .filter((one) => before === null || one.id < Number(before))
       .toSorted((a, b) => b.id - a.id);
+    // context ADR 0009: explicit offset selects bounded numbered mode; legacy cursors stay compatible.
+    if (query.has("offset")) {
+      const offset = Number(query.get("offset"));
+      if (before !== null || !Number.isSafeInteger(offset) || offset < 0 || offset > int32Max) {
+        throw problem({ status: 422, title: "Invalid history offset" });
+      }
+      return {
+        movements: matching.slice(offset, offset + limit),
+        total: matching.length,
+        nextBefore: null,
+      };
+    }
     const movements = matching.slice(0, limit);
     return {
       movements,
@@ -969,6 +981,18 @@ export const handlers = [
       .filter((entry) => result === null || entry.result === result)
       .filter((entry) => before === null || entry.id < Number(before))
       .toSorted((a, b) => b.id - a.id);
+    // context ADR 0009: explicit offset selects bounded numbered mode; legacy cursors stay compatible.
+    if (query.has("offset")) {
+      const offset = Number(query.get("offset"));
+      if (before !== null || !Number.isSafeInteger(offset) || offset < 0 || offset > int32Max) {
+        throw problem({ status: 422, title: "Invalid history offset" });
+      }
+      return {
+        entries: matching.slice(offset, offset + limit),
+        total: matching.length,
+        nextBefore: null,
+      };
+    }
     const entries = matching.slice(0, limit);
     // Entries older than the last one on the page, or null when there are none.
     return {

@@ -3,9 +3,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { errorMessage } from "@/api/errors";
 import type { StockMovement } from "@/api/generated/model";
 import { useGetProduct } from "@/api/generated/products/products";
-import { useListStockMovements } from "@/api/generated/stock-movements/stock-movements";
+import {
+  listStockMovements,
+  useListStockMovements,
+} from "@/api/generated/stock-movements/stock-movements";
 import { DateInput } from "@/components/date-input";
-import { CursorPaging } from "@/components/list-paging";
+import { ListPaging } from "@/components/list-paging";
 import { ProductSelect, useActiveProducts } from "@/components/product-select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { useCurrentUser } from "@/lib/current-user";
 import { formatDateTime } from "@/lib/format";
+import { numberedHistoryPage } from "@/lib/paging";
 import { movementsSearchSchema, type MovementsSearch } from "@/lib/stock-movements-search";
 import { cn } from "@/lib/utils";
 
@@ -45,11 +49,15 @@ function StockMovementsPage() {
   const canAdjust = role !== "staff";
   // A range that ends before it starts holds nothing, and is said so rather than asked of the API.
   const backwards = search.from !== undefined && search.to !== undefined && search.from > search.to;
-  const { size = 25, ...filters } = search;
-  const movements = useListStockMovements(
-    { ...filters, limit: size },
-    { query: { enabled: !backwards } },
-  );
+  const { size = 25, page = 1, productId, kind, from, to } = search;
+  const params = { productId, kind, from, to, limit: size, offset: (page - 1) * size };
+  const movements = useListStockMovements(params, {
+    // Validate before caching: a rejected request has stable error state and normal retry recovery.
+    query: {
+      enabled: !backwards,
+      queryFn: ({ signal }) => listStockMovements(params, { signal }).then(numberedHistoryPage),
+    },
+  });
   const filtered =
     search.productId !== undefined ||
     search.kind !== undefined ||
@@ -79,7 +87,7 @@ function StockMovementsPage() {
         search={search}
         // A filter changes what the pages hold, so the page it was on means nothing any more.
         onChange={(changes) =>
-          void navigate({ search: { ...search, ...changes, before: undefined } })
+          void navigate({ search: { ...search, ...changes, page: undefined } })
         }
       />
       {backwards && (
@@ -101,8 +109,8 @@ function StockMovementsPage() {
       {movements.isSuccess && movements.data.movements.length === 0 && (
         <div className="flex flex-col items-start gap-3">
           <p className="text-muted-foreground">
-            {search.before !== undefined
-              ? "No older entries on this page. Return to newest entries."
+            {page > 1
+              ? "No entries on this page. Return to the first page."
               : filtered
                 ? "No stock movements match these filters."
                 : "No stock movements yet. Receive stock to start the history of every change."}
@@ -121,17 +129,13 @@ function StockMovementsPage() {
           <MovementsTable movements={movements.data.movements} />
         </>
       )}
-      <CursorPaging
+      <ListPaging
+        page={page}
         size={size}
-        onSize={(size) => void navigate({ search: { ...search, size, before: undefined } })}
-        older={search.before !== undefined}
+        total={!backwards && movements.isSuccess ? movements.data.total : undefined}
         busy={movements.isFetching}
-        canOlder={movements.isSuccess && movements.data.nextBefore !== null}
-        onNewest={() => void navigate({ search: { ...search, before: undefined } })}
-        onOlder={() => {
-          if (movements.data?.nextBefore != null)
-            void navigate({ search: { ...search, before: movements.data.nextBefore } });
-        }}
+        onSize={(size) => void navigate({ search: { ...search, size, page: undefined } })}
+        onPage={(page) => void navigate({ search: { ...search, page } })}
       />
     </div>
   );

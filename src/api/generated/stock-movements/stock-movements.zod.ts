@@ -8,10 +8,13 @@ import * as zod from 'zod';
 
 
 /**
- * Every Role sees every Stock movement, newest first, one page at a time. No operation changes or removes one. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
+ * Every Role sees every Stock movement, newest first, one page at a time. No operation changes or removes one. Omit offset to preserve legacy cursor paging, including before/nextBefore and the default limit of 50. An explicitly supplied offset, including offset=0, selects numbered mode; offset and before together return 422. Numbered success includes a bounded page and total, always present and exact for all current filters before offset/limit, including total: 0 for no matches. An out-of-range page is empty with the actual matching total. total is omitted from legacy responses. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
  * @summary List the Stock movements
  */
 
+
+export const listStockMovementsQueryOffsetMin = 0;
+export const listStockMovementsQueryOffsetMax = 2147483647;
 
 export const listStockMovementsQueryLimitDefault = 50;
 export const listStockMovementsQueryLimitMax = 100;
@@ -24,8 +27,13 @@ export const ListStockMovementsQueryParams = zod.object({
   "from": zod.iso.date().optional().describe('Only the movements on or after this day of the Shop, in Bangkok time (YYYY-MM-DD).'),
   "to": zod.iso.date().optional().describe('Only the movements on or before this day of the Shop, in Bangkok time (YYYY-MM-DD).'),
   "before": zod.int().min(1).optional().describe('The previous page\'s nextBefore: only the movements older than that. Leave out for the newest.'),
+  "offset": zod.int().min(listStockMovementsQueryOffsetMin).max(listStockMovementsQueryOffsetMax).optional().describe('Explicitly selects numbered mode, including 0. Omit for legacy cursor mode.'),
   "limit": zod.int().min(1).max(listStockMovementsQueryLimitMax).default(listStockMovementsQueryLimitDefault).describe('The most movements on a page.')
 })
+
+export const listStockMovementsResponseTotalMin = 0;
+
+
 
 export const ListStockMovementsResponse = zod.object({
   "$schema": zod.url().optional().describe('A URL to the JSON Schema for this object.'),
@@ -51,7 +59,8 @@ export const ListStockMovementsResponse = zod.object({
   "name": zod.string().describe('The User\'s name now.')
 }).describe('The User who made it.')
 })).describe('Newest first.'),
-  "nextBefore": zod.int().nullable().describe('Pass as before for the next page. Null on the last page.')
+  "nextBefore": zod.int().nullable().describe('Pass as before for the next page. Null on the last page.'),
+  "total": zod.int().min(listStockMovementsResponseTotalMin).optional().describe('Always present on numbered success: exact count for all current filters before offset/limit, including 0. Omitted in legacy cursor mode.')
 })
 
 /**

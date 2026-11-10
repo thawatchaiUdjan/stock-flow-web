@@ -2,11 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { errorMessage } from "@/api/errors";
-import { useListLoginLog } from "@/api/generated/login-log/login-log";
+import { listLoginLog, useListLoginLog } from "@/api/generated/login-log/login-log";
 import { LoginLogEntryBodyResult } from "@/api/generated/model";
 import type { LoginLogEntryBody, LoginLogUser } from "@/api/generated/model";
 import { useListUsers } from "@/api/generated/users/users";
-import { CursorPaging } from "@/components/list-paging";
+import { ListPaging } from "@/components/list-paging";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/format";
-import { pagingSearch } from "@/lib/paging";
+import { historyPageSearch, numberedHistoryPage, pagingSearch } from "@/lib/paging";
 import { cn } from "@/lib/utils";
 
 type Result = LoginLogEntryBody["result"];
@@ -40,13 +40,15 @@ const resultVariants = {
 
 // ADR 0008: the filters and the page live in the address, so a reload or a shared link keeps them.
 // A value the API wouldn't accept is dropped rather than sent.
-const searchSchema = z.object({
-  // navigation-and-lists R8: accept only the offered sizes.
-  size: pagingSearch.size,
-  userId: z.number().int().min(1).optional().catch(undefined),
-  result: z.enum(LoginLogEntryBodyResult).optional().catch(undefined),
-  before: z.number().int().min(1).optional().catch(undefined),
-});
+const searchSchema = z
+  .object({
+    // navigation-and-lists R8: accept only the offered sizes.
+    size: pagingSearch.size,
+    userId: z.number().int().min(1).optional().catch(undefined),
+    result: z.enum(LoginLogEntryBodyResult).optional().catch(undefined),
+    page: pagingSearch.page,
+  })
+  .transform(historyPageSearch);
 
 export const Route = createFileRoute("/_app/login-log")({
   validateSearch: searchSchema,
@@ -56,8 +58,12 @@ export const Route = createFileRoute("/_app/login-log")({
 function LoginLogPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { size = 25, ...filters } = search;
-  const log = useListLoginLog({ ...filters, limit: size });
+  const { size = 25, page = 1, userId, result } = search;
+  const params = { userId, result, limit: size, offset: (page - 1) * size };
+  const log = useListLoginLog(params, {
+    // Validate before caching: a rejected request has stable error state and normal retry recovery.
+    query: { queryFn: ({ signal }) => listLoginLog(params, { signal }).then(numberedHistoryPage) },
+  });
   const filtered = search.userId !== undefined || search.result !== undefined;
 
   return (
@@ -68,7 +74,7 @@ function LoginLogPage() {
         result={search.result}
         // A filter changes what the pages hold, so the page it was on means nothing any more.
         onChange={(changes) =>
-          void navigate({ search: { ...search, ...changes, before: undefined } })
+          void navigate({ search: { ...search, ...changes, page: undefined } })
         }
       />
       {log.isPending && <output className="text-muted-foreground">Loading the Login log</output>}
@@ -85,8 +91,8 @@ function LoginLogPage() {
       {log.isSuccess && log.data.entries.length === 0 && (
         <div className="flex flex-col items-start gap-3">
           <p className="text-muted-foreground">
-            {search.before !== undefined
-              ? "No older entries on this page. Return to newest entries."
+            {page > 1
+              ? "No entries on this page. Return to the first page."
               : filtered
                 ? "No entries match these filters."
                 : "No logins yet. Entries appear here when someone logs in, fails to log in or logs out."}
@@ -105,17 +111,13 @@ function LoginLogPage() {
           <EntriesTable entries={log.data.entries} />
         </>
       )}
-      <CursorPaging
+      <ListPaging
+        page={page}
         size={size}
-        onSize={(size) => void navigate({ search: { ...search, size, before: undefined } })}
-        older={search.before !== undefined}
+        total={log.isSuccess ? log.data.total : undefined}
         busy={log.isFetching}
-        canOlder={log.isSuccess && log.data.nextBefore !== null}
-        onNewest={() => void navigate({ search: { ...search, before: undefined } })}
-        onOlder={() => {
-          if (log.data?.nextBefore != null)
-            void navigate({ search: { ...search, before: log.data.nextBefore } });
-        }}
+        onSize={(size) => void navigate({ search: { ...search, size, page: undefined } })}
+        onPage={(page) => void navigate({ search: { ...search, page } })}
       />
     </div>
   );

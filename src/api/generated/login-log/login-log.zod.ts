@@ -8,10 +8,13 @@ import * as zod from 'zod';
 
 
 /**
- * Every login, failed login and logout, newest first, one page at a time. Entries cannot be changed or removed, and no operation does. Owner only: answers 403 to an Admin or Staff. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
+ * Every login, failed login and logout, newest first, one page at a time. Entries cannot be changed or removed, and no operation does. Omit offset to preserve legacy cursor paging, including before/nextBefore and the default limit of 50. An explicitly supplied offset, including offset=0, selects numbered mode; offset and before together return 422. Numbered success includes a bounded page and total, always present and exact for all current filters before offset/limit, including total: 0 for no matches. An out-of-range page is empty with the actual matching total. total is omitted from legacy responses. Owner only: answers 403 to an Admin or Staff. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
  * @summary List the Login log
  */
 
+
+export const listLoginLogQueryOffsetMin = 0;
+export const listLoginLogQueryOffsetMax = 2147483647;
 
 export const listLoginLogQueryLimitDefault = 50;
 export const listLoginLogQueryLimitMax = 100;
@@ -22,8 +25,13 @@ export const ListLoginLogQueryParams = zod.object({
   "userId": zod.int().min(1).optional().describe('Only the entries of this User.'),
   "result": zod.enum(['login', 'failed-login', 'logout']).optional().describe('Only the entries with this result.'),
   "before": zod.int().min(1).optional().describe('The previous page\'s nextBefore: only the entries older than that. Leave out for the newest.'),
+  "offset": zod.int().min(listLoginLogQueryOffsetMin).max(listLoginLogQueryOffsetMax).optional().describe('Explicitly selects numbered mode, including 0. Omit for legacy cursor mode.'),
   "limit": zod.int().min(1).max(listLoginLogQueryLimitMax).default(listLoginLogQueryLimitDefault).describe('The most entries on a page.')
 })
+
+export const listLoginLogResponseTotalMin = 0;
+
+
 
 export const ListLoginLogResponse = zod.object({
   "$schema": zod.url().optional().describe('A URL to the JSON Schema for this object.'),
@@ -39,6 +47,7 @@ export const ListLoginLogResponse = zod.object({
 }),zod.null()]).describe('The User the email matches, or null when it matches none.'),
   "userAgent": zod.string().describe('The browser or device, as it called itself. Empty when it sent nothing.')
 })).describe('Newest first.'),
-  "nextBefore": zod.int().nullable().describe('Pass as before for the next page. Null on the last page.')
+  "nextBefore": zod.int().nullable().describe('Pass as before for the next page. Null on the last page.'),
+  "total": zod.int().min(listLoginLogResponseTotalMin).optional().describe('Always present on numbered success: exact count for all current filters before offset/limit, including 0. Omitted in legacy cursor mode.')
 })
 

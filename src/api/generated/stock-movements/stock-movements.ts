@@ -98,7 +98,7 @@ export const getListStockMovementsUrl = (params?: ListStockMovementsParams,) => 
 }
 
 /**
- * Every Role sees every Stock movement, newest first, one page at a time. No operation changes or removes one. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
+ * Every Role sees every Stock movement, newest first, one page at a time. No operation changes or removes one. Omit offset to preserve legacy cursor paging, including before/nextBefore and the default limit of 50. An explicitly supplied offset, including offset=0, selects numbered mode; offset and before together return 422. Numbered success includes a bounded page and total, always present and exact for all current filters before offset/limit, including total: 0 for no matches. An out-of-range page is empty with the actual matching total. total is omitted from legacy responses. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
  * @summary List the Stock movements
  */
 export const listStockMovements = async (params?: ListStockMovementsParams, options?: Parameters<typeof apiFetch>[1]): Promise<ListStockMovementsOutputBody> => {

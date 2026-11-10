@@ -16,4 +16,9 @@ export interface ListStockMovementsOutputBody {
      * @nullable
      */
   nextBefore: number | null;
+  /**
+     * Always present on numbered success: exact count for all current filters before offset/limit, including 0. Omitted in legacy cursor mode.
+     * @minimum 0
+     */
+  total?: number;
 }
