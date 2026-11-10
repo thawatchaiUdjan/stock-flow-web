@@ -197,6 +197,11 @@ describe("the Dashboard", () => {
 
     const chart = await screen.findByRole("figure", { name: /Sales for each of the last 14 days/ });
     expect(chart).toBeInTheDocument();
+    within(chart).getByRole("application").focus();
+    await user.keyboard("{ArrowRight}{ArrowLeft}");
+    expect(await within(chart).findByText("฿12,500.50")).toBeVisible();
+    await user.keyboard("{ArrowRight}");
+    expect(await within(chart).findByText("฿0.00")).toBeVisible();
     await user.click(screen.getByText("Show the figures"));
     const rows = within(screen.getByRole("table", { name: "Sales for each of the last 14 days" }))
       .getAllByRole("row")

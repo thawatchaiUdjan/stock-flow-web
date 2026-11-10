@@ -509,6 +509,10 @@ it("pages daily rows without shrinking the chart or total and resets on date cha
   expect(within(table).getAllByRole("row")).toHaveLength(7);
   expect(screen.getByText("฿31.00")).toBeInTheDocument();
   expect(screen.getByRole("figure")).toHaveAccessibleName(/31 Oct/);
+  const chart = screen.getByRole("figure");
+  within(chart).getByRole("application").focus();
+  await user.keyboard("{ArrowRight>30/}");
+  expect(await within(chart).findByText("31 Oct")).toBeVisible();
   expect(sent.every((url) => !url.searchParams.has("page"))).toBe(true);
   await chooseDate(user, "From", "2026-10-01");
   expect(router.state.location.search.page).toBeUndefined();

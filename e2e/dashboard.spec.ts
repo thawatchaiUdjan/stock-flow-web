@@ -69,11 +69,23 @@ test("the Owner completes an Order and sees it in today's Sales", async ({ page 
   ).toBeVisible();
   const bars = page
     .getByRole("figure", { name: /Sales for each of the last 14 days/ })
-    .locator("[style]");
-  await expect(bars).toHaveCount(14);
-  for (const bar of await bars.all()) {
-    await expect(bar).toHaveCSS("background-color", "rgb(58, 107, 79)");
+    .locator(".recharts-bar-rectangle");
+  // Zero-sales days keep their positions but Recharts draws only positive bars.
+  await expect(bars).toHaveCount(1);
+  await expect(bars.locator("path")).toHaveCount(1);
+  for (const bar of await bars.locator("path").all()) {
+    await expect(bar).toHaveCSS("fill", "rgb(58, 107, 79)");
   }
+  // Keep an active tooltip inside the chart when phone users enlarge text.
+  await page.setViewportSize({ width: 375, height: 900 });
+  const chart = page.getByRole("figure", { name: /Sales for each of the last 14 days/ });
+  await chart.getByRole("application").focus();
+  for (let day = 0; day < 14; day++) await page.keyboard.press("ArrowRight");
+  await expect(chart.getByText("฿246.90", { exact: true })).toBeVisible();
+  await page.addStyleTag({ content: "html { font-size: 200% }" });
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+    .toBe(true);
 });
 
 // docs/design.md, *Breakpoints*: no page scrolls sideways at any of these widths.

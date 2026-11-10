@@ -1,4 +1,12 @@
+import { Bar, BarChart, XAxis, YAxis } from "recharts";
+
 import type { SalesDay } from "@/api/generated/model";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import {
   Table,
   TableBody,
@@ -8,9 +16,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatBaht, formatDay } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
-const chartHeight = "h-40";
+const chartConfig = { sales: { label: "Sales", color: "var(--chart-1)" } } satisfies ChartConfig;
 
 // Past a month the bars are hairlines, so the gaps shrink and only the ends of the range are named.
 const denseFrom = 32;
@@ -42,23 +49,47 @@ export function SalesByDay({
           <p className="text-small text-muted-foreground">Highest day {formatBaht(highest)}</p>
           <figure
             aria-label={`${title}, ${formatDay(first.date)} to ${formatDay(last.date)}, highest day ${formatBaht(highest)}`}
-            className={cn("flex items-end border-b", dense ? "gap-px" : "gap-1", chartHeight)}
+            className="min-w-0 border-b"
           >
-            {days.map((one) => (
-              <div
-                key={one.date}
-                title={`${formatDay(one.date)}: ${formatBaht(one.sales)}`}
-                className="flex h-full min-w-0 flex-1 flex-col justify-end"
+            <ChartContainer
+              config={chartConfig}
+              className="aspect-auto h-40 w-full"
+              initialDimension={{ width: 320, height: 160 }}
+            >
+              <BarChart
+                accessibilityLayer
+                data={days}
+                margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+                barCategoryGap={dense ? 0 : "8%"}
               >
-                <div
-                  className="w-full rounded-t-sm bg-chart-1"
-                  // A day with Sales is never invisible, however small beside the highest.
-                  style={{
-                    height: `${one.sales > 0 ? Math.max((one.sales / highest) * 100, 1.5) : 0}%`,
-                  }}
+                <XAxis dataKey="date" hide />
+                <YAxis domain={[0, highest]} hide />
+                <ChartTooltip
+                  isAnimationActive={false}
+                  cursor={false}
+                  position={{ x: 0, y: 0 }}
+                  content={
+                    <ChartTooltipContent
+                      labelFormatter={(value) => formatDay(String(value))}
+                      formatter={(value) => (
+                        <>
+                          <span>Sales</span>
+                          <span>{formatBaht(Number(value))}</span>
+                        </>
+                      )}
+                    />
+                  }
                 />
-              </div>
-            ))}
+                <Bar
+                  dataKey="sales"
+                  fill="var(--color-sales)"
+                  radius={[4, 4, 0, 0]}
+                  isAnimationActive={false}
+                  // A day with Sales is never invisible, however small beside the highest.
+                  minPointSize={(value) => (Number(value) > 0 ? 2.4 : 0)}
+                />
+              </BarChart>
+            </ChartContainer>
           </figure>
           {dense ? (
             <p aria-hidden className="flex justify-between text-small text-muted-foreground">
