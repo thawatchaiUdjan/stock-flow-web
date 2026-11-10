@@ -36,22 +36,7 @@ export function ListPaging({
               : `Page ${page} of ${pages} \u00b7 ${total} matching`}
       </p>
       <div className="flex flex-wrap items-center justify-between gap-3 max-shell:w-full shell:ml-auto shell:gap-6">
-        {onSize && (
-          <label className="flex items-center gap-2 whitespace-nowrap">
-            Rows per page
-            <NativeSelect
-              aria-label="Rows per page"
-              value={size}
-              onChange={(event) => onSize(Number(event.target.value) as 10 | 25 | 50)}
-            >
-              {[10, 25, 50].map((value) => (
-                <NativeSelectOption key={value} value={value}>
-                  {value}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </label>
-        )}
+        {onSize && <RowsPerPage size={size} onSize={onSize} />}
         <div className="ml-auto flex items-center gap-3">
           <Button
             variant="outline"
@@ -103,13 +88,18 @@ export function ListPaging({
   );
 }
 // navigation-and-lists R6: cursors carry position, never a total.
+// navigation-and-lists R8: histories share the list size selector.
 export function CursorPaging({
+  size,
+  onSize,
   older,
   busy,
   canOlder,
   onNewest,
   onOlder,
 }: {
+  size: number;
+  onSize: (size: 10 | 25 | 50) => void;
   older: boolean;
   busy: boolean;
   canOlder: boolean;
@@ -117,16 +107,61 @@ export function CursorPaging({
   onOlder: () => void;
 }) {
   return (
-    <nav aria-label="Pages" aria-busy={busy} className="flex flex-wrap items-center gap-2">
-      <p className="text-muted-foreground">
+    <nav
+      aria-label="Pages"
+      aria-busy={busy}
+      className="flex flex-wrap items-center justify-between gap-3"
+    >
+      <p className="text-muted-foreground" aria-live="polite">
         {older ? "Viewing older entries" : "Viewing newest entries"}
       </p>
-      <Button variant="outline" disabled={!older} onClick={onNewest}>
-        Newest entries
-      </Button>
-      <Button variant="outline" disabled={busy || !canOlder} onClick={onOlder}>
-        Older entries
-      </Button>
+      <div className="flex flex-wrap items-center justify-between gap-3 max-shell:w-full shell:ml-auto shell:gap-6">
+        <RowsPerPage size={size} onSize={onSize} />
+        <div className="ml-auto flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-11 shell:size-9.5"
+            aria-label="Newest entries"
+            title="Newest entries"
+            disabled={!older}
+            onClick={onNewest}
+          >
+            <ChevronFirstIcon aria-hidden="true" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-11 shell:size-9.5"
+            aria-label="Older entries"
+            title="Older entries"
+            disabled={busy || !canOlder}
+            onClick={onOlder}
+          >
+            <ChevronRightIcon aria-hidden="true" />
+          </Button>
+        </div>
+      </div>
     </nav>
+  );
+}
+
+function RowsPerPage({ size, onSize }: { size: number; onSize: (size: 10 | 25 | 50) => void }) {
+  return (
+    <label className="flex flex-wrap items-center gap-2 whitespace-nowrap">
+      Rows per page
+      <NativeSelect
+        className="shrink-0"
+        aria-label="Rows per page"
+        value={size}
+        onChange={(event) => onSize(Number(event.target.value) as 10 | 25 | 50)}
+      >
+        {[10, 25, 50].map((value) => (
+          <NativeSelectOption key={value} value={value}>
+            {value}
+          </NativeSelectOption>
+        ))}
+      </NativeSelect>
+    </label>
   );
 }

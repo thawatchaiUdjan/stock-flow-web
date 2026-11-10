@@ -30,11 +30,11 @@ const chromeOnWindows =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0";
 const results = ["login", "failed-login", "logout"] as const;
 const total = 120;
-// The API sends 50 entries a page unless asked for fewer (users-and-access R38).
-const pageSize = 50;
+// navigation-and-lists R8: histories request 25 rows by default.
+const pageSize = 25;
 
 // Entry n happened n minutes after midnight, so its time tells it apart from every other, and the
-// newest is entry 120 at 02:00. Mali has most of them, so that her entries alone fill two pages;
+// newest is entry 120 at 02:00. Mali has most of them, so her entries alone fill several pages;
 // every tenth is nobody's, an email that matches no User (R36).
 function entry(id: number): Entry {
   const user = id % 10 === 0 ? null : id % 10 === 5 ? somchai : mali;
@@ -102,7 +102,7 @@ test("the Owner opens the Login log, filters it by User and by result, and pages
   await expect(rows.first()).toContainText("Firefox on Windows");
   await expect(rows.nth(1)).toContainText(time(total - 1));
   await expect(rows.last()).toContainText(time(total - pageSize + 1));
-  expect(requests.at(-1)!.search).toBe("");
+  expect(requests.at(-1)!.search).toBe("?limit=25");
 
   // Filter by User: only her entries, and the address says so.
   await page.getByLabel("User").selectOption({ label: `${mali.name} (${mali.email})` });
@@ -133,15 +133,19 @@ test("the Owner opens the Login log, filters it by User and by result, and pages
   await page.getByLabel("Result").selectOption({ label: "All results" });
   await expect(page).toHaveURL("/login-log");
 
-  // Page through all of it: 120 entries are three pages, and the oldest page is the short one.
+  // Page through all 120 entries; the fifth page is the short one.
   await page.getByRole("button", { name: "Older entries" }).click();
   await expect(page).toHaveURL(`/login-log?before=${total - pageSize + 1}`);
   await expect(rows).toHaveCount(pageSize);
+  expect(requests.at(-1)!.searchParams.get("limit")).toBe("25");
   await expect(rows.first()).toContainText(time(total - pageSize));
   await expect(rows.last()).toContainText(time(total - 2 * pageSize + 1));
   expect(requests.at(-1)!.searchParams.get("before")).toBe(String(total - pageSize + 1));
-  await page.getByRole("button", { name: "Older entries" }).click();
-  await expect(rows).toHaveCount(total - 2 * pageSize);
+  for (let index = 2; index < Math.ceil(total / pageSize); index++) {
+    await page.getByRole("button", { name: "Older entries" }).click();
+    await expect(rows.first()).toContainText(time(total - index * pageSize));
+  }
+  await expect(rows).toHaveCount(total % pageSize);
   await expect(rows.last()).toContainText(time(1));
   await expect(page.getByRole("button", { name: "Older entries" })).toBeDisabled();
 
@@ -157,13 +161,13 @@ test("the Owner opens the Login log, filters it by User and by result, and pages
   const older = requests.at(-1)!.searchParams;
   expect([older.get("userId"), older.has("before")]).toEqual([String(mali.id), true]);
   const url = page.url();
-  await expect(rows).toHaveCount(46);
+  await expect(rows).toHaveCount(pageSize);
   await expect(rows.filter({ hasNotText: mali.name })).toHaveCount(0);
 
   await page.reload();
   await expect(page).toHaveURL(url);
   await expect(page.getByLabel("User")).toHaveValue(String(mali.id));
-  await expect(rows).toHaveCount(46);
+  await expect(rows).toHaveCount(pageSize);
   await expect(rows.filter({ hasNotText: mali.name })).toHaveCount(0);
 
   // A filter changes what the pages hold, so it sends the Owner back to the newest.

@@ -20,6 +20,11 @@ for (const width of [375, 768, 1024, 1440]) {
     await logIn(page, "nok@example.com", password);
     await page.goto("/stock-movements?kind=receive");
     const table = page.getByRole("table");
+    const size = page.getByRole("combobox", { name: "Rows per page" });
+    // navigation-and-lists R8: default to 25; explicitly choose 50 for this long-history check.
+    await expect(size).toHaveValue("25");
+    await expect(table.getByRole("row")).toHaveCount(width < 800 ? 25 : 26);
+    await size.selectOption("50");
     await expect(table.getByRole("row")).toHaveCount(width < 800 ? 50 : 51);
     if (width >= 800) {
       const product = table.getByRole("row").nth(1).getByRole("cell").nth(1);
@@ -33,6 +38,7 @@ for (const width of [375, 768, 1024, 1440]) {
     await expect(page.getByText("Viewing older entries")).toBeVisible();
     await page.reload();
     await expect(page.getByLabel("Kind")).toHaveValue("receive");
+    await expect(size).toHaveValue("50");
     const from = page.getByLabel("From", { exact: true });
     await expect(from).toHaveText("Start date");
     await from.focus();

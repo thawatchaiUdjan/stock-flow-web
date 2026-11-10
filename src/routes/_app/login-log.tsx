@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/format";
+import { pagingSearch } from "@/lib/paging";
 import { cn } from "@/lib/utils";
 
 type Result = LoginLogEntryBody["result"];
@@ -40,6 +41,8 @@ const resultVariants = {
 // ADR 0008: the filters and the page live in the address, so a reload or a shared link keeps them.
 // A value the API wouldn't accept is dropped rather than sent.
 const searchSchema = z.object({
+  // navigation-and-lists R8: accept only the offered sizes.
+  size: pagingSearch.size,
   userId: z.number().int().min(1).optional().catch(undefined),
   result: z.enum(LoginLogEntryBodyResult).optional().catch(undefined),
   before: z.number().int().min(1).optional().catch(undefined),
@@ -53,7 +56,8 @@ export const Route = createFileRoute("/_app/login-log")({
 function LoginLogPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const log = useListLoginLog(search);
+  const { size = 25, ...filters } = search;
+  const log = useListLoginLog({ ...filters, limit: size });
   const filtered = search.userId !== undefined || search.result !== undefined;
 
   return (
@@ -89,7 +93,9 @@ function LoginLogPage() {
           </p>
           {filtered && (
             <Button variant="outline" asChild>
-              <Link to="/login-log">Clear filters</Link>
+              <Link to="/login-log" search={{ size: search.size }}>
+                Clear filters
+              </Link>
             </Button>
           )}
         </div>
@@ -100,6 +106,8 @@ function LoginLogPage() {
         </>
       )}
       <CursorPaging
+        size={size}
+        onSize={(size) => void navigate({ search: { ...search, size, before: undefined } })}
         older={search.before !== undefined}
         busy={log.isFetching}
         canOlder={log.isSuccess && log.data.nextBefore !== null}
