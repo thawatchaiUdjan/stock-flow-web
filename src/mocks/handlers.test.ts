@@ -62,7 +62,7 @@ describe.each(["/api/stock-movements", "/api/login-log"])("history modes at %s",
     const legacy = await apiFetch(`${path}?before=99&limit=10`);
     expect(legacy).not.toHaveProperty("total");
   });
-  it.each(["-1", "1.5", "bad", "9007199254740992", "0&before=1"])(
+  it.each(["-1", "1.5", "bad", "9007199254740992", "2147483648", "0&before=1"])(
     "refuses invalid offset %s",
     async (offset) => {
       await expect(apiFetch(`${path}?offset=${offset}`)).rejects.toMatchObject({ status: 422 });

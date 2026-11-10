@@ -44,9 +44,6 @@ export const getListLoginLogResponseMock422 = (overrideResponse: Partial<Extract
 export const getListLoginLogResponseMock500 = (overrideResponse: Partial<Extract<ErrorModel, object>> = {}): ErrorModel => ({$schema: faker.helpers.arrayElement([faker.internet.url(), undefined]), detail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), errors: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({location: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), message: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), value: faker.helpers.arrayElement([{}, undefined])})), null]), instance: faker.helpers.arrayElement([faker.internet.url(), undefined]), products: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), stock: faker.number.int()})), undefined]), status: faker.helpers.arrayElement([faker.number.int(), undefined]), title: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(['about:blank','login-failed','session-ended','setup-link-invalid','email-taken','target-is-owner','user-inactive','sku-taken','insufficient-stock','product-archived','order-not-pending'] as const), ...overrideResponse})
 
 
-export const getListLoginLogResponseMock501 = (overrideResponse: Partial<Extract<ErrorModel, object>> = {}): ErrorModel => ({$schema: faker.helpers.arrayElement([faker.internet.url(), undefined]), detail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), errors: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({location: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), message: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), value: faker.helpers.arrayElement([{}, undefined])})), null]), instance: faker.helpers.arrayElement([faker.internet.url(), undefined]), products: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), stock: faker.number.int()})), undefined]), status: faker.helpers.arrayElement([faker.number.int(), undefined]), title: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(['about:blank','login-failed','session-ended','setup-link-invalid','email-taken','target-is-owner','user-inactive','sku-taken','insufficient-stock','product-archived','order-not-pending'] as const), ...overrideResponse})
-
-
 export const getListLoginLogMockHandler = (overrideResponse?: ListLoginLogOutputBody | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ListLoginLogOutputBody> | ListLoginLogOutputBody), options?: RequestHandlerOptions) => {
   return http.get('*/api/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
 
@@ -120,19 +117,6 @@ export const getListLoginLogMockHandler500 = (overrideResponse?: ErrorModel | ((
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getListLoginLogResponseMock500(),
       { status: 500, headers: { 'Content-Type': 'application/problem+json' }
-      })
-  }, options)
-}
-
-
-export const getListLoginLogMockHandler501 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/api/login-log', async (info: Parameters<HttpResponseResolver>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListLoginLogResponseMock501(),
-      { status: 501, headers: { 'Content-Type': 'application/problem+json' }
       })
   }, options)
 }

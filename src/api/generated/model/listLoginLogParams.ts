@@ -20,7 +20,7 @@ export type ListLoginLogParams = {
    */
   before?: number;
   /**
-   * Explicitly selects numbered mode, including 0. Omit for legacy cursor mode. Temporarily returns 501.
+   * Explicitly selects numbered mode, including 0. Omit for legacy cursor mode.
    * @minimum 0
    * @maximum 2147483647
    */

@@ -858,7 +858,7 @@ export const handlers = [
     // context ADR 0009: explicit offset selects bounded numbered mode; legacy cursors stay compatible.
     if (query.has("offset")) {
       const offset = Number(query.get("offset"));
-      if (before !== null || !Number.isSafeInteger(offset) || offset < 0) {
+      if (before !== null || !Number.isSafeInteger(offset) || offset < 0 || offset > int32Max) {
         throw problem({ status: 422, title: "Invalid history offset" });
       }
       return {
@@ -984,7 +984,7 @@ export const handlers = [
     // context ADR 0009: explicit offset selects bounded numbered mode; legacy cursors stay compatible.
     if (query.has("offset")) {
       const offset = Number(query.get("offset"));
-      if (before !== null || !Number.isSafeInteger(offset) || offset < 0) {
+      if (before !== null || !Number.isSafeInteger(offset) || offset < 0 || offset > int32Max) {
         throw problem({ status: 422, title: "Invalid history offset" });
       }
       return {

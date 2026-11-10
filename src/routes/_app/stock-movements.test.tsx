@@ -969,14 +969,17 @@ describe("numbered history", () => {
     });
   });
 
-  it.each([0, -1, 1.5, "bad", "9007199254740991"])("normalizes invalid page %s", async (page) => {
-    signedIn("owner");
-    mockApi.products = [helmet];
-    const sent = requestsTo("/api/stock-movements");
-    renderApp(`/stock-movements?page=${page}`);
-    await screen.findByText("Page 1 of 1 \u00b7 0 matching");
-    expect(sent.at(-1)!.url.searchParams.get("offset")).toBe("0");
-  });
+  it.each([0, -1, 1.5, "bad", "9007199254740991", 85899347])(
+    "normalizes invalid page %s",
+    async (page) => {
+      signedIn("owner");
+      mockApi.products = [helmet];
+      const sent = requestsTo("/api/stock-movements");
+      renderApp(`/stock-movements?page=${page}`);
+      await screen.findByText("Page 1 of 1 \u00b7 0 matching");
+      expect(sent.at(-1)!.url.searchParams.get("offset")).toBe("0");
+    },
+  );
 
   it.each(["missing total", "501"])(
     "shows an error without an invented count for %s",

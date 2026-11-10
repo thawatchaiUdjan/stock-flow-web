@@ -538,14 +538,17 @@ describe("numbered history", () => {
     });
   });
 
-  it.each([0, -1, 1.5, "bad", "9007199254740991"])("normalizes invalid page %s", async (page) => {
-    mockApi.session = "live";
-    addUsers();
-    const sent = requestsToTheLog();
-    renderApp(`/login-log?page=${page}`);
-    await screen.findByText("Page 1 of 1 \u00b7 0 matching");
-    expect(sent.at(-1)!.searchParams.get("offset")).toBe("0");
-  });
+  it.each([0, -1, 1.5, "bad", "9007199254740991", 85899347])(
+    "normalizes invalid page %s",
+    async (page) => {
+      mockApi.session = "live";
+      addUsers();
+      const sent = requestsToTheLog();
+      renderApp(`/login-log?page=${page}`);
+      await screen.findByText("Page 1 of 1 \u00b7 0 matching");
+      expect(sent.at(-1)!.searchParams.get("offset")).toBe("0");
+    },
+  );
 
   it.each(["missing total", "501"])(
     "shows an error without an invented count for %s",

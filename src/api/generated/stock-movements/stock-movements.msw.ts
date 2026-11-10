@@ -44,9 +44,6 @@ export const getListStockMovementsResponseMock422 = (overrideResponse: Partial<E
 
 export const getListStockMovementsResponseMock500 = (overrideResponse: Partial<Extract<ErrorModel, object>> = {}): ErrorModel => ({$schema: faker.helpers.arrayElement([faker.internet.url(), undefined]), detail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), errors: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({location: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), message: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), value: faker.helpers.arrayElement([{}, undefined])})), null]), instance: faker.helpers.arrayElement([faker.internet.url(), undefined]), products: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), stock: faker.number.int()})), undefined]), status: faker.helpers.arrayElement([faker.number.int(), undefined]), title: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(['about:blank','login-failed','session-ended','setup-link-invalid','email-taken','target-is-owner','user-inactive','sku-taken','insufficient-stock','product-archived','order-not-pending'] as const), ...overrideResponse})
 
-
-export const getListStockMovementsResponseMock501 = (overrideResponse: Partial<Extract<ErrorModel, object>> = {}): ErrorModel => ({$schema: faker.helpers.arrayElement([faker.internet.url(), undefined]), detail: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), errors: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({location: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), message: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), value: faker.helpers.arrayElement([{}, undefined])})), null]), instance: faker.helpers.arrayElement([faker.internet.url(), undefined]), products: faker.helpers.arrayElement([Array.from({ length: faker.number.int({min: 1, max: 10}) }, (_, i) => i + 1).map(() => ({id: faker.number.int(), stock: faker.number.int()})), undefined]), status: faker.helpers.arrayElement([faker.number.int(), undefined]), title: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), undefined]), type: faker.helpers.arrayElement(['about:blank','login-failed','session-ended','setup-link-invalid','email-taken','target-is-owner','user-inactive','sku-taken','insufficient-stock','product-archived','order-not-pending'] as const), ...overrideResponse})
-
 export const getAdjustStockResponseStockMovementOrderMock = (overrideResponse: Partial<StockMovementOrder> = {}): StockMovementOrder => ({...{id: faker.number.int(), number: faker.number.int()}, ...overrideResponse});
 
 export const getAdjustStockResponseMock = (overrideResponse: Partial<Extract<StockMovement, object>> = {}): StockMovement => ({$schema: faker.helpers.arrayElement([faker.internet.url(), undefined]), at: faker.date.past().toISOString().slice(0, 19) + 'Z', change: faker.number.int(), id: faker.number.int(), kind: faker.helpers.arrayElement(['receive','adjustment','order','cancellation'] as const), note: faker.string.alpha({length: {min: 10, max: 20}}), order: faker.helpers.arrayElement([{...getAdjustStockResponseStockMovementOrderMock()},null,]), product: {id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 20}}), sku: faker.string.alpha({length: {min: 10, max: 20}})}, stockAfter: faker.number.int(), user: {id: faker.number.int(), name: faker.string.alpha({length: {min: 10, max: 20}})}, ...overrideResponse})
@@ -155,19 +152,6 @@ export const getListStockMovementsMockHandler500 = (overrideResponse?: ErrorMode
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
     : getListStockMovementsResponseMock500(),
       { status: 500, headers: { 'Content-Type': 'application/problem+json' }
-      })
-  }, options)
-}
-
-
-export const getListStockMovementsMockHandler501 = (overrideResponse?: ErrorModel | ((info: Parameters<HttpResponseResolver>[0]) => Promise<ErrorModel> | ErrorModel), options?: RequestHandlerOptions) => {
-  return http.get('*/api/stock-movements', async (info: Parameters<HttpResponseResolver>[0]) => {
-
-
-    return HttpResponse.json(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getListStockMovementsResponseMock501(),
-      { status: 501, headers: { 'Content-Type': 'application/problem+json' }
       })
   }, options)
 }

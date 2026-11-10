@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/format";
-import { numberedHistoryPage, pagingSearch } from "@/lib/paging";
+import { historyPageSearch, numberedHistoryPage, pagingSearch } from "@/lib/paging";
 import { cn } from "@/lib/utils";
 
 type Result = LoginLogEntryBody["result"];
@@ -40,13 +40,15 @@ const resultVariants = {
 
 // ADR 0008: the filters and the page live in the address, so a reload or a shared link keeps them.
 // A value the API wouldn't accept is dropped rather than sent.
-const searchSchema = z.object({
-  // navigation-and-lists R8: accept only the offered sizes.
-  size: pagingSearch.size,
-  userId: z.number().int().min(1).optional().catch(undefined),
-  result: z.enum(LoginLogEntryBodyResult).optional().catch(undefined),
-  page: pagingSearch.page,
-});
+const searchSchema = z
+  .object({
+    // navigation-and-lists R8: accept only the offered sizes.
+    size: pagingSearch.size,
+    userId: z.number().int().min(1).optional().catch(undefined),
+    result: z.enum(LoginLogEntryBodyResult).optional().catch(undefined),
+    page: pagingSearch.page,
+  })
+  .transform(historyPageSearch);
 
 export const Route = createFileRoute("/_app/login-log")({
   validateSearch: searchSchema,
