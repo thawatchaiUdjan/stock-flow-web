@@ -93,7 +93,9 @@ function LoginLogPage() {
           </p>
           {filtered && (
             <Button variant="outline" asChild>
-              <Link to="/login-log">Clear filters</Link>
+              <Link to="/login-log" search={{ size: search.size }}>
+                Clear filters
+              </Link>
             </Button>
           )}
         </div>

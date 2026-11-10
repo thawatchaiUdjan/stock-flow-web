@@ -885,3 +885,16 @@ it.each(["loading", "error"])(
     expect(pages.getByRole("button", { name: "Older entries" })).toBeDisabled();
   },
 );
+
+// navigation-and-lists R8: clearing filters also keeps the chosen size.
+it("retains the selected history size when clearing filters", async () => {
+  signedIn("owner");
+  const sent = requestsTo("/api/stock-movements");
+  const { user, router } = renderApp("/stock-movements?kind=adjustment&size=50");
+  await screen.findByText("No stock movements match these filters.");
+  await user.click(screen.getByRole("link", { name: "Clear filters" }));
+  await waitFor(() => expect(router.state.location.search).toEqual({ size: 50 }));
+  await waitFor(() =>
+    expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toEqual({ limit: "50" }),
+  );
+});

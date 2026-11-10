@@ -36,22 +36,7 @@ export function ListPaging({
               : `Page ${page} of ${pages} \u00b7 ${total} matching`}
       </p>
       <div className="flex flex-wrap items-center justify-between gap-3 max-shell:w-full shell:ml-auto shell:gap-6">
-        {onSize && (
-          <label className="flex items-center gap-2 whitespace-nowrap">
-            Rows per page
-            <NativeSelect
-              aria-label="Rows per page"
-              value={size}
-              onChange={(event) => onSize(Number(event.target.value) as 10 | 25 | 50)}
-            >
-              {[10, 25, 50].map((value) => (
-                <NativeSelectOption key={value} value={value}>
-                  {value}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </label>
-        )}
+        {onSize && <RowsPerPage size={size} onSize={onSize} />}
         <div className="ml-auto flex items-center gap-3">
           <Button
             variant="outline"
@@ -131,20 +116,7 @@ export function CursorPaging({
         {older ? "Viewing older entries" : "Viewing newest entries"}
       </p>
       <div className="flex flex-wrap items-center justify-between gap-3 max-shell:w-full shell:ml-auto shell:gap-6">
-        <label className="flex items-center gap-2 whitespace-nowrap">
-          Rows per page
-          <NativeSelect
-            aria-label="Rows per page"
-            value={size}
-            onChange={(event) => onSize(Number(event.target.value) as 10 | 25 | 50)}
-          >
-            {[10, 25, 50].map((value) => (
-              <NativeSelectOption key={value} value={value}>
-                {value}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-        </label>
+        <RowsPerPage size={size} onSize={onSize} />
         <div className="ml-auto flex items-center gap-3">
           <Button
             variant="outline"
@@ -171,5 +143,24 @@ export function CursorPaging({
         </div>
       </div>
     </nav>
+  );
+}
+
+function RowsPerPage({ size, onSize }: { size: number; onSize: (size: 10 | 25 | 50) => void }) {
+  return (
+    <label className="flex items-center gap-2 whitespace-nowrap">
+      Rows per page
+      <NativeSelect
+        aria-label="Rows per page"
+        value={size}
+        onChange={(event) => onSize(Number(event.target.value) as 10 | 25 | 50)}
+      >
+        {[10, 25, 50].map((value) => (
+          <NativeSelectOption key={value} value={value}>
+            {value}
+          </NativeSelectOption>
+        ))}
+      </NativeSelect>
+    </label>
   );
 }

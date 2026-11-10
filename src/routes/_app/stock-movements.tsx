@@ -109,7 +109,9 @@ function StockMovementsPage() {
           </p>
           {filtered && (
             <Button variant="outline" asChild>
-              <Link to="/stock-movements">Clear filters</Link>
+              <Link to="/stock-movements" search={{ size: search.size }}>
+                Clear filters
+              </Link>
             </Button>
           )}
         </div>
