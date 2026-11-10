@@ -148,9 +148,10 @@ export function CursorPaging({
 
 function RowsPerPage({ size, onSize }: { size: number; onSize: (size: 10 | 25 | 50) => void }) {
   return (
-    <label className="flex items-center gap-2 whitespace-nowrap">
+    <label className="flex flex-wrap items-center gap-2 whitespace-nowrap">
       Rows per page
       <NativeSelect
+        className="shrink-0"
         aria-label="Rows per page"
         value={size}
         onChange={(event) => onSize(Number(event.target.value) as 10 | 25 | 50)}
