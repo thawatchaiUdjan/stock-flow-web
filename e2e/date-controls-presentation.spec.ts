@@ -55,6 +55,7 @@ for (const width of [375, 768, 1024, 1440]) {
           const button = dialog.getByRole("button", { name: action, exact: true });
           await expect(button).toHaveCSS("border-top-style", "solid");
           await expect(button).toHaveCSS("border-top-color", "rgb(137, 145, 131)");
+          await page.keyboard.press("Tab");
           await button.focus();
           await expect(button).toHaveCSS("outline-style", "solid");
           await expect(button).toHaveCSS("outline-width", "2px");
@@ -78,4 +79,28 @@ for (const width of [375, 768, 1024, 1440]) {
       }
     });
   }
+}
+
+for (const route of ["stock-movements", "reports"]) {
+  test(`${route} calendars remain reachable in phone landscape`, async ({ page }, info) => {
+    await page.setViewportSize({ width: 667, height: 375 });
+    const password = `landscape-${info.testId}`;
+    await install(page, password);
+    await logIn(page, "nok@example.com", password);
+    await page.goto(`/${route}`);
+    for (const label of ["From", "To"]) {
+      const trigger = page.getByLabel(label, { exact: true });
+      await trigger.click();
+      const dialog = page.getByRole("dialog", { name: `${label} calendar` });
+      const bounds = (await dialog.boundingBox())!;
+      expect(bounds.y).toBeGreaterThanOrEqual(0);
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(375);
+      const previous = dialog.getByRole("button", { name: "Previous year", exact: true });
+      await previous.scrollIntoViewIfNeeded();
+      await previous.click();
+      await expect(previous).toBeInViewport();
+      await page.keyboard.press("Escape");
+      await expect(trigger).toBeFocused();
+    }
+  });
 }

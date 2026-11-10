@@ -60,7 +60,7 @@ export function DateInput({
       <PopoverContent
         align="start"
         collisionPadding={8}
-        className="w-auto max-w-[calc(100vw-1rem)] p-2"
+        className="max-h-(--radix-popover-content-available-height) w-auto max-w-[calc(100vw-1rem)] overflow-y-auto p-2"
         aria-label={`${label} calendar`}
         aria-describedby={value ? `${id}-instruction` : undefined}
       >
