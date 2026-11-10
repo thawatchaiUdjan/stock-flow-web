@@ -19,14 +19,12 @@ const denseFrom = 32;
 export function SalesByDay({
   title,
   days,
-  focus,
   tableOpen,
   tablePage,
   showChart = true,
 }: {
   title: string;
   days: SalesDay[];
-  focus?: string;
   tableOpen?: boolean;
   tablePage?: number;
   showChart?: boolean;
@@ -53,10 +51,7 @@ export function SalesByDay({
                 className="flex h-full min-w-0 flex-1 flex-col justify-end"
               >
                 <div
-                  className={cn(
-                    "w-full rounded-t-sm",
-                    one.date === focus ? "bg-chart-2" : "bg-chart-1",
-                  )}
+                  className="w-full rounded-t-sm bg-chart-1"
                   // A day with Sales is never invisible, however small beside the highest.
                   style={{
                     height: `${one.sales > 0 ? Math.max((one.sales / highest) * 100, 1.5) : 0}%`,

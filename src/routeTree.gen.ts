@@ -23,6 +23,8 @@ import { Route as AppOrdersNumberRouteImport } from './routes/_app/orders.$numbe
 import { Route as AppOrdersNewRouteImport } from './routes/_app/orders.new'
 import { Route as AppProductsIndexRouteImport } from './routes/_app/products.index'
 import { Route as AppProductsNewRouteImport } from './routes/_app/products.new'
+import { Route as AppStockMovementsAdjustRouteImport } from './routes/_app/stock-movements_.adjust'
+import { Route as AppStockMovementsReceiveRouteImport } from './routes/_app/stock-movements_.receive'
 import { Route as AppUsersIndexRouteImport } from './routes/_app/users.index'
 import { Route as AppUsersNewRouteImport } from './routes/_app/users.new'
 import { Route as AppProductsIdEditRouteImport } from './routes/_app/products.$id.edit'
@@ -97,6 +99,17 @@ const AppProductsNewRoute = AppProductsNewRouteImport.update({
   path: '/products/new',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStockMovementsAdjustRoute = AppStockMovementsAdjustRouteImport.update({
+  id: '/stock-movements_/adjust',
+  path: '/stock-movements/adjust',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStockMovementsReceiveRoute =
+  AppStockMovementsReceiveRouteImport.update({
+    id: '/stock-movements_/receive',
+    path: '/stock-movements/receive',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppUsersIndexRoute = AppUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -130,6 +143,8 @@ export interface FileRoutesByFullPath {
   '/orders/$number': typeof AppOrdersNumberRoute
   '/orders/new': typeof AppOrdersNewRoute
   '/products/new': typeof AppProductsNewRoute
+  '/stock-movements/adjust': typeof AppStockMovementsAdjustRoute
+  '/stock-movements/receive': typeof AppStockMovementsReceiveRoute
   '/users/new': typeof AppUsersNewRoute
   '/orders/': typeof AppOrdersIndexRoute
   '/products/': typeof AppProductsIndexRoute
@@ -149,6 +164,8 @@ export interface FileRoutesByTo {
   '/orders/$number': typeof AppOrdersNumberRoute
   '/orders/new': typeof AppOrdersNewRoute
   '/products/new': typeof AppProductsNewRoute
+  '/stock-movements/adjust': typeof AppStockMovementsAdjustRoute
+  '/stock-movements/receive': typeof AppStockMovementsReceiveRoute
   '/users/new': typeof AppUsersNewRoute
   '/orders': typeof AppOrdersIndexRoute
   '/products': typeof AppProductsIndexRoute
@@ -170,6 +187,8 @@ export interface FileRoutesById {
   '/_app/orders/$number': typeof AppOrdersNumberRoute
   '/_app/orders/new': typeof AppOrdersNewRoute
   '/_app/products/new': typeof AppProductsNewRoute
+  '/_app/stock-movements_/adjust': typeof AppStockMovementsAdjustRoute
+  '/_app/stock-movements_/receive': typeof AppStockMovementsReceiveRoute
   '/_app/users/new': typeof AppUsersNewRoute
   '/_app/orders/': typeof AppOrdersIndexRoute
   '/_app/products/': typeof AppProductsIndexRoute
@@ -191,6 +210,8 @@ export interface FileRouteTypes {
     | '/orders/$number'
     | '/orders/new'
     | '/products/new'
+    | '/stock-movements/adjust'
+    | '/stock-movements/receive'
     | '/users/new'
     | '/orders/'
     | '/products/'
@@ -210,6 +231,8 @@ export interface FileRouteTypes {
     | '/orders/$number'
     | '/orders/new'
     | '/products/new'
+    | '/stock-movements/adjust'
+    | '/stock-movements/receive'
     | '/users/new'
     | '/orders'
     | '/products'
@@ -230,6 +253,8 @@ export interface FileRouteTypes {
     | '/_app/orders/$number'
     | '/_app/orders/new'
     | '/_app/products/new'
+    | '/_app/stock-movements_/adjust'
+    | '/_app/stock-movements_/receive'
     | '/_app/users/new'
     | '/_app/orders/'
     | '/_app/products/'
@@ -344,6 +369,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProductsNewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/stock-movements_/adjust': {
+      id: '/_app/stock-movements_/adjust'
+      path: '/stock-movements/adjust'
+      fullPath: '/stock-movements/adjust'
+      preLoaderRoute: typeof AppStockMovementsAdjustRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/stock-movements_/receive': {
+      id: '/_app/stock-movements_/receive'
+      path: '/stock-movements/receive'
+      fullPath: '/stock-movements/receive'
+      preLoaderRoute: typeof AppStockMovementsReceiveRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/users/': {
       id: '/_app/users/'
       path: '/users'
@@ -385,6 +424,8 @@ interface AppRouteChildren {
   AppOrdersNumberRoute: typeof AppOrdersNumberRoute
   AppOrdersNewRoute: typeof AppOrdersNewRoute
   AppProductsNewRoute: typeof AppProductsNewRoute
+  AppStockMovementsAdjustRoute: typeof AppStockMovementsAdjustRoute
+  AppStockMovementsReceiveRoute: typeof AppStockMovementsReceiveRoute
   AppUsersNewRoute: typeof AppUsersNewRoute
   AppOrdersIndexRoute: typeof AppOrdersIndexRoute
   AppProductsIndexRoute: typeof AppProductsIndexRoute
@@ -403,6 +444,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppOrdersNumberRoute: AppOrdersNumberRoute,
   AppOrdersNewRoute: AppOrdersNewRoute,
   AppProductsNewRoute: AppProductsNewRoute,
+  AppStockMovementsAdjustRoute: AppStockMovementsAdjustRoute,
+  AppStockMovementsReceiveRoute: AppStockMovementsReceiveRoute,
   AppUsersNewRoute: AppUsersNewRoute,
   AppOrdersIndexRoute: AppOrdersIndexRoute,
   AppProductsIndexRoute: AppProductsIndexRoute,

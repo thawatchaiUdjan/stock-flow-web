@@ -72,11 +72,7 @@ function DashboardFigures({ dashboard }: { dashboard: DashboardOutputBody }) {
             Sales, last 14 days
           </h2>
           {hasSales ? (
-            <SalesByDay
-              title="Sales for each of the last 14 days"
-              days={dashboard.salesByDay}
-              focus={dashboard.today}
-            />
+            <SalesByDay title="Sales for each of the last 14 days" days={dashboard.salesByDay} />
           ) : (
             <p className="text-muted-foreground">
               No sales in the last 14 days. Complete an order to record one.

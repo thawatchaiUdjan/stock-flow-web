@@ -26,7 +26,7 @@ Light theme only. Dark mode would be a change of direction. Values live in `src/
 | --- | --- | --- | --- |
 | Forest | `#3A6B4F` | `primary`, `ring`, `chart-1` | The one accent: primary buttons, selected navigation, focus, chart bars, healthy stock level |
 | Fern | `#E6F0E8` | `secondary`, `accent` | Soft tint behind selected navigation |
-| Ink | `#20261F` | `foreground`, `chart-2` | Text, the minimum marker, today's bar in a chart |
+| Ink | `#20261F` | `foreground` | Text and the minimum marker |
 | Moss | `#5C6558` | `muted-foreground` | Secondary text: SKUs, labels, table headers |
 | Page | `#F6F7F4` | `background` | The page behind surfaces, table header rows |
 | White | `#FFFFFF` | `card`, `popover`, `sidebar` | Surfaces, and text on Forest |
@@ -43,7 +43,7 @@ State colors appear only where stock or an action needs attention, and always be
 
 Every pair in use meets WCAG AA: 4.5:1 for text, 3:1 for control borders and level bars. Re-measure any value that changes.
 
-Charts use Forest for a single series, with Ink for the point in focus. A chart with several series needs a palette this direction doesn't have yet: ask, don't invent one.
+Charts use Forest for a single series, including today's bar. A chart with several series needs a palette this direction doesn't have yet: ask, don't invent one.
 
 ## Type
 
@@ -89,7 +89,7 @@ Desktop                                  Phone (below 800 px, navigation above c
 └────────┴──────────────────────────┘    └──────────────────┘
 ```
 
-- **Sidebar:** 216 px, sticky, with an icon and a word for each item, and the User's name, Role and Log out at its foot. Below 800 px, show every permitted destination in a two-column grid between the home link and account strip, above the content. Links have full labels, a minimum 44 px height and 8 px gaps on an opaque White surface. Navigation scrolls with the page; there is no bottom overlay to obscure content or paging. The shell pads all four device safe areas.
+- **Sidebar:** 216 px, sticky, with an icon and a word for each item, and the User's name, Role and Log out at its foot. Below 800 px, show every permitted destination in a single-column grid between the home link and account strip, above the content. Links have full labels, a minimum 44 px height and 8 px gaps on an opaque White surface. Navigation scrolls with the page; there is no bottom overlay to obscure content or paging. The shell pads all four device safe areas.
 - **Content:** 32 px side padding (12 px on a phone), up to 1280 px wide.
 - **Spacing:** a 4 px base: 4, 8, 12, 16, 24, 32. Gaps between surfaces are 16 px.
 - **Surfaces:** white, a 1 px Line border, 8 px radius, no shadow, no gradient. Related figures share one surface, split by rules, rather than sitting in separate cards.
@@ -106,7 +106,7 @@ Desktop                                  Phone (below 800 px, navigation above c
 - **Focus:** a 2 px Forest outline, offset 2 px, on everything that takes focus. shadcn's default `ring/50` alone falls below 3:1 on Page, so it needs the solid border beside it.
 - **Motion:** 150 ms on hover and focus, nothing that plays by itself, and none under `prefers-reduced-motion`.
 - **Brand:** `src/assets/stockflow.svg` is the original StockFlow mark: an outlined inventory carton with a rising outbound arrow, white on a Forest rounded square. The 32-unit drawing uses 2-unit strokes for readability at 16 px (favicon) and 32 px (shell). Keep the artwork square and beside the StockFlow wordmark. The pair is one link named "StockFlow home", leading Owner/Admin to Dashboard and Staff to Orders. It appears above navigation on desktop and above the account strip on phones. The favicon uses the same SVG.
-- **Navigation:** main navigation contains destinations, with creation actions in their lists. Product forms select Products; Order forms and details select Orders; User forms select Users. Access to forms is independent of shortcut visibility. A white top bar above the work shows the current page; nested pages show a parent-list link, a quiet slash and the current page label. Parent links have 44 px touch height on phones. Unknown addresses say "Page not found"; denied addresses say "No access". Labels wrap when space is tight. Preserve the Forest palette, Figtree type and 4 px spacing rhythm.
+- **Navigation:** main navigation contains destinations, with creation actions in their lists. Product forms select Products; Order forms and details select Orders; User forms select Users. Receive stock and Adjust stock have separate pages with Stock movements as their parent and selected main destination. Access to forms is independent of shortcut visibility. A white top bar above the work shows the current page; nested pages show a parent-list link, a quiet slash and the current page label. Parent links have 44 px touch height on phones. Unknown addresses say "Page not found"; denied addresses say "No access". Labels wrap when space is tight. Preserve the Forest palette, Figtree type and 4 px spacing rhythm.
 - **Icons:** Lucide, 16 to 18 px, always beside a word unless the control has an accessible name.
 
 ## Principles

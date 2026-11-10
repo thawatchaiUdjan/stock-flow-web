@@ -67,6 +67,13 @@ test("the Owner completes an Order and sees it in today's Sales", async ({ page 
   await expect(
     page.getByRole("figure", { name: /Sales for each of the last 14 days/ }),
   ).toBeVisible();
+  const bars = page
+    .getByRole("figure", { name: /Sales for each of the last 14 days/ })
+    .locator("[style]");
+  await expect(bars).toHaveCount(14);
+  for (const bar of await bars.all()) {
+    await expect(bar).toHaveCSS("background-color", "rgb(58, 107, 79)");
+  }
 });
 
 // docs/design.md, *Breakpoints*: no page scrolls sideways at any of these widths.

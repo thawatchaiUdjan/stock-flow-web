@@ -56,6 +56,24 @@ const r11 = [
     staff: true,
   },
   {
+    page: "Receive stock",
+    path: "/stock-movements/receive",
+    label: undefined,
+    heading: "Receive stock",
+    owner: true,
+    admin: true,
+    staff: true,
+  },
+  {
+    page: "Adjust stock",
+    path: "/stock-movements/adjust",
+    label: undefined,
+    heading: "Adjust stock",
+    owner: true,
+    admin: true,
+    staff: false,
+  },
+  {
     page: "Orders List",
     path: "/orders",
     label: "Orders",
@@ -186,7 +204,7 @@ describe("what each Role reaches", () => {
           row[role] &&
           !row.path.startsWith("/users") &&
           !row.path.startsWith("/products") &&
-          row.path !== "/stock-movements" &&
+          !row.path.startsWith("/stock-movements") &&
           !row.path.startsWith("/orders") &&
           !("route" in row && row.route === "/orders/$number") &&
           row.path !== "/login-log" &&

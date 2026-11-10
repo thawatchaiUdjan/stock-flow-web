@@ -11,6 +11,21 @@ for (const width of [375, 768, 1024, 1440]) {
     await install(page, password);
     await logIn(page, "nok@example.com", password);
     const main = page.getByRole("navigation", { name: "Main", exact: true });
+    if (width < 800) {
+      const boxes = await main.getByRole("link").evaluateAll((links) =>
+        links.map((link) => {
+          const { x, y, width, height } = link.getBoundingClientRect();
+          return { x, y, width, height };
+        }),
+      );
+      for (const [index, box] of boxes.entries()) {
+        expect(box.height).toBeGreaterThanOrEqual(44);
+        expect(box.x).toBe(boxes[0]!.x);
+        expect(box.width).toBe(boxes[0]!.width);
+        if (index > 0)
+          expect(box.y).toBeGreaterThanOrEqual(boxes[index - 1]!.y + boxes[index - 1]!.height + 8);
+      }
+    }
     await expect(main.getByRole("link", { name: "New product" })).toHaveCount(0);
     await expect(main.getByRole("link", { name: "New order" })).toHaveCount(0);
     await main.getByRole("link", { name: "Products", exact: true }).click();
@@ -40,6 +55,21 @@ for (const width of [375, 768, 1024, 1440]) {
     await expect(parent).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("heading", { name: "Products", exact: true })).toBeVisible();
+    await main.getByRole("link", { name: "Stock movements", exact: true }).click();
+    for (const action of ["Receive stock", "Adjust stock"]) {
+      await page.getByRole("main").getByRole("link", { name: action, exact: true }).click();
+      await expect(context.getByText(action, { exact: true })).toHaveAttribute(
+        "aria-current",
+        "page",
+      );
+      await expect(
+        main.getByRole("link", { name: "Stock movements", exact: true }),
+      ).toHaveAttribute("aria-current", "page");
+      await context.getByRole("link", { name: "Stock movements", exact: true }).click();
+      await expect(
+        page.getByRole("heading", { name: "Stock movements", exact: true }),
+      ).toBeVisible();
+    }
     const home = page.getByRole("link", { name: "StockFlow home" });
     await home.focus();
     await page.keyboard.press("Enter");

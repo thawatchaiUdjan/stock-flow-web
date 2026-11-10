@@ -51,6 +51,21 @@ export const pages = [
     icon: ArrowLeftRight,
     roles: ["owner", "admin", "staff"],
   },
+  // stock-movements R4, R5: forms retain the operation's Role permissions.
+  {
+    title: "Receive stock",
+    path: "/stock-movements/receive",
+    parent: "/stock-movements",
+    icon: ArrowLeftRight,
+    roles: ["owner", "admin", "staff"],
+  },
+  {
+    title: "Adjust stock",
+    path: "/stock-movements/adjust",
+    parent: "/stock-movements",
+    icon: ArrowLeftRight,
+    roles: ["owner", "admin"],
+  },
   {
     title: "Orders",
     path: "/orders",
