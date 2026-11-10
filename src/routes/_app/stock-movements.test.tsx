@@ -1,8 +1,12 @@
 import { screen, waitFor, within } from "@testing-library/react";
+import { delay } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import type { StockMovement } from "@/api/generated/model";
-import { getListStockMovementsMockHandler500 } from "@/api/generated/stock-movements/stock-movements.msw";
+import {
+  getListStockMovementsMockHandler200,
+  getListStockMovementsMockHandler500,
+} from "@/api/generated/stock-movements/stock-movements.msw";
 import { mockApi, productOf, serverFailure } from "@/mocks/handlers";
 import { chooseDate } from "@/test/date-picker";
 import { renderApp } from "@/test/render-app";
@@ -78,6 +82,15 @@ function rowOf(text: string | RegExp) {
 }
 
 describe("the Stock Movements list", () => {
+  // navigation-and-lists R8: the UI default must reach the API.
+  it("requests 25 rows by default", async () => {
+    signedIn("owner");
+    const sent = requestsTo("/api/stock-movements");
+    renderApp("/stock-movements");
+    await screen.findByText(/No stock movements yet/);
+    expect(sent.at(-1)?.url.searchParams.get("limit")).toBe("25");
+    expect(screen.getByRole("combobox", { name: "Rows per page" })).toHaveValue("25");
+  });
   // stock-movements R10, R11
   it("shows each entry's time, Product with SKU, kind, change, stock after, User and note, newest first", async () => {
     signedIn("owner");
@@ -190,18 +203,18 @@ describe("the Stock Movements list", () => {
   it("pages by cursor, keeping the filters", async () => {
     signedIn("owner");
     mockApi.products = [helmet];
-    mockApi.stockMovements = Array.from({ length: 51 }, (_, i) =>
+    mockApi.stockMovements = Array.from({ length: 26 }, (_, i) =>
       movement(i + 1, { note: `n${i + 1}` }),
     );
     const sent = requestsTo("/api/stock-movements");
     const { user } = renderApp("/stock-movements?kind=receive");
 
-    await screen.findByText("n51");
+    await screen.findByText("n26");
     expect(screen.queryByText("n1")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Older entries" }));
 
     await screen.findByText("n1");
-    expect(screen.queryByText("n51")).not.toBeInTheDocument();
+    expect(screen.queryByText("n26")).not.toBeInTheDocument();
     expect(sent.at(-1)!.url.searchParams.get("before")).toBe("2");
     expect(sent.at(-1)!.url.searchParams.get("kind")).toBe("receive");
     expect(screen.getByRole("button", { name: "Older entries" })).toBeDisabled();
@@ -664,6 +677,7 @@ it.each(["From", "To"])(
       expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toEqual({
         productId: "1",
         kind: "receive",
+        limit: "25",
         ...remaining,
       }),
     );
@@ -734,3 +748,140 @@ it("focuses Bangkok today with a fixed application clock", async () => {
     vi.useRealTimers();
   }
 });
+
+// navigation-and-lists R6, R8: URL size survives cursors; changing it retains filters.
+describe("history page sizes", () => {
+  it.each([10, 25, 50])(
+    "restores %i rows from the URL and retains them through cursor navigation",
+    async (size) => {
+      signedIn("owner");
+      mockApi.products = [helmet];
+      mockApi.stockMovements.push(...Array.from({ length: 60 }, (_, i) => movement(i + 1)));
+      const sent = requestsTo("/api/stock-movements");
+      const { user, router } = renderApp(
+        `/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&size=${size}`,
+      );
+      await screen.findByRole("table");
+      expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(size + 1);
+      expect(screen.getByLabelText("Rows per page")).toHaveValue(String(size));
+      expect(sent.at(-1)?.url.searchParams.get("limit")).toBe(String(size));
+      expect(sent.at(-1)?.url.searchParams.has("size")).toBe(false);
+      await user.click(screen.getByRole("button", { name: "Older entries" }));
+      await screen.findByText("Viewing older entries");
+      await waitFor(() =>
+        expect(sent.at(-1)?.url.searchParams.get("before")).toBe(String(61 - size)),
+      );
+      expect(sent.at(-1)?.url.searchParams.get("limit")).toBe(String(size));
+      expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toMatchObject({
+        productId: "1",
+        kind: "receive",
+        from: "2026-11-01",
+        to: "2026-11-07",
+      });
+      expect(router.state.location.search).toMatchObject({ size, before: 61 - size });
+      await user.click(screen.getByRole("button", { name: "Newest entries" }));
+      await waitFor(() => expect(router.state.location.search.before).toBeUndefined());
+      expect(router.state.location.search.size).toBe(size);
+      expect(router.state.location.search).toMatchObject({ size });
+    },
+  );
+
+  it.each([0, 11, 100, -1, 25.5, "bad", "[10,25]"])(
+    "normalizes invalid URL size %s to 25",
+    async (size) => {
+      signedIn("owner");
+      mockApi.products = [helmet];
+      const sent = requestsTo("/api/stock-movements");
+      renderApp(`/stock-movements?size=${size}`);
+      await screen.findByText(/No stock movements yet/);
+      expect(screen.getByLabelText("Rows per page")).toHaveValue("25");
+      expect(sent.at(-1)?.url.searchParams.get("limit")).toBe("25");
+      expect(sent.at(-1)?.url.searchParams.has("size")).toBe(false);
+    },
+  );
+
+  it("resets an older cursor on size and filter changes without losing the selected size", async () => {
+    signedIn("owner");
+    mockApi.products = [helmet];
+    const sent = requestsTo("/api/stock-movements");
+    const { user, router } = renderApp(
+      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&size=50&before=99",
+    );
+    await screen.findByText("No older entries on this page. Return to newest entries.");
+    await user.selectOptions(screen.getByLabelText("Rows per page"), "10");
+    await waitFor(() => expect(sent.at(-1)?.url.searchParams.has("before")).toBe(false));
+    expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toEqual({
+      productId: "1",
+      kind: "receive",
+      from: "2026-11-01",
+      to: "2026-11-07",
+      limit: "10",
+    });
+    expect(router.state.location.search.size).toBe(10);
+    await router.navigate({
+      to: "/stock-movements",
+      search: { ...router.state.location.search, before: 99 },
+    });
+    await screen.findByText("Viewing older entries");
+    await user.selectOptions(screen.getByLabelText("Kind"), "adjustment");
+    await waitFor(() => expect(sent.at(-1)?.url.searchParams.get("kind")).toBe("adjustment"));
+    expect(sent.at(-1)?.url.searchParams.has("before")).toBe(false);
+    expect(sent.at(-1)?.url.searchParams.get("limit")).toBe("10");
+    expect(router.state.location.search.size).toBe(10);
+  });
+
+  it("keeps named icon controls visible and recovers from an empty older page", async () => {
+    signedIn("owner");
+    mockApi.products = [helmet];
+    const { user, router } = renderApp(
+      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&size=10&before=1",
+    );
+    await screen.findByText("No older entries on this page. Return to newest entries.");
+    const pages = within(screen.getByRole("navigation", { name: "Pages" }));
+    expect(pages.getAllByRole("button")).toHaveLength(2);
+    const newest = pages.getByRole("button", { name: "Newest entries" });
+    const older = pages.getByRole("button", { name: "Older entries" });
+    expect(newest).toHaveAttribute("title", "Newest entries");
+    expect(older).toHaveAttribute("title", "Older entries");
+    expect(older).toBeDisabled();
+    await user.click(older);
+    expect(router.state.location.search.before).toBe(1);
+    await user.click(newest);
+    await screen.findByText("No stock movements match these filters.");
+    expect(router.state.location.search.size).toBe(10);
+    expect(newest).toBeDisabled();
+  });
+});
+
+// navigation-and-lists R4, R6: loading and failure never strand an older cursor.
+it.each(["loading", "error"])(
+  "keeps history controls usable during an older %s state",
+  async (state) => {
+    signedIn("owner");
+    if (state === "loading") {
+      server.use(
+        getListStockMovementsMockHandler200(async () => {
+          await delay(300);
+          return { movements: [movement(1)], nextBefore: null };
+        }),
+      );
+    } else {
+      server.use(getListStockMovementsMockHandler500(serverFailure));
+    }
+    const { user, router } = renderApp("/stock-movements?size=50&before=99");
+    await screen.findByText(
+      state === "loading" ? "Loading stock movements" : "Something went wrong. Try again.",
+    );
+    const pages = within(screen.getByRole("navigation", { name: "Pages" }));
+    expect(pages.getByRole("combobox", { name: "Rows per page" })).toHaveValue("50");
+    expect(pages.getByRole("button", { name: "Older entries" })).toBeDisabled();
+    expect(pages.getByRole("button", { name: "Newest entries" })).toBeEnabled();
+    server.use(getListStockMovementsMockHandler200({ movements: [movement(1)], nextBefore: null }));
+    await user.click(pages.getByRole("button", { name: "Newest entries" }));
+    await screen.findByRole("table");
+    expect(router.state.location.search.before).toBeUndefined();
+    expect(router.state.location.search.size).toBe(50);
+    expect(pages.getByRole("button", { name: "Newest entries" })).toBeDisabled();
+    expect(pages.getByRole("button", { name: "Older entries" })).toBeDisabled();
+  },
+);

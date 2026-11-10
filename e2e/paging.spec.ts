@@ -14,6 +14,26 @@ for (const width of [375, 768, 1024, 1440]) {
       const paging = page.getByRole("navigation", { name: "Pages" });
       await expect(paging).toBeVisible();
       await expect(paging).not.toHaveAttribute("aria-busy", "true");
+      const size = paging.getByRole("combobox", { name: "Rows per page" });
+      await expect(size).toHaveValue("25");
+      await size.selectOption("10");
+      await expect(page).toHaveURL(new RegExp(`${route}\\?size=10$`));
+      await page.reload();
+      await expect(size).toHaveValue("10");
+      await expect(paging).not.toHaveAttribute("aria-busy", "true");
+      const controls = paging.getByRole("button");
+      await expect(controls).toHaveCount(
+        route === "stock-movements" || route === "login-log" ? 2 : 4,
+      );
+      for (const control of await controls.all()) {
+        await expect(control).toHaveAttribute(
+          "title",
+          (await control.getAttribute("aria-label")) ?? "",
+        );
+        const box = (await control.boundingBox())!;
+        expect(box.width).toBe(width < 800 ? 44 : 38);
+        expect(box.height).toBe(width < 800 ? 44 : 38);
+      }
       await paging.scrollIntoViewIfNeeded();
       expect(
         await page.evaluate(

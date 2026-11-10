@@ -68,6 +68,15 @@ function emails() {
 }
 
 describe("the Login log", () => {
+  // navigation-and-lists R8: the UI default must reach the API.
+  it("requests 25 rows by default", async () => {
+    mockApi.session = "live";
+    const requests = requestsToTheLog();
+    renderApp("/login-log");
+    await screen.findByText(/No logins yet/);
+    expect(requests.at(-1)?.searchParams.get("limit")).toBe("25");
+    expect(screen.getByRole("combobox", { name: "Rows per page" })).toHaveValue("25");
+  });
   // users-and-access R36, R38
   it("shows each entry's time, email, User, result, IP address and browser, newest first", async () => {
     mockApi.session = "live";
@@ -247,7 +256,7 @@ describe("the Login log", () => {
     });
   });
 
-  // users-and-access R38: the API pages by cursor, 50 entries at a time.
+  // users-and-access R38, navigation-and-lists R8: cursor pages default to 25 rows.
   describe("pages", () => {
     function seedMany() {
       mockApi.session = "live";
@@ -271,19 +280,19 @@ describe("the Login log", () => {
       seedMany();
       const { user } = renderApp("/login-log");
       await screen.findByRole("table");
-      expect(firstAndLast().count).toBe(50);
+      expect(firstAndLast().count).toBe(25);
       expect(firstAndLast().first).toContain("entry-130@example.com");
-      expect(firstAndLast().last).toContain("entry-81@example.com");
+      expect(firstAndLast().last).toContain("entry-106@example.com");
       expect(screen.getByRole("button", { name: "Newest entries" })).toBeDisabled();
 
       await user.click(screen.getByRole("button", { name: "Older entries" }));
-      await waitFor(() => expect(firstAndLast().first).toContain("entry-80@example.com"));
-      expect(firstAndLast().last).toContain("entry-31@example.com");
+      await waitFor(() => expect(firstAndLast().first).toContain("entry-105@example.com"));
+      expect(firstAndLast().last).toContain("entry-81@example.com");
 
       await user.click(screen.getByRole("button", { name: "Older entries" }));
-      await waitFor(() => expect(firstAndLast().first).toContain("entry-30@example.com"));
-      expect(firstAndLast().count).toBe(30);
-      expect(screen.getByRole("button", { name: "Older entries" })).toBeDisabled();
+      await waitFor(() => expect(firstAndLast().first).toContain("entry-80@example.com"));
+      expect(firstAndLast().count).toBe(25);
+      expect(screen.getByRole("button", { name: "Older entries" })).toBeEnabled();
 
       await user.click(screen.getByRole("button", { name: "Newest entries" }));
       await waitFor(() => expect(firstAndLast().first).toContain("entry-130@example.com"));
@@ -299,11 +308,11 @@ describe("the Login log", () => {
 
       await user.click(await screen.findByRole("button", { name: "Older entries" }));
 
-      await waitFor(() => expect(firstAndLast().first).toContain("entry-30@example.com"));
-      expect(firstAndLast().count).toBe(15);
+      await waitFor(() => expect(firstAndLast().first).toContain("entry-80@example.com"));
+      expect(firstAndLast().count).toBe(25);
       expect(screen.getByLabelText("Result")).toHaveValue("failed-login");
       expect(requests.at(-1)?.searchParams.get("result")).toBe("failed-login");
-      expect(requests.at(-1)?.searchParams.get("before")).toBe("32");
+      expect(requests.at(-1)?.searchParams.get("before")).toBe("82");
     });
 
     it("start again from the newest when a filter changes", async () => {
@@ -319,3 +328,128 @@ describe("the Login log", () => {
     });
   });
 });
+
+// navigation-and-lists R6, R8: URL size survives cursors; changing it retains filters.
+describe("history page sizes", () => {
+  it.each([10, 25, 50])(
+    "restores %i rows from the URL and retains them through cursor navigation",
+    async (size) => {
+      mockApi.session = "live";
+      addUsers();
+      mockApi.loginLog.push(...Array.from({ length: 60 }, (_, i) => entry(i + 1)));
+      const sent = requestsToTheLog();
+      const { user, router } = renderApp(`/login-log?userId=2&result=login&size=${size}`);
+      await screen.findByRole("table");
+      expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(size + 1);
+      expect(screen.getByLabelText("Rows per page")).toHaveValue(String(size));
+      expect(sent.at(-1)?.searchParams.get("limit")).toBe(String(size));
+      expect(sent.at(-1)?.searchParams.has("size")).toBe(false);
+      await user.click(screen.getByRole("button", { name: "Older entries" }));
+      await screen.findByText("Viewing older entries");
+      await waitFor(() => expect(sent.at(-1)?.searchParams.get("before")).toBe(String(61 - size)));
+      expect(sent.at(-1)?.searchParams.get("limit")).toBe(String(size));
+      expect(Object.fromEntries(sent.at(-1)!.searchParams)).toMatchObject({
+        userId: "2",
+        result: "login",
+      });
+      expect(router.state.location.search).toMatchObject({ size, before: 61 - size });
+      await user.click(screen.getByRole("button", { name: "Newest entries" }));
+      await waitFor(() => expect(router.state.location.search.before).toBeUndefined());
+      expect(router.state.location.search.size).toBe(size);
+      expect(router.state.location.search).toMatchObject({ size });
+    },
+  );
+
+  it.each([0, 11, 100, -1, 25.5, "bad", "[10,25]"])(
+    "normalizes invalid URL size %s to 25",
+    async (size) => {
+      mockApi.session = "live";
+      addUsers();
+      const sent = requestsToTheLog();
+      renderApp(`/login-log?size=${size}`);
+      await screen.findByText(/No logins yet/);
+      expect(screen.getByLabelText("Rows per page")).toHaveValue("25");
+      expect(sent.at(-1)?.searchParams.get("limit")).toBe("25");
+      expect(sent.at(-1)?.searchParams.has("size")).toBe(false);
+    },
+  );
+
+  it("resets an older cursor on size and filter changes without losing the selected size", async () => {
+    mockApi.session = "live";
+    addUsers();
+    const sent = requestsToTheLog();
+    const { user, router } = renderApp("/login-log?userId=2&result=login&size=50&before=99");
+    await screen.findByText("No older entries on this page. Return to newest entries.");
+    await user.selectOptions(screen.getByLabelText("Rows per page"), "10");
+    await waitFor(() => expect(sent.at(-1)?.searchParams.has("before")).toBe(false));
+    expect(Object.fromEntries(sent.at(-1)!.searchParams)).toEqual({
+      userId: "2",
+      result: "login",
+      limit: "10",
+    });
+    expect(router.state.location.search.size).toBe(10);
+    await router.navigate({
+      to: "/login-log",
+      search: { ...router.state.location.search, before: 99 },
+    });
+    await screen.findByText("Viewing older entries");
+    await user.selectOptions(screen.getByLabelText("Result"), "logout");
+    await waitFor(() => expect(sent.at(-1)?.searchParams.get("result")).toBe("logout"));
+    expect(sent.at(-1)?.searchParams.has("before")).toBe(false);
+    expect(sent.at(-1)?.searchParams.get("limit")).toBe("10");
+    expect(router.state.location.search.size).toBe(10);
+  });
+
+  it("keeps named icon controls visible and recovers from an empty older page", async () => {
+    mockApi.session = "live";
+    addUsers();
+    const { user, router } = renderApp("/login-log?userId=2&result=login&size=10&before=1");
+    await screen.findByText("No older entries on this page. Return to newest entries.");
+    const pages = within(screen.getByRole("navigation", { name: "Pages" }));
+    expect(pages.getAllByRole("button")).toHaveLength(2);
+    const newest = pages.getByRole("button", { name: "Newest entries" });
+    const older = pages.getByRole("button", { name: "Older entries" });
+    expect(newest).toHaveAttribute("title", "Newest entries");
+    expect(older).toHaveAttribute("title", "Older entries");
+    expect(older).toBeDisabled();
+    await user.click(older);
+    expect(router.state.location.search.before).toBe(1);
+    await user.click(newest);
+    await screen.findByText("No entries match these filters.");
+    expect(router.state.location.search.size).toBe(10);
+    expect(newest).toBeDisabled();
+  });
+});
+
+// navigation-and-lists R4, R6: loading and failure never strand an older cursor.
+it.each(["loading", "error"])(
+  "keeps history controls usable during an older %s state",
+  async (state) => {
+    mockApi.session = "live";
+    if (state === "loading") {
+      server.use(
+        getListLoginLogMockHandler200(async () => {
+          await delay(300);
+          return { entries: [entry(1)], nextBefore: null };
+        }),
+      );
+    } else {
+      server.use(getListLoginLogMockHandler500(serverFailure));
+    }
+    const { user, router } = renderApp("/login-log?size=50&before=99");
+    await screen.findByText(
+      state === "loading" ? "Loading the Login log" : "Something went wrong. Try again.",
+    );
+    const pages = within(screen.getByRole("navigation", { name: "Pages" }));
+    expect(pages.getByRole("combobox", { name: "Rows per page" })).toHaveValue("50");
+    expect(pages.getByRole("button", { name: "Older entries" })).toBeDisabled();
+    expect(pages.getByRole("button", { name: "Newest entries" })).toBeEnabled();
+    server.use(getListLoginLogMockHandler200({ entries: [entry(1)], nextBefore: null }));
+    await user.click(pages.getByRole("button", { name: "Newest entries" }));
+    await screen.findByRole("table");
+    expect(router.state.location.search.before).toBeUndefined();
+    expect(router.state.location.search.size).toBe(50);
+    expect(pages.getByRole("button", { name: "Newest entries" })).toBeDisabled();
+    expect(pages.getByRole("button", { name: "Older entries" })).toBeDisabled();
+  },
+);

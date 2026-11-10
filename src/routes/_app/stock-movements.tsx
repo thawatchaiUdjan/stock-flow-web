@@ -45,7 +45,11 @@ function StockMovementsPage() {
   const canAdjust = role !== "staff";
   // A range that ends before it starts holds nothing, and is said so rather than asked of the API.
   const backwards = search.from !== undefined && search.to !== undefined && search.from > search.to;
-  const movements = useListStockMovements(search, { query: { enabled: !backwards } });
+  const { size = 25, ...filters } = search;
+  const movements = useListStockMovements(
+    { ...filters, limit: size },
+    { query: { enabled: !backwards } },
+  );
   const filtered =
     search.productId !== undefined ||
     search.kind !== undefined ||
@@ -116,6 +120,8 @@ function StockMovementsPage() {
         </>
       )}
       <CursorPaging
+        size={size}
+        onSize={(size) => void navigate({ search: { ...search, size, before: undefined } })}
         older={search.before !== undefined}
         busy={movements.isFetching}
         canOlder={movements.isSuccess && movements.data.nextBefore !== null}
