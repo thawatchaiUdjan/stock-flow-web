@@ -64,7 +64,7 @@ export const getListLoginLogUrl = (params?: ListLoginLogParams,) => {
 }
 
 /**
- * Every login, failed login and logout, newest first, one page at a time. Entries cannot be changed or removed, and no operation does. Owner only: answers 403 to an Admin or Staff. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
+ * Every login, failed login and logout, newest first, one page at a time. Entries cannot be changed or removed, and no operation does. Omit offset to preserve legacy cursor paging, including before/nextBefore and the default limit of 50. An explicitly supplied offset, including offset=0, selects numbered mode; offset and before together return 422. Numbered success includes a bounded page and total, always present and exact for all current filters before offset/limit, including total: 0 for no matches. An out-of-range page is empty with the actual matching total. total is omitted from legacy responses. During this contract-first stage, numbered mode temporarily returns 501; no numbered success or count is implemented yet. Authorization and validation run before this temporary response. Owner only: answers 403 to an Admin or Staff. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
  * @summary List the Login log
  */
 export const listLoginLog = async (params?: ListLoginLogParams, options?: Parameters<typeof apiFetch>[1]): Promise<ListLoginLogOutputBody> => {

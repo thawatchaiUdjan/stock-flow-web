@@ -22,9 +22,7 @@ for (const width of [375, 768, 1024, 1440]) {
       await expect(size).toHaveValue("10");
       await expect(paging).not.toHaveAttribute("aria-busy", "true");
       const controls = paging.getByRole("button");
-      await expect(controls).toHaveCount(
-        route === "stock-movements" || route === "login-log" ? 2 : 4,
-      );
+      await expect(controls).toHaveCount(4);
       for (const control of await controls.all()) {
         await expect(control).toHaveAttribute(
           "title",

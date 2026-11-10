@@ -20,6 +20,12 @@ export type ListLoginLogParams = {
    */
   before?: number;
   /**
+   * Explicitly selects numbered mode, including 0. Omit for legacy cursor mode. Temporarily returns 501.
+   * @minimum 0
+   * @maximum 2147483647
+   */
+  offset?: number;
+  /**
    * The most entries on a page.
    * @minimum 1
    * @maximum 100

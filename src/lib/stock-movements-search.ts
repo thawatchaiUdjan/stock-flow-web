@@ -13,6 +13,6 @@ export const movementsSearchSchema = z.object({
   kind: z.enum(ListStockMovementsKind).optional().catch(undefined),
   from: z.iso.date().optional().catch(undefined),
   to: z.iso.date().optional().catch(undefined),
-  before: z.number().int().min(1).optional().catch(undefined),
+  page: pagingSearch.page,
 });
 export type MovementsSearch = z.infer<typeof movementsSearchSchema>;

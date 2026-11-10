@@ -50,3 +50,33 @@ describe("the mock API", () => {
     });
   });
 });
+
+// context ADR 0009: numbered and legacy modes remain distinct at the API boundary.
+describe.each(["/api/stock-movements", "/api/login-log"])("history modes at %s", (path) => {
+  it("returns exact zero only in numbered mode, including an out-of-range offset", async () => {
+    await expect(apiFetch(`${path}?offset=0&limit=10`)).resolves.toMatchObject({
+      total: 0,
+      nextBefore: null,
+    });
+    await expect(apiFetch(`${path}?offset=100&limit=10`)).resolves.toMatchObject({ total: 0 });
+    const legacy = await apiFetch(`${path}?before=99&limit=10`);
+    expect(legacy).not.toHaveProperty("total");
+  });
+  it.each(["-1", "1.5", "bad", "9007199254740992", "0&before=1"])(
+    "refuses invalid offset %s",
+    async (offset) => {
+      await expect(apiFetch(`${path}?offset=${offset}`)).rejects.toMatchObject({ status: 422 });
+    },
+  );
+  it("protects numbered records and counts with existing authorization", async () => {
+    mockApi.session = "none";
+    await expect(apiFetch(`${path}?offset=0`)).rejects.toMatchObject({ status: 401 });
+    mockApi.session = "live";
+    mockApi.role = "staff";
+    if (path.endsWith("login-log")) {
+      await expect(apiFetch(`${path}?offset=0`)).rejects.toMatchObject({ status: 403 });
+    } else {
+      await expect(apiFetch(`${path}?offset=0`)).resolves.toMatchObject({ total: 0 });
+    }
+  });
+});

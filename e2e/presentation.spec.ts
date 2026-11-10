@@ -33,9 +33,9 @@ for (const width of [375, 768, 1024, 1440]) {
     const main = page.getByRole("navigation", { name: "Main", exact: true });
     expect(await main.evaluate((nav) => nav.scrollWidth <= nav.clientWidth)).toBe(true);
     await expect(main.getByRole("link")).toHaveCount(7);
-    await page.getByRole("button", { name: "Older entries", exact: true }).click();
-    await expect(page).toHaveURL(/before=/);
-    await expect(page.getByText("Viewing older entries")).toBeVisible();
+    await page.getByRole("button", { name: "Next page", exact: true }).click();
+    await expect(page).toHaveURL(/page=2/);
+    await expect(page.getByText(/Page 2 of \d+ \u00b7 \d+ matching/)).toBeVisible();
     await page.reload();
     await expect(page.getByLabel("Kind")).toHaveValue("receive");
     await expect(size).toHaveValue("50");
@@ -45,14 +45,14 @@ for (const width of [375, 768, 1024, 1440]) {
     await page.keyboard.press("Enter");
     const day = page.getByRole("button", { name: /Tuesday, November 10th, 2026/ });
     await expect(day).toBeFocused();
-    await expect(page).toHaveURL(/before=/);
+    await expect(page).toHaveURL(/page=2/);
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
     await page.screenshot({ path: info.outputPath(`stock-calendar-open-${width}.png`) });
     await page.keyboard.press("Enter");
     await expect(from).toHaveText("10 Nov 2026");
-    await expect(page).not.toHaveURL(/before=/);
+    await expect(page).not.toHaveURL(/page=2/);
     await page.reload();
     await expect(from).toHaveText("10 Nov 2026");
     await from.tap();
@@ -62,7 +62,7 @@ for (const width of [375, 768, 1024, 1440]) {
     await expect(from).toHaveText("Start date");
     await expect(page.getByLabel("Kind")).toHaveValue("receive");
     await expect(from).toBeFocused();
-    await page.getByRole("button", { name: "Older entries", exact: true }).scrollIntoViewIfNeeded();
+    await page.getByRole("button", { name: "Next page", exact: true }).scrollIntoViewIfNeeded();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth),
     ).toBe(0);

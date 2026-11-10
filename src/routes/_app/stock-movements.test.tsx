@@ -6,6 +6,7 @@ import type { StockMovement } from "@/api/generated/model";
 import {
   getListStockMovementsMockHandler200,
   getListStockMovementsMockHandler500,
+  getListStockMovementsMockHandler501,
 } from "@/api/generated/stock-movements/stock-movements.msw";
 import { mockApi, productOf, serverFailure } from "@/mocks/handlers";
 import { chooseDate } from "@/test/date-picker";
@@ -200,7 +201,7 @@ describe("the Stock Movements list", () => {
     expect(await screen.findByText("Safety helmet")).toBeInTheDocument();
   });
 
-  it("pages by cursor, keeping the filters", async () => {
+  it("pages by number, keeping the filters", async () => {
     signedIn("owner");
     mockApi.products = [helmet];
     mockApi.stockMovements = Array.from({ length: 26 }, (_, i) =>
@@ -211,13 +212,13 @@ describe("the Stock Movements list", () => {
 
     await screen.findByText("n26");
     expect(screen.queryByText("n1")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Older entries" }));
+    await user.click(screen.getByRole("button", { name: "Next page" }));
 
     await screen.findByText("n1");
     expect(screen.queryByText("n26")).not.toBeInTheDocument();
-    expect(sent.at(-1)!.url.searchParams.get("before")).toBe("2");
+    expect(sent.at(-1)!.url.searchParams.get("offset")).toBe("25");
     expect(sent.at(-1)!.url.searchParams.get("kind")).toBe("receive");
-    expect(screen.getByRole("button", { name: "Older entries" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
   });
 
   it("offers to try again when the list fails", async () => {
@@ -621,10 +622,10 @@ describe("Adjust stock", () => {
   });
 });
 // date-controls R2-R6, R8-R9: calendar choices preserve Shop dates and independent filters.
-it("selects and removes the Bangkok day without keeping a cursor", async () => {
+it("selects and removes the Bangkok day without keeping a later page", async () => {
   signedIn("owner");
   const sent = requestsTo("/api/stock-movements");
-  const { user, router } = renderApp("/stock-movements?kind=receive&before=99");
+  const { user, router } = renderApp("/stock-movements?kind=receive&page=99");
   await screen.findByRole("heading", { name: "Stock movements" });
   const now = vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-11-09T18:30:00Z"));
   try {
@@ -638,7 +639,7 @@ it("selects and removes the Bangkok day without keeping a cursor", async () => {
     await user.click(from);
     const day = screen.getByRole("button", { name: /Tuesday, November 10th, 2026/ });
     await waitFor(() => expect(day).toHaveFocus());
-    expect(router.state.location.search).toEqual({ kind: "receive", before: 99 });
+    expect(router.state.location.search).toEqual({ kind: "receive", page: 99 });
     await user.keyboard("{Enter}");
     expect(from).toHaveTextContent("10 Nov 2026");
     expect(screen.getAllByText("10 Nov 2026")).toHaveLength(1);
@@ -667,7 +668,7 @@ it.each(["From", "To"])(
     mockApi.products = [helmet];
     const sent = requestsTo("/api/stock-movements");
     const { user, router } = renderApp(
-      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&before=99",
+      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&page=99",
     );
     await screen.findByRole("heading", { name: "Stock movements" });
     await chooseDate(user, label, label === "From" ? "2026-11-01" : "2026-11-07");
@@ -678,6 +679,7 @@ it.each(["From", "To"])(
         productId: "1",
         kind: "receive",
         limit: "25",
+        offset: "0",
         ...remaining,
       }),
     );
@@ -752,7 +754,7 @@ it("focuses Bangkok today with a fixed application clock", async () => {
 // navigation-and-lists R6, R8: URL size survives cursors; changing it retains filters.
 describe("history page sizes", () => {
   it.each([10, 25, 50])(
-    "restores %i rows from the URL and retains them through cursor navigation",
+    "restores %i rows from the URL and retains them through numbered navigation",
     async (size) => {
       signedIn("owner");
       mockApi.products = [helmet];
@@ -766,11 +768,9 @@ describe("history page sizes", () => {
       expect(screen.getByLabelText("Rows per page")).toHaveValue(String(size));
       expect(sent.at(-1)?.url.searchParams.get("limit")).toBe(String(size));
       expect(sent.at(-1)?.url.searchParams.has("size")).toBe(false);
-      await user.click(screen.getByRole("button", { name: "Older entries" }));
-      await screen.findByText("Viewing older entries");
-      await waitFor(() =>
-        expect(sent.at(-1)?.url.searchParams.get("before")).toBe(String(61 - size)),
-      );
+      await user.click(screen.getByRole("button", { name: "Next page" }));
+      await screen.findByText(`Page 2 of ${Math.ceil(60 / size)} \u00b7 60 matching`);
+      await waitFor(() => expect(sent.at(-1)?.url.searchParams.get("offset")).toBe(String(size)));
       expect(sent.at(-1)?.url.searchParams.get("limit")).toBe(String(size));
       expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toMatchObject({
         productId: "1",
@@ -778,9 +778,9 @@ describe("history page sizes", () => {
         from: "2026-11-01",
         to: "2026-11-07",
       });
-      expect(router.state.location.search).toMatchObject({ size, before: 61 - size });
-      await user.click(screen.getByRole("button", { name: "Newest entries" }));
-      await waitFor(() => expect(router.state.location.search.before).toBeUndefined());
+      expect(router.state.location.search).toMatchObject({ size, page: 2 });
+      await user.click(screen.getByRole("button", { name: "First page" }));
+      await waitFor(() => expect(router.state.location.search.page).toBe(1));
       expect(router.state.location.search.size).toBe(size);
       expect(router.state.location.search).toMatchObject({ size });
     },
@@ -800,14 +800,14 @@ describe("history page sizes", () => {
     },
   );
 
-  it("resets an older cursor on size and filter changes without losing the selected size", async () => {
+  it("resets a later page on size and filter changes without losing the selected size", async () => {
     signedIn("owner");
     mockApi.products = [helmet];
     const sent = requestsTo("/api/stock-movements");
     const { user, router } = renderApp(
-      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&size=50&before=99",
+      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&size=50&page=99",
     );
-    await screen.findByText("No older entries on this page. Return to newest entries.");
+    await screen.findByText("No entries on this page. Return to the first page.");
     await user.selectOptions(screen.getByLabelText("Rows per page"), "10");
     await waitFor(() => expect(sent.at(-1)?.url.searchParams.has("before")).toBe(false));
     expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toEqual({
@@ -816,13 +816,14 @@ describe("history page sizes", () => {
       from: "2026-11-01",
       to: "2026-11-07",
       limit: "10",
+      offset: "0",
     });
     expect(router.state.location.search.size).toBe(10);
     await router.navigate({
       to: "/stock-movements",
-      search: { ...router.state.location.search, before: 99 },
+      search: { ...router.state.location.search, page: 99 },
     });
-    await screen.findByText("Viewing older entries");
+    await screen.findByText("This page is no longer available.");
     await user.selectOptions(screen.getByLabelText("Kind"), "adjustment");
     await waitFor(() => expect(sent.at(-1)?.url.searchParams.get("kind")).toBe("adjustment"));
     expect(sent.at(-1)?.url.searchParams.has("before")).toBe(false);
@@ -834,18 +835,18 @@ describe("history page sizes", () => {
     signedIn("owner");
     mockApi.products = [helmet];
     const { user, router } = renderApp(
-      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&size=10&before=1",
+      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&size=10&page=99",
     );
-    await screen.findByText("No older entries on this page. Return to newest entries.");
+    await screen.findByText("No entries on this page. Return to the first page.");
     const pages = within(screen.getByRole("navigation", { name: "Pages" }));
-    expect(pages.getAllByRole("button")).toHaveLength(2);
-    const newest = pages.getByRole("button", { name: "Newest entries" });
-    const older = pages.getByRole("button", { name: "Older entries" });
-    expect(newest).toHaveAttribute("title", "Newest entries");
-    expect(older).toHaveAttribute("title", "Older entries");
+    expect(pages.getAllByRole("button")).toHaveLength(4);
+    const newest = pages.getByRole("button", { name: "First page" });
+    const older = pages.getByRole("button", { name: "Next page" });
+    expect(newest).toHaveAttribute("title", "First page");
+    expect(older).toHaveAttribute("title", "Next page");
     expect(older).toBeDisabled();
     await user.click(older);
-    expect(router.state.location.search.before).toBe(1);
+    expect(router.state.location.search.page).toBe(99);
     await user.click(newest);
     await screen.findByText("No stock movements match these filters.");
     expect(router.state.location.search.size).toBe(10);
@@ -862,27 +863,29 @@ it.each(["loading", "error"])(
       server.use(
         getListStockMovementsMockHandler200(async () => {
           await delay(300);
-          return { movements: [movement(1)], nextBefore: null };
+          return { movements: [movement(1)], nextBefore: null, total: 1 };
         }),
       );
     } else {
       server.use(getListStockMovementsMockHandler500(serverFailure));
     }
-    const { user, router } = renderApp("/stock-movements?size=50&before=99");
+    const { user, router } = renderApp("/stock-movements?size=50&page=99");
     await screen.findByText(
       state === "loading" ? "Loading stock movements" : "Something went wrong. Try again.",
     );
     const pages = within(screen.getByRole("navigation", { name: "Pages" }));
     expect(pages.getByRole("combobox", { name: "Rows per page" })).toHaveValue("50");
-    expect(pages.getByRole("button", { name: "Older entries" })).toBeDisabled();
-    expect(pages.getByRole("button", { name: "Newest entries" })).toBeEnabled();
-    server.use(getListStockMovementsMockHandler200({ movements: [movement(1)], nextBefore: null }));
-    await user.click(pages.getByRole("button", { name: "Newest entries" }));
+    expect(pages.getByRole("button", { name: "Next page" })).toBeDisabled();
+    expect(pages.getByRole("button", { name: "First page" })).toBeEnabled();
+    server.use(
+      getListStockMovementsMockHandler200({ movements: [movement(1)], nextBefore: null, total: 1 }),
+    );
+    await user.click(pages.getByRole("button", { name: "First page" }));
     await screen.findByRole("table");
-    expect(router.state.location.search.before).toBeUndefined();
+    expect(router.state.location.search.page).toBe(1);
     expect(router.state.location.search.size).toBe(50);
-    expect(pages.getByRole("button", { name: "Newest entries" })).toBeDisabled();
-    expect(pages.getByRole("button", { name: "Older entries" })).toBeDisabled();
+    expect(pages.getByRole("button", { name: "First page" })).toBeDisabled();
+    expect(pages.getByRole("button", { name: "Next page" })).toBeDisabled();
   },
 );
 
@@ -895,6 +898,113 @@ it("retains the selected history size when clearing filters", async () => {
   await user.click(screen.getByRole("link", { name: "Clear filters" }));
   await waitFor(() => expect(router.state.location.search).toEqual({ size: 50 }));
   await waitFor(() =>
-    expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toEqual({ limit: "50" }),
+    expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toEqual({ limit: "50", offset: "0" }),
+  );
+});
+
+// navigation-and-lists R4-R6, R8: numbered history controls navigate real bounded pages.
+describe("numbered history", () => {
+  it("uses Last and Previous with exact matching totals and retained filters", async () => {
+    signedIn("owner");
+    mockApi.products = [helmet];
+    mockApi.stockMovements.push(...Array.from({ length: 61 }, (_, i) => movement(i + 1)));
+    const sent = requestsTo("/api/stock-movements");
+    const { user, router } = renderApp(
+      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&size=10",
+    );
+    await screen.findByText("Page 1 of 7 \u00b7 61 matching");
+    await user.click(screen.getByRole("button", { name: "Last page" }));
+    await screen.findByText("Page 7 of 7 \u00b7 61 matching");
+    expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toEqual({
+      productId: "1",
+      kind: "receive",
+      from: "2026-11-01",
+      to: "2026-11-07",
+      limit: "10",
+      offset: "60",
+    });
+    expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(2);
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Last page" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Previous page" }));
+    await screen.findByText("Page 6 of 7 \u00b7 61 matching");
+    expect(sent.at(-1)!.url.searchParams.get("offset")).toBe("50");
+    expect(router.state.location.search).toMatchObject({ page: 6, size: 10 });
+  });
+
+  it("restores a numbered page from a reload URL", async () => {
+    signedIn("owner");
+    mockApi.products = [helmet];
+    mockApi.stockMovements.push(...Array.from({ length: 61 }, (_, i) => movement(i + 1)));
+    const sent = requestsTo("/api/stock-movements");
+    renderApp(
+      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&size=10&page=3",
+    );
+    await screen.findByText("Page 3 of 7 \u00b7 61 matching");
+    expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toEqual({
+      productId: "1",
+      kind: "receive",
+      from: "2026-11-01",
+      to: "2026-11-07",
+      limit: "10",
+      offset: "20",
+    });
+  });
+
+  it("opens legacy before URLs at page one with filters and size", async () => {
+    signedIn("owner");
+    mockApi.products = [helmet];
+    const sent = requestsTo("/api/stock-movements");
+    renderApp(
+      "/stock-movements?productId=1&kind=receive&from=2026-11-01&to=2026-11-07&size=10&before=99",
+    );
+    await screen.findByText("Page 1 of 1 \u00b7 0 matching");
+    expect(Object.fromEntries(sent.at(-1)!.url.searchParams)).toEqual({
+      productId: "1",
+      kind: "receive",
+      from: "2026-11-01",
+      to: "2026-11-07",
+      limit: "10",
+      offset: "0",
+    });
+  });
+
+  it.each([0, -1, 1.5, "bad", "9007199254740991"])("normalizes invalid page %s", async (page) => {
+    signedIn("owner");
+    mockApi.products = [helmet];
+    const sent = requestsTo("/api/stock-movements");
+    renderApp(`/stock-movements?page=${page}`);
+    await screen.findByText("Page 1 of 1 \u00b7 0 matching");
+    expect(sent.at(-1)!.url.searchParams.get("offset")).toBe("0");
+  });
+
+  it.each(["missing total", "501"])(
+    "shows an error without an invented count for %s",
+    async (failure) => {
+      signedIn("owner");
+      mockApi.products = [helmet];
+      server.use(
+        failure === "501"
+          ? getListStockMovementsMockHandler501({
+              status: 501,
+              title: "Not Implemented",
+              type: "about:blank",
+            })
+          : getListStockMovementsMockHandler200({ movements: [], nextBefore: null }),
+      );
+      const { user } = renderApp("/stock-movements?page=2&size=10");
+      await screen.findByText("Something went wrong. Try again.");
+      expect(screen.getByText("Page unavailable")).toBeInTheDocument();
+      expect(screen.queryByText(/matching$/)).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "First page" })).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Last page" })).toBeDisabled();
+      server.use(
+        getListStockMovementsMockHandler200({ movements: [], nextBefore: null, total: 0 }),
+      );
+      await user.click(screen.getByRole("button", { name: "Try again" }));
+      await screen.findByText("This page is no longer available.");
+      await user.click(screen.getByRole("button", { name: "First page" }));
+      await screen.findByText("Page 1 of 1 \u00b7 0 matching");
+    },
   );
 });

@@ -102,7 +102,7 @@ test("the Owner opens the Login log, filters it by User and by result, and pages
   await expect(rows.first()).toContainText("Firefox on Windows");
   await expect(rows.nth(1)).toContainText(time(total - 1));
   await expect(rows.last()).toContainText(time(total - pageSize + 1));
-  expect(requests.at(-1)!.search).toBe("?limit=25");
+  expect(requests.at(-1)!.search).toBe("?limit=25&offset=0");
 
   // Filter by User: only her entries, and the address says so.
   await page.getByLabel("User").selectOption({ label: `${mali.name} (${mali.email})` });
@@ -134,32 +134,40 @@ test("the Owner opens the Login log, filters it by User and by result, and pages
   await expect(page).toHaveURL("/login-log");
 
   // Page through all 120 entries; the fifth page is the short one.
-  await page.getByRole("button", { name: "Older entries" }).click();
-  await expect(page).toHaveURL(`/login-log?before=${total - pageSize + 1}`);
+  await page.getByRole("button", { name: "Next page" }).click();
+  await expect(page).toHaveURL("/login-log?page=2");
   await expect(rows).toHaveCount(pageSize);
   expect(requests.at(-1)!.searchParams.get("limit")).toBe("25");
   await expect(rows.first()).toContainText(time(total - pageSize));
   await expect(rows.last()).toContainText(time(total - 2 * pageSize + 1));
-  expect(requests.at(-1)!.searchParams.get("before")).toBe(String(total - pageSize + 1));
+  expect(requests.at(-1)!.searchParams.get("offset")).toBe("25");
   for (let index = 2; index < Math.ceil(total / pageSize); index++) {
-    await page.getByRole("button", { name: "Older entries" }).click();
+    await page.getByRole("button", { name: "Next page" }).click();
     await expect(rows.first()).toContainText(time(total - index * pageSize));
   }
   await expect(rows).toHaveCount(total % pageSize);
   await expect(rows.last()).toContainText(time(1));
-  await expect(page.getByRole("button", { name: "Older entries" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Next page" })).toBeDisabled();
 
-  await page.getByRole("button", { name: "Newest entries" }).click();
-  await expect(page).toHaveURL("/login-log");
+  await page.getByRole("button", { name: "Previous page" }).click();
+  await expect(page).toHaveURL("/login-log?page=4");
+  await expect(rows.first()).toContainText(time(45));
+  expect(requests.at(-1)!.searchParams.get("offset")).toBe("75");
+  await page.getByRole("button", { name: "Last page" }).click();
+  await expect(page).toHaveURL("/login-log?page=5");
+  await expect(rows.last()).toContainText(time(1));
+  expect(requests.at(-1)!.searchParams.get("offset")).toBe("100");
+  await page.getByRole("button", { name: "First page" }).click();
+  await expect(page).toHaveURL("/login-log?page=1");
   await expect(rows.first()).toContainText(time(total));
 
   // The filters ride along while paging, and are kept in the address: a reload shows the same.
   await page.getByLabel("User").selectOption({ label: `${mali.name} (${mali.email})` });
   await expect(page).toHaveURL(`/login-log?userId=${mali.id}`);
-  await page.getByRole("button", { name: "Older entries" }).click();
-  await expect(page).toHaveURL(new RegExp(String.raw`/login-log\?userId=${mali.id}&before=\d+$`));
+  await page.getByRole("button", { name: "Next page" }).click();
+  await expect(page).toHaveURL(new RegExp(String.raw`/login-log\?userId=${mali.id}&page=2$`));
   const older = requests.at(-1)!.searchParams;
-  expect([older.get("userId"), older.has("before")]).toEqual([String(mali.id), true]);
+  expect([older.get("userId"), older.has("offset")]).toEqual([String(mali.id), true]);
   const url = page.url();
   await expect(rows).toHaveCount(pageSize);
   await expect(rows.filter({ hasNotText: mali.name })).toHaveCount(0);
@@ -174,7 +182,7 @@ test("the Owner opens the Login log, filters it by User and by result, and pages
   await page.getByLabel("Result").selectOption({ label: "Logout" });
   await expect(page).toHaveURL(`/login-log?userId=${mali.id}&result=logout`);
   await expect(rows.filter({ hasNotText: "Logout" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Newest entries" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "First page" })).toBeDisabled();
 });
 
 for (const role of ["admin", "staff"] as const) {
@@ -235,7 +243,7 @@ for (const { width, phone } of [
       expect((await select.boundingBox())!.height).toBe(phone ? 44 : 38);
       await expect(select).toHaveCSS("font-size", phone ? "16px" : "15px");
     }
-    const paging = page.getByRole("button", { name: "Older entries" });
+    const paging = page.getByRole("button", { name: "Next page" });
     expect((await paging.boundingBox())!.height).toBe(phone ? 44 : 38);
 
     // navigation-and-lists R3: every phone destination fits above the work, without an overlay.
