@@ -45,11 +45,19 @@ for (const width of [375, 768, 1024, 1440]) {
         await expect(today).toHaveAttribute("aria-pressed", "true");
         const adjacent = dialog.getByRole("button", { name: /Wednesday, November 11th, 2026/ });
         await adjacent.hover();
-        const selectedBox = (await today.boundingBox())!;
-        const adjacentBox = (await adjacent.boundingBox())!;
-        expect(adjacentBox.x - selectedBox.x - selectedBox.width).toBeGreaterThanOrEqual(4);
-        expect(selectedBox.width).toBeGreaterThanOrEqual(width < 800 ? 44 : 40);
-        expect(selectedBox.height).toBeGreaterThanOrEqual(width < 800 ? 44 : 40);
+        await expect
+          .poll(async () => {
+            const selectedBox = (await today.boundingBox())!;
+            const adjacentBox = (await adjacent.boundingBox())!;
+            return adjacentBox.x - selectedBox.x - selectedBox.width;
+          })
+          .toBeGreaterThanOrEqual(4);
+        await expect
+          .poll(async () => (await today.boundingBox())!.width)
+          .toBeGreaterThanOrEqual(width < 800 ? 44 : 40);
+        await expect
+          .poll(async () => (await today.boundingBox())!.height)
+          .toBeGreaterThanOrEqual(width < 800 ? 44 : 40);
         await expect(adjacent).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
         for (const action of ["Previous year", "Next year"]) {
           const button = dialog.getByRole("button", { name: action, exact: true });
