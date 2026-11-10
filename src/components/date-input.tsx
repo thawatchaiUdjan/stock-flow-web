@@ -57,6 +57,7 @@ export function DateInput({
           <CalendarIcon aria-hidden="true" />
         </Button>
       </PopoverTrigger>
+      {/* date-controls R10: short viewports scroll the calendar without clipping its controls. */}
       <PopoverContent
         align="start"
         collisionPadding={8}
