@@ -996,7 +996,7 @@ describe("numbered history", () => {
       await screen.findByText("Something went wrong. Try again.");
       expect(screen.getByText("Page unavailable")).toBeInTheDocument();
       expect(screen.queryByText(/matching$/)).not.toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "First page" })).toBeEnabled();
+      expect(await screen.findByRole("button", { name: "First page" })).toBeEnabled();
       expect(screen.getByRole("button", { name: "Last page" })).toBeDisabled();
       server.use(
         getListStockMovementsMockHandler200({ movements: [], nextBefore: null, total: 0 }),
