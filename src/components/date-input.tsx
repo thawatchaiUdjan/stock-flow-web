@@ -45,7 +45,7 @@ export function DateInput({
           id={id}
           type="button"
           variant="outline"
-          className="w-full justify-between shell:w-52"
+          className="w-full justify-between font-normal max-shell:text-base shell:w-52"
         >
           {value
             ? formatFullDay(value)
@@ -57,10 +57,11 @@ export function DateInput({
           <CalendarIcon aria-hidden="true" />
         </Button>
       </PopoverTrigger>
+      {/* date-controls R10: short viewports scroll the calendar without clipping its controls. */}
       <PopoverContent
         align="start"
         collisionPadding={8}
-        className="w-auto max-w-[calc(100vw-1rem)] p-2"
+        className="max-h-(--radix-popover-content-available-height) w-auto max-w-[calc(100vw-1rem)] overflow-y-auto p-2"
         aria-label={`${label} calendar`}
         aria-describedby={value ? `${id}-instruction` : undefined}
       >
@@ -83,7 +84,7 @@ export function DateInput({
         <div className="flex justify-between gap-2">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={() =>
               setMonth(new TZDate(month.getFullYear() - 1, month.getMonth(), 1, "Asia/Bangkok"))
             }
@@ -92,7 +93,7 @@ export function DateInput({
           </Button>
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={() =>
               setMonth(new TZDate(month.getFullYear() + 1, month.getMonth(), 1, "Asia/Bangkok"))
             }
