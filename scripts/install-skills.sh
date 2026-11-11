@@ -11,6 +11,11 @@ cd "$(dirname "$0")/.."
 # Why each skill is here: README.md, "Agent skills".
 SKILLS=(
   setup-matt-pocock-skills
+  grill-with-docs
+  grilling
+  domain-modeling
+  to-spec
+  to-tickets
   implement
   tdd
   codebase-design

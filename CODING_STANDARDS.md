@@ -8,7 +8,7 @@ oxfmt formats and oxlint lints (ADR 0010): `bun run format` and `bun run lint`. 
 
 ## Naming
 
-- Domain concepts use the terms in `stock-flow-context`'s `GLOSSARY.md`, never their `_Avoid_` synonyms.
+- Domain concepts use the terms in local `GLOSSARY.md`, never their `_Avoid_` synonyms.
 
 ## Structure
 
@@ -31,7 +31,7 @@ oxfmt formats and oxlint lints (ADR 0010): `bun run format` and `bun run lint`. 
 ## Comments
 
 - One short line, only where the reason isn't obvious from the code; never narrate what the code does.
-- Code that enforces a recorded rule cites it: `<module> R3` or `context ADR 0007`.
+- Code that enforces a recorded rule cites it: `<module> R3` or `domain ADR 0007`. Historical `context ADR NNNN` citations resolve to the imported business decisions in `docs/domain/adr/`.
 
 ## Tests
 

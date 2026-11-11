@@ -21,7 +21,7 @@ The first slow run on a machine needs `bunx playwright install chromium`.
 The fast and slow layers both run against the contract's mocks, and `stock-flow-api`'s tests run the api alone. Nothing else proves that the two agree: field names, status codes, the session cookie through the `/api` proxy, the migrations. The smoke suite (`e2e-smoke/`, its own Playwright config) does: it drives the built app, without MSW, against a real `stock-flow-api` and Postgres.
 
 - **What it covers:** one happy path, in order: the Owner sets a password from the Setup link and logs in, adds a Product, receives stock for it, creates an Order, completes it and sees the Sale on the Dashboard. Every other case stays in the mocked `e2e/` suite.
-- **CI only.** It is the `smoke` job in `.github/workflows/ci.yml`, in parallel with the others, on every pull request and on `main`. It checks out `stock-flow-api`'s `main`, builds the api (cached by its commit), migrates a Postgres service container, issues the Owner's Setup link and starts the api. Its first step fails, saying to run `bun run api:sync`, when `openapi/openapi.yaml` differs from that api's. `bun run ci` does **not** run it, because it needs Postgres.
+- **CI only.** It is the `smoke` job in `.github/workflows/integration.yml`, run manually and weekly. It checks out the API commit in `openapi/api-source.json`, builds the api (cached by its commit), migrates a Postgres service container, issues the Owner's Setup link and starts the api. Its first step fails, saying to run `bun run api:sync`, when `openapi/openapi.yaml` differs from the pinned API's contract. `bun run ci` does **not** run it, because it needs Postgres.
 - **Locally, if you have a Postgres** (and `../stock-flow-api` or another checkout of it; paths below are from its root): migrate an empty database with `go tool goose -dir db/migrations postgres "$POSTGRES_URL" up`, print the Owner's Setup link token with `go run ./cmd/install -name "Smoke Owner" -email owner@smoke.example`, start the api with `go run ./cmd/api`, then from this repo:
 
   ```sh
@@ -32,7 +32,7 @@ The fast and slow layers both run against the contract's mocks, and `stock-flow-
 
 ## Overrides
 
-- **This overrides `implement`'s "the full test suite once at the end".** Locally, "the full suite" means the whole fast layer. The slow layer runs only in CI, and **no agent waits for it**: open the pull request and move on. `e2e` is a required check on `main` (ADR 0015), so GitHub holds the merge until it passes. When the user reports a red pipeline, the fix comes back as work (`stock-flow-context`'s `docs/workflow.md`).
+- **This overrides `implement`'s "the full test suite once at the end".** Locally, "the full suite" means the whole fast layer. The slow layer runs only in CI, and **no agent waits for it**: open the pull request and move on. `e2e` is a required check on `main` (ADR 0015), so GitHub holds the merge until it passes. When the user reports a red pipeline, investigate it here under `docs/workflow.md`; no context coordinator is required.
 - You still **write** slow tests, one per user journey the record names (below); you just don't wait for them. Write them so they pass first time on a clean environment: unique data, no ordering assumptions.
 - **Until CI exists, nothing runs the slow layer.** In that case, run the end-to-end tests this change touched once before opening the pull request, and say in it that you did.
 

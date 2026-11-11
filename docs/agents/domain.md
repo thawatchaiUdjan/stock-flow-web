@@ -1,26 +1,25 @@
-# Domain Docs
+# Domain docs
 
-This repo **reads** the domain documentation; `stock-flow-context` owns it.
+This repository owns its frontend domain record. `stock-flow-context` is historical reference only. No sibling checkout is required.
 
-## Before exploring, read these
+## Read before exploring
 
-- **`../stock-flow-context/GLOSSARY.md`**: the shared vocabulary.
-- **`../stock-flow-context/docs/requirements/`**: the module files that touch the area you're working in.
-- **`../stock-flow-context/docs/adr/`**: business decisions that touch it. Each ADR's `Affects:` line says whether it applies to this repo.
-- **`docs/adr/`** here: technical decisions.
+- `GLOSSARY.md`: canonical domain vocabulary.
+- `docs/requirements/<module>.md`: applicable rules and open questions.
+- `docs/domain/adr/`: business decisions, including the imported shared baseline.
+- `docs/adr/`: frontend technical decisions.
 
-If a file doesn't exist yet, proceed silently. If `stock-flow-context` itself can't be found, stop and say so: the record is never optional.
+Do not infer a business rule from backend code or a ticket summary. If a needed rule is missing, resolve it locally with `/grill-with-docs`, or record it under the module's Open questions. If code, requirements and the accepted API contract disagree, surface that conflict before changing the affected behaviour.
 
-## Never create these here
+## Writing the record
 
-- **No `GLOSSARY.md` in this repo.** A second glossary is two vocabularies. A missing term is an open question for `stock-flow-context`.
-- **No business ADRs here.** The test is in `stock-flow-context`'s `AGENTS.md`: a decision that would survive a rewrite in another stack belongs there.
+`/grill-with-docs` combines `grilling` and `domain-modeling`. In this repository it also writes settled behaviour to `docs/requirements/<module>.md`, using `docs/requirements/README.md`. Keep rule IDs stable; never renumber them. Unknowns are questions, not rules. Preserve existing confirmed rules until their change is authorised and recorded.
 
-## Technical ADRs
+New terms go in root `GLOSSARY.md` using the installed `domain-modeling/GLOSSARY-FORMAT.md`: a term, its definition and avoided synonyms. The glossary contains vocabulary, not implementation details or a substitute for requirements.
 
-`docs/adr/NNNN-slug.md`, numbered by scanning `docs/adr/` for the highest number. Create the directory with the first ADR.
+Business ADRs go in `docs/domain/adr/`, overriding `domain-modeling`'s default path. A business decision describes behaviour that would survive a rewrite in a different stack. Technical ADRs go in `docs/adr/`. Number each directory independently by incrementing its highest existing number. Offer an ADR only for a significant trade-off that is hard to reverse and surprising without context; ordinary new rules belong in requirements.
 
-Write one only when the decision is hard to reverse, surprising without context, and the result of a real trade-off: the framework, the component library, state management, how the API client is generated, a deliberate departure from the obvious approach.
+Technical ADR format:
 
 ```md
 # NNNN: <Short title>
@@ -33,12 +32,25 @@ Date: YYYY-MM-DD
 ## What was not chosen and why
 ```
 
-An Accepted, merged ADR is never edited: changing course is a new ADR that supersedes it.
+Business ADR format:
 
-## Use the glossary's vocabulary
+```md
+# NNNN: <Short title>
 
-Name components, routes, types, functions and tests with the glossary's terms, never with the synonyms it lists under `_Avoid_`.
+Status: Proposed | Accepted | Superseded by domain ADR NNNN
+Date: YYYY-MM-DD
+Affects: web | api, web (requires direct coordination)
 
-## Flag ADR conflicts
+## Context
+## Decision
+## Consequences
+## Alternatives considered
+```
 
-If your change contradicts an ADR, here or in `stock-flow-context`, say so explicitly rather than silently overriding it.
+Accepted, merged decisions are immutable. Change course with a new ADR identifying the superseded decision; only its Status line may be updated. Imported decisions retain their historical meaning. Workflow ownership is explicitly superseded by technical ADR 0023; this does not revoke product rules.
+
+## Citations and scope
+
+Use `<module> R3`, `domain ADR 0007` and `technical ADR 0007` to distinguish the two decision directories. Existing `context ADR NNNN` citations resolve to the same-numbered imported decision in `docs/domain/adr/`. Existing unqualified frontend technical citations retain their meaning. Migration provenance: `docs/domain/README.md`.
+
+Use the glossary's terms in code, tests, requirements and tickets. If a proposed change affects backend guarantees, record the request here and coordinate directly with the API repository under `docs/workflow.md`. Local documentation never changes another repository's behaviour by itself.

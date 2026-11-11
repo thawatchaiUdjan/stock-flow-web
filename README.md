@@ -1,61 +1,71 @@
 # stock-flow-web
 
-The frontend for stock-flow. It implements the rules recorded in [`stock-flow-context`](../stock-flow-context) and talks to [`stock-flow-api`](../stock-flow-api) through the contract that repo publishes.
+The frontend for stock-flow. This repository owns its requirements, glossary, decisions, specs, tickets and implementation workflow. Start work here; no context checkout or central coordinator is required.
 
+## Project goal
+
+A practice project for frontend development. Choose tools for the work and learning value; job-market share is not a criterion.
+
+## Run locally
+
+```sh
+bun install
+bun run dev:mock
 ```
-<workspace>/
-├── stock-flow-context/   the record: what the system must do, and why
-├── stock-flow-api/       backend, owner of the API contract
-└── stock-flow-web/       ← this repo
+
+Mock development needs no backend. Open `/set-password#mock-setup-link-token`, set a password and log in as `nok@example.com`. The mock starts with an empty shop and persists state across reloads in the same tab. Clear session storage or open a new tab to reset it. The command reuses the existing `e2e` mode and shared MSW handlers; production builds exclude mocks.
+
+For a real API, copy `.env.example` to `.env`, set `API_PROXY_TARGET` to a compatible service and run `bun run dev`. No backend source checkout is required. In a real install, the API's installer prints a token; open `<web origin>/set-password#<token>` (technical ADR 0022).
+
+## Work from idea to code
+
+Start with `/grill-with-docs <idea>` in this repository. Settle the local record, open its PR, then use `/to-spec`, `/to-tickets` and `/implement <ticket>`. Test-first development, design guidance, code review and implementation PRs remain part of the workflow.
+
+Steps, work modes and direct API collaboration: [workflow](docs/workflow.md).
+
+| Record | Location |
+| --- | --- |
+| Vocabulary | [GLOSSARY.md](GLOSSARY.md) |
+| Behaviour and stable rule IDs | [requirements](docs/requirements/README.md) |
+| Business decisions | `docs/domain/adr/` |
+| Technical decisions | `docs/adr/` |
+| Design direction | [design](docs/design.md) |
+| Specs and implementation tickets | Issues in this repository |
+
+`stock-flow-context` is historical reference. Existing rules were imported once with their IDs, unresolved questions and source provenance preserved; [domain provenance](docs/domain/README.md) explains old citations. Future frontend decisions are made here.
+
+## API boundary
+
+`stock-flow-api` independently owns backend work and publishes OpenAPI. Web adopts an exact API commit in `openapi/api-source.json`, keeps its contract in `openapi/openapi.yaml`, and generates the client with Orval.
+
+```sh
+bun run api:sync
+bun run api:generate
+bun run api:check
 ```
 
-Keep the three clones side by side: the agent docs refer to the siblings as `../stock-flow-context` and `../stock-flow-api`.
+For a contract update, change the manifest to a reviewed API commit first. Regular frontend checks use the committed contract and mocks. A separate manual/weekly integration workflow runs the real API and Postgres against that pin. [Contract and integration guidance](docs/agents/api-contract.md) describes what each check proves.
 
-## First-time setup
+If either repo needs work from the other, send an authorised request directly through linked issues. The receiving repo owns its requirements, planning and implementation; only genuinely dependent work waits. No context coordinator sits between them. [API migration handoff](docs/agents/api-workflow-handoff.md) contains the prompt for adopting this workflow in the API repo; this change does not modify that repo.
 
-1. Create the repo on GitHub or GitLab and add `origin`. In `docs/agents/issue-tracker.md`, keep the command section for that host and delete the other; delete the template folder of the host you don't use (`.github/` or `.gitlab/`).
-2. The stack is chosen from `stock-flow-context` before the first feature ([its workflow](../stock-flow-context/docs/workflow.md#before-the-first-feature-choose-the-stack)) and arrives here as a stack ticket. Working it records the stack as the first ADRs in `docs/adr/` (framework, component library, how the API client is generated), scaffolds the app, and fills the *Stack and commands* table in `AGENTS.md` and the sections of `CODING_STANDARDS.md`.
-3. Fill the remaining placeholders. `grep -rn 'FILL' --exclude-dir=.agents .` lists every one.
-4. `./scripts/install-skills.sh` installs the skills listed below.
-5. Commit.
+## Checks
 
-## The Owner's Setup link
-
-`cmd/install` in `stock-flow-api` prints a token, not a link. Open `<web origin>/set-password#<token>` (ADR 0022).
-
-## How work arrives
-
-The full workflow, step by step, is in `stock-flow-context`'s [docs/workflow.md](../stock-flow-context/docs/workflow.md).
-
-Tickets are created in this project by `stock-flow-context` (`/to-tickets`), each linking its spec and the rules it implements; a ticket that needs a contract change is blocked by its `stock-flow-api` ticket. `/dispatch` in `stock-flow-context` starts a fresh agent here for each ready ticket; to work one by hand instead, start a session with `--add-dir ../stock-flow-context` and run `/implement <ticket>`. Either way, `/implement` builds test-first with `tdd`, runs the fast layer, and reviews the result with `code-review` before committing.
+Run `bun run test`, `bun run typecheck`, `bun run lint` and `bun run format:check` locally. `bun run build` builds production. CI also runs the browser suite and generated-client check. Exact testing policy: [testing](docs/agents/testing.md). `bun test` is not the project's test runner.
 
 ## Agent skills
 
-From [mattpocock/skills](https://github.com/mattpocock/skills), installed by `scripts/install-skills.sh` into `.agents/skills/` (read by Codex, Cursor, Gemini CLI, Copilot and others), with symlinks in `.claude/skills/` for Claude Code. `skills-lock.json` records the source and hash of each one.
+Skills live in `.agents/skills/`, with `.claude/skills/` links and provenance in `skills-lock.json`. Run `./scripts/install-skills.sh` to refresh this repository only; review the lockfile and skill diffs before committing.
 
-| Skill | Why it's here |
+| Skill | Purpose |
 | --- | --- |
-| `implement` | Builds a ticket end to end: calls `tdd`, runs the suite, then calls `code-review` |
-| `tdd` | Red-green loop at the ticket's seam; `implement` calls it |
-| `codebase-design` | Module and interface vocabulary; `tdd` calls it when a seam's shape is in question |
-| `code-review` | Two-axis review, against `CODING_STANDARDS.md` and against the spec; `implement` calls it |
-| `diagnosing-bugs` | Disciplined loop for hard bugs, including UI ones driven through a headless browser |
-| `prototype` | Several radically different UI variations on one route, to choose a design before building it |
-| `frontend-design` | From `anthropics/skills`: the words on every screen, marketing pages, and a review of the design direction against generic defaults |
-| `ui-ux-pro-max` | From `nextlevelbuilder/ui-ux-pro-max-skill`: an offline search (Python 3, no network) over UX rules, palettes, font pairings and per-stack UI guidelines, with a pre-delivery checklist. Drafts `docs/design.md`'s tokens; who does what: `AGENTS.md`, *Design* |
-| `shadcn` | From `shadcn-ui/ui`: current shadcn/ui components and CLI, newer than the agents' training. Theme commands are off limits: `AGENTS.md`, *Stack skills* |
-| TanStack Intent | Not a skill file: a guidance block in `AGENTS.md` that loads the skills shipped inside TanStack Router and Table, at the installed version (ADR 0014). `intent hooks` is left out: it would write `.claude/settings.json` and gate every edit |
-| `setup-matt-pocock-skills` | Re-runs tracker setup if it ever changes. User-invoked only, so it costs no context until called |
+| `grill-with-docs`, `grilling`, `domain-modeling` | Define local requirements, terms and significant decisions |
+| `to-spec`, `to-tickets` | Publish local specs and small implementation tickets |
+| `implement`, `tdd`, `code-review` | Build, verify and review authorised work |
+| `codebase-design`, `diagnosing-bugs`, `prototype` | Module design, diagnosis and throwaway exploration |
+| `shadcn`, `ui-ux-pro-max`, `frontend-design` | Existing UI components, UX checks and screen wording |
+| `setup-matt-pocock-skills` | User-invoked tracker configuration; preserve local ownership rules |
+| TanStack Intent | Guidance shipped with the installed TanStack packages; loading policy in `AGENTS.md` |
 
-Left out on purpose:
+The migration adopts the five planning skills from the existing local context installation without changing their upstream versions or lock entries. The installer includes them for future refreshes.
 
-- `domain-modeling`, `grill-with-docs`: the glossary and business decisions belong to `stock-flow-context`. Installed here, `domain-modeling` would create a second glossary. Technical ADRs are written by hand, per `docs/agents/domain.md`.
-- `to-spec`, `to-tickets`: specs and tickets come from `stock-flow-context`.
-- `vercel-react-best-practices`: many of its rules are Next.js-only, and this is a Vite single-page app.
-- Other stack-specific skills (a framework's best practices, end-to-end tooling): add them once the stack is chosen, and only where the agent keeps making the same mistake. Read a skill's `SKILL.md` and scripts before installing it. Install one with `npx skills add <source> --skill <name> --agent claude-code --agent universal`, then add its name to `OTHER_SKILLS` in `scripts/install-skills.sh`, or the script's check rejects it. The script refreshes only the mattpocock set; refresh the others by name with `npx skills@1.7.4 update -p <name>`.
-
-### Updating
-
-Skills do not update themselves. They are normally refreshed for all three repos at once from `stock-flow-context` (`scripts/update-all-skills.sh`), which runs this repo's `./scripts/install-skills.sh`; running that script here on its own refreshes only this repo. Either way, read `git diff skills-lock.json .agents/skills` before committing: a skill change changes agent behaviour, so it is reviewed like code.
-
-Never edit a file under `.agents/skills/`: the next refresh overwrites it. Put repo-specific rules in `AGENTS.md`, `CODING_STANDARDS.md` or `docs/agents/`.
+Never hand-edit installed skill files: refreshes overwrite them. Repository overrides, including the business ADR directory and requirements output, belong in `AGENTS.md` and `docs/agents/`.
