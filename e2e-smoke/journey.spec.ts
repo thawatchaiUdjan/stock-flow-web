@@ -181,7 +181,16 @@ test("email setup and self-service recovery preserve installation, delivery outc
   await page.getByRole("link", { name: "Set up your password" }).click();
   await page.getByLabel("Email").fill(staffEmail);
   await page.getByLabel("First-time code").fill(code!);
+  const verification = page.waitForResponse("**/api/v2/password-setup/verify");
   await page.getByRole("button", { name: "Verify code" }).click();
+  const verified = await verification;
+  const verifiedBody = await verified.json();
+  // Status/type/field names diagnose integration without printing a code or grant.
+  expect({
+    status: verified.status(),
+    type: verifiedBody.type,
+    fields: verifiedBody.errors?.map((error: { location?: string }) => error.location),
+  }).toEqual({ status: 200, type: undefined, fields: undefined });
   await page.getByLabel("New password").fill(password);
   await page.getByRole("button", { name: "Set password" }).click();
   await expect(page).toHaveURL("/login");

@@ -1,6 +1,8 @@
+import { useForm } from "@tanstack/react-form";
 import { useEffect, useState } from "react";
 
 import { errorMessage, hasFieldError } from "@/api/errors";
+import { RequestFirstTimeCodeBody } from "@/api/generated/email-access/email-access.zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -53,12 +55,19 @@ export function EmailInstructions({
   error: unknown;
   success: boolean;
 }) {
+  const form = useForm({
+    defaultValues: { email },
+    validators: { onSubmit: RequestFirstTimeCodeBody },
+    onSubmit: () => {
+      if (!pending) request();
+    },
+  });
   return (
     <form
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        if (!pending && !success) request();
+        void form.handleSubmit();
       }}
     >
       <FieldGroup>
@@ -67,19 +76,26 @@ export function EmailInstructions({
             <AlertDescription>{errorMessage(error)}</AlertDescription>
           </Alert>
         )}
-        <EmailField
-          email={email}
-          onChange={onEmailChange}
-          disabled={pending}
-          invalid={hasFieldError(error, "email")}
-        />
+        <form.Field name="email">
+          {(field) => (
+            <EmailField
+              email={field.state.value}
+              onChange={(value) => {
+                field.handleChange(value);
+                onEmailChange(value);
+              }}
+              disabled={pending}
+              invalid={field.state.meta.errors.length > 0 || hasFieldError(error, "email")}
+            />
+          )}
+        </form.Field>
         {success && <output>{instructionsMessage}</output>}
         <FieldDescription>
           Check your inbox and spam folder. Wait at least a minute before requesting again. Only the
           newest instructions work.
         </FieldDescription>
         {success ? (
-          <RequestAgain request={request} pending={pending} />
+          <RequestAgain pending={pending} />
         ) : (
           <Button type="submit" disabled={pending}>
             {pending ? "Requesting instructions" : "Send instructions"}
@@ -90,14 +106,14 @@ export function EmailInstructions({
   );
 }
 
-function RequestAgain({ request, pending }: { request: () => void; pending: boolean }) {
+function RequestAgain({ pending }: { pending: boolean }) {
   const [coolingDown, setCoolingDown] = useState(true);
   useEffect(() => {
     const timer = window.setTimeout(() => setCoolingDown(false), 60_000);
     return () => window.clearTimeout(timer);
   }, []);
   return (
-    <Button type="button" disabled={pending || coolingDown} onClick={request}>
+    <Button type="submit" disabled={pending || coolingDown}>
       Send instructions
     </Button>
   );

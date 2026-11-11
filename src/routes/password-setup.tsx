@@ -1,3 +1,4 @@
+import { useForm } from "@tanstack/react-form";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -7,6 +8,7 @@ import {
   useSetEmailPassword,
   useVerifyFirstTimeCode,
 } from "@/api/generated/email-access/email-access";
+import { VerifyFirstTimeCodeBody } from "@/api/generated/email-access/email-access.zod";
 import { CenteredSurface } from "@/components/centered-surface";
 import { EmailInstructions } from "@/components/email-instructions";
 import { EmailPasswordForm } from "@/components/email-password-form";
@@ -19,7 +21,6 @@ export const Route = createFileRoute("/password-setup")({ component: PasswordSet
 
 function PasswordSetupPage() {
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
   // users-and-access R42: a grant authorizes password setup only, and survives no reload.
   const [grant, setGrant] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ function PasswordSetupPage() {
       gcTime: 0,
       onSuccess: (result) => {
         setGrant(result.token);
-        setCode("");
+        codeForm.reset();
       },
     },
   });
@@ -42,8 +43,15 @@ function PasswordSetupPage() {
       },
     },
   });
+  const codeForm = useForm({
+    defaultValues: { code: "" },
+    validators: { onSubmit: VerifyFirstTimeCodeBody.pick({ code: true }) },
+    onSubmit: ({ value }) => {
+      if (!verify.isPending && !request.isPending)
+        verify.mutate({ data: { email, code: value.code } });
+    },
+  });
   const invalidGrant = hasCode(password.error, "password-setup-invalid");
-  const invalidCode = hasFieldError(verify.error, "code");
 
   return (
     <CenteredSurface title="Set up your password">
@@ -95,37 +103,50 @@ function PasswordSetupPage() {
             noValidate
             onSubmit={(event) => {
               event.preventDefault();
-              if (!verify.isPending && !request.isPending) verify.mutate({ data: { email, code } });
+              void codeForm.handleSubmit();
             }}
           >
             <FieldGroup>
-              {verify.isError && !invalidCode && !hasFieldError(verify.error, "email") && (
-                <Alert variant="destructive">
-                  <AlertDescription>{errorMessage(verify.error)}</AlertDescription>
-                </Alert>
-              )}
-              <Field data-invalid={invalidCode}>
-                <FieldLabel htmlFor="code">First-time code</FieldLabel>
-                <Input
-                  disabled={verify.isPending || request.isPending}
-                  id="code"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  value={code}
-                  onChange={(event) => {
-                    setCode(event.target.value);
-                    verify.reset();
-                  }}
-                  aria-invalid={invalidCode}
-                  aria-describedby={invalidCode ? "code-error" : "code-hint"}
-                />
-                <FieldDescription id="code-hint">
-                  Use the newest code. You can paste all six digits.
-                </FieldDescription>
-                {invalidCode && (
-                  <FieldError id="code-error">Enter the six-digit code from your email.</FieldError>
+              {verify.isError &&
+                !hasFieldError(verify.error, "code") &&
+                !hasFieldError(verify.error, "email") && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{errorMessage(verify.error)}</AlertDescription>
+                  </Alert>
                 )}
-              </Field>
+              <codeForm.Field name="code">
+                {(field) => {
+                  const invalid =
+                    field.state.meta.errors.length > 0 || hasFieldError(verify.error, "code");
+                  return (
+                    <Field data-invalid={invalid}>
+                      <FieldLabel htmlFor={field.name}>First-time code</FieldLabel>
+                      <Input
+                        disabled={verify.isPending || request.isPending}
+                        id={field.name}
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(event) => {
+                          field.handleChange(event.target.value);
+                          verify.reset();
+                        }}
+                        aria-invalid={invalid}
+                        aria-describedby={invalid ? "code-error" : "code-hint"}
+                      />
+                      <FieldDescription id="code-hint">
+                        Use the newest code. You can paste all six digits.
+                      </FieldDescription>
+                      {invalid && (
+                        <FieldError id="code-error">
+                          Enter the six-digit code from your email.
+                        </FieldError>
+                      )}
+                    </Field>
+                  );
+                }}
+              </codeForm.Field>
               <Button type="submit" disabled={verify.isPending || request.isPending}>
                 {verify.isPending ? "Verifying code" : "Verify code"}
               </Button>
