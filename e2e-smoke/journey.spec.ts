@@ -179,6 +179,9 @@ test("email setup and self-service recovery preserve installation, delivery outc
   await expect(page).toHaveURL("/login");
 
   await page.getByRole("link", { name: "Set up your password" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Set up your password", exact: true }),
+  ).toBeVisible();
   await page.getByLabel("Email").fill(staffEmail);
   await page.getByLabel("First-time code").fill(code!);
   const verification = page.waitForResponse("**/api/v2/password-setup/verify");

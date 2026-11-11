@@ -6,6 +6,9 @@ test("a person requests first-time instructions and can retry an invalid code", 
 }) => {
   await page.goto("/login");
   await page.getByRole("link", { name: "Set up your password" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Set up your password", exact: true }),
+  ).toBeVisible();
   await page.getByLabel("Email").fill("staff@example.com");
   const request = page.waitForRequest("**/api/v2/password-setup/request");
   await page.getByRole("button", { name: "Send instructions" }).click();
