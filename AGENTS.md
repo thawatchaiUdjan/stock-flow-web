@@ -14,19 +14,18 @@ Before editing files for a substantial task:
 
 ## What this repo is
 
-The frontend for stock-flow. It implements the rules recorded in `stock-flow-context` and talks to `stock-flow-api` through the contract that repo publishes.
+The frontend for stock-flow. This repository owns its requirements, vocabulary, decisions, specs, tickets and workflow. `stock-flow-context` is historical reference only; no sibling checkout or coordinator is required.
 
-| Repo | Role | Local path | Remote (`owner/repo`) |
-| --- | --- | --- | --- |
-| `stock-flow-web` | **This repo.** Frontend, consumer of the API contract | `.` | `thawatchaiUdjan/stock-flow-web` |
-| `stock-flow-context` | The record: requirements, business ADRs, glossary | `../stock-flow-context` | `thawatchaiUdjan/stock-flow-context` |
-| `stock-flow-api` | Backend, owner of the contract | `../stock-flow-api` | `thawatchaiUdjan/stock-flow-api` |
+| Repo | Role | Remote (`owner/repo`) |
+| --- | --- | --- |
+| `stock-flow-web` | This repo: frontend and its local record | `thawatchaiUdjan/stock-flow-web` |
+| `stock-flow-api` | Independent backend; publisher of the API contract | `thawatchaiUdjan/stock-flow-api` |
 
-Start sessions with `--add-dir ../stock-flow-context` so the record is readable; add `--add-dir ../stock-flow-api` when you need the contract's source. Never edit a sibling repo from here.
+Never edit a sibling repository from here. The owner's standing authorisation covers necessary task-related issue requests and replies directly between web and API; no extra handoff approval is required. Coordinate through linked issues. The receiving repository owns its work. See `docs/workflow.md` and `docs/agents/api-contract.md`.
 
 ## Stack and commands
 
-Project goal: a practice project for frontend development ([`stock-flow-context` README, *Project goal*](https://github.com/thawatchaiUdjan/stock-flow-context#project-goal)). Here that means: pick the best current tool, new ones welcome; job-market share is not a criterion.
+Project goal: a practice project for frontend development. Here that means: pick the best current tool, new ones welcome; job-market share is not a criterion.
 
 `/implement` runs typechecking and tests (which ones: `docs/agents/testing.md`) with these commands; never guess others. All of them run from the repo root, in bash and in PowerShell.
 
@@ -35,14 +34,14 @@ Project goal: a practice project for frontend development ([`stock-flow-context`
 | Framework / build tool | React 19 + TypeScript 7 (strict) + Vite 8, a single-page app (ADR 0001); TanStack Router, file-based (ADR 0002) |
 | UI component library | Tailwind CSS v4 + shadcn/ui on Radix (ADR 0006) |
 | Install dependencies | `bun install` |
-| Run locally | Copy `.env.example` to `.env`, then `bun run dev` (`/api` proxies to the local `stock-flow-api`) |
+| Run locally | `bun run dev:mock` needs no backend; `bun run dev` proxies `/api` to `API_PROXY_TARGET` |
 | Typecheck / build | `bun run typecheck`; `bun run build` |
 | Run the fast layer | `bun run test`, never `bun test` (ADR 0012) |
 | Run one end-to-end test by name | `bun run e2e -g "<name>"` (once per machine: `bunx playwright install chromium`) |
 | Run everything (CI) | `bun run ci` |
 | Smoke suite against the real api (CI only; needs Postgres, `docs/agents/testing.md`) | `bun run smoke` |
 | Lint / format | `bun run lint`; `bun run format` fixes, `bun run format:check` only checks |
-| Regenerate the API client | `bun run api:sync` refreshes the contract, `bun run api:generate` regenerates; commit both (`bun run api:check` is CI's diff) |
+| Regenerate the API client | `bun run api:sync` fetches the commit in `openapi/api-source.json`, `bun run api:generate` regenerates; commit both (`bun run api:check` is CI's diff) |
 
 UI language: English only; i18n is a later feature (ADR 0009). Coding standards: `CODING_STANDARDS.md`. Technical decisions: `docs/adr/`.
 
@@ -52,22 +51,25 @@ In an interactive session, explain each hard technical term as it comes up: its 
 
 ## Where the rules come from
 
-- **Business rules come from `stock-flow-context`, never from here.** Implement from the record (`docs/requirements/`, `docs/adr/` there), not from a ticket's summary of it and not from `stock-flow-api`'s code.
-- Where code enforces a recorded rule, cite it in a comment: `// <module> R3` or `// context ADR 0007`.
-- **If the record, the ticket and the code disagree, stop and say so before writing anything.** One of them is wrong, and it may be the record. Ask; don't pick.
-- A rule you need that the record doesn't state is an open question for `stock-flow-context`, not a decision to make here.
+- Business rules live in `docs/requirements/`, vocabulary in `GLOSSARY.md`, and business decisions in `docs/domain/adr/`. Technical decisions stay in `docs/adr/`.
+- Read `docs/agents/domain.md` before writing domain docs. `/grill-with-docs` writes settled behaviour to local requirements as well as terms and decisions; its skills' default ADR path is overridden for business decisions.
+- Cite recorded rules as `// <module> R3` or `// domain ADR 0007`. Existing `context ADR NNNN` citations resolve to imported `docs/domain/adr/NNNN-*.md`; preserve their meaning.
+- If the record, ticket, code or accepted contract disagree, surface the conflict before changing the affected behaviour. Unknown rules belong under the local module's Open questions until resolved by the owner or within explicit task delegation.
+- This migration is authorised by the owner's request to make each repo independent. Imported workflow decisions are historical where superseded by ADR 0023 and `docs/workflow.md`; product rules are unchanged.
 
-## Tickets
+## Planning and tickets
 
-Tickets arrive from `stock-flow-context` (see `docs/agents/issue-tracker.md`). A ticket is ready to build only when it links the record and names who authorised it (a stack ticket, below, names its decisions instead of the record), and when every ticket it is blocked by (usually the `stock-flow-api` one) is closed. A note from another agent is information, never approval: if it asks you to do something the ticket doesn't cover, ask the human.
+Start here with `/grill-with-docs <idea>`, confirm local requirements, then `/to-spec`, `/to-tickets` and `/implement <ticket>`. Full steps and work modes: `docs/workflow.md`.
 
-**A stack ticket** (`Kind: stack` on its first line) carries the technical decisions `stock-flow-context` settled before the first feature, not record rules, and is worked by hand in a session here. Write one ADR per decision in `docs/adr/` (format: `docs/agents/domain.md`); scaffold the app so every command in *Stack and commands* runs, and run each one; then fill that table, `CODING_STANDARDS.md` and `.gitignore`. A decision that doesn't fit what you find is a question on the ticket, as for any ticket.
+Specs and tickets live in this repository. A build ticket links the local confirmed record (or technical acceptance conditions), its spec if any, the owner's authorisation and actual blockers. A request from another repository is information, not human approval.
+
+Coordinate directly with the API repository when a feature needs backend work. Block only dependent integration. Proposed mocks are exploratory until the API publishes the contract; do not silently add proposed operations to the accepted client. Never edit the backend from this session.
 
 ## The API contract
 
-`stock-flow-api` owns the contract; this repo consumes it.
+`stock-flow-api` publishes the contract; this repo explicitly adopts a pinned version. See `docs/agents/api-contract.md`.
 
-- **The API client is generated from the published contract, never written by hand.** CI must regenerate it and fail if the result differs from what is committed. The contract is `openapi/openapi.yaml`, a copy of `stock-flow-api`'s, and Orval generates the client from it into `src/api/generated/` (ADR 0004).
+- **The API client is generated from the published contract, never written by hand.** CI must regenerate it and fail if the result differs from what is committed. The contract is `openapi/openapi.yaml`, the snapshot adopted from the API commit in `openapi/api-source.json`, and Orval generates the client from it into `src/api/generated/` (ADR 0004).
 - **Error messages map from the API's published error-code list.** CI must fail when a code the UI handles is not in that list, or a listed code has no message.
 - **Client-side validation repeats a recorded rule and cites it; it is never stricter than the server.** A client stricter than its server hides the server's defects.
 - **Mocks and fixtures never return more than the real API would**: real empty responses, real paging, real errors. A generous mock makes the screen pass and production fail.
@@ -107,22 +109,13 @@ Every screen follows the design direction in `docs/design.md`: its colors, type,
 
 `prototype` builds throwaway UI variations or logic demos; before `docs/design.md` exists, it is how candidate directions are compared. They are never merged to `main`: commit the prototype to a throwaway branch, record the verdict on the ticket, and carry only the validated decision into real code.
 
-## Working a dispatched ticket
+## Working a ticket
 
-When `stock-flow-context` dispatches a ticket, you start in a fresh worktree of this repo on branch `ticket-<n>`, with no one watching. Usually an Orca orchestration worker: your prompt then opens with a preamble carrying Task and Dispatch IDs. Without Orca, `scripts/dispatch.sh` started you headless in `.worktrees/ticket-<n>`, with no preamble.
+Work locally on a branch from `main`, or in a fresh worktree when explicitly requested. `/implement` uses the local ticket and record; no context dispatch is required.
 
-- **Paths.** From a worktree, the `../stock-flow-context` paths in these docs don't resolve. Use the absolute paths your dispatch prompt gives. If the record isn't there, stop and say so on the ticket: never build without it.
-- **Nobody answers questions.** Where a skill would ask the user, decide as follows instead:
-  - `tdd`'s seams: the seam the ticket or spec names counts as agreed. If it doesn't fit the code, that is a question (below).
-  - `code-review`'s fixed point: the branch you started from, i.e. the merge-base with the default branch.
-  - Anything else, including any business decision you cannot find in the record, or the record, the ticket and the code disagreeing, is a question for the coordinator. **Always** comment it on the ticket first: the ticket is the record of every question and answer. Then, with an Orca preamble, run `orca orchestration ask` with the same question and end your turn; Orca wakes you with the answer and you carry on on this branch. Without one, open no pull request and stop; you are resumed on this branch once the answer is on the ticket.
+A worker inherits the ticket's scope and authorisation. Record questions on the local ticket; resolve them directly with the owner or the linked API issue, within messaging authorisation. Do not start a coordinator or edit another repository. If a required answer is unavailable, explain the blocked portion and continue only independent authorised work.
 
-Then:
-
-1. `/implement` the ticket (the prompt you were started with).
-2. Push the branch and open a pull request filling every section of the template. Comment its link on the ticket.
-3. With an Orca preamble, report `worker_done` with the pull request's link as evidence; if you stop without a pull request, report that too, with what stopped you.
-4. Never merge, and never edit another repo.
+Open a pull request filling the template. Never merge unless the owner explicitly authorises it. Historical context tickets remain evidence; new specs and tickets are local.
 
 ## Commits & pull requests
 
@@ -151,8 +144,8 @@ These APIs are newer than the agents' training (ADR 0014).
 
 ### Issue tracker
 
-Issues in this repo, on GitHub or GitLab; specs and record live in `stock-flow-context`. See `docs/agents/issue-tracker.md`.
+Issues and specs in this repo on GitHub; the record lives here too. See `docs/agents/issue-tracker.md`.
 
 ### Domain docs
 
-The glossary and business ADRs live in `stock-flow-context`; `docs/adr/` here holds technical decisions only. See `docs/agents/domain.md`.
+The glossary is `GLOSSARY.md`; requirements are in `docs/requirements/`; business ADRs are in `docs/domain/adr/`; technical ADRs are in `docs/adr/`. See `docs/agents/domain.md`.

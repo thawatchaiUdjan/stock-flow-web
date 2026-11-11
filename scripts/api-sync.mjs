@@ -1,6 +1,10 @@
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 
-const url = "https://raw.githubusercontent.com/thawatchaiUdjan/stock-flow-api/main/openapi.yaml";
+const { repository, ref } = JSON.parse(await readFile("openapi/api-source.json", "utf8"));
+if (repository !== "thawatchaiUdjan/stock-flow-api" || !/^[a-f0-9]{40}$/.test(ref)) {
+  throw new Error("api:sync: api-source.json must name stock-flow-api and a full commit SHA");
+}
+const url = `https://raw.githubusercontent.com/${repository}/${ref}/openapi.yaml`;
 
 const response = await fetch(url);
 if (!response.ok) {

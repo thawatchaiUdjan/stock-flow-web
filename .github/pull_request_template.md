@@ -4,11 +4,11 @@ Closes #<!-- ticket number -->
 
 ## Record
 
-<!-- The rules and decisions this implements, from stock-flow-context: `<module> R3`, `context ADR 0007`. "None" for a purely technical change. -->
+<!-- Local requirements and decisions: `<module> R3`, `domain ADR 0007`, `technical ADR 0023`. Link the local spec and authorisation/work mode. "None" for a purely technical change. Historical context links are evidence only. -->
 
 ## API dependency
 
-<!-- The stock-flow-api ticket or pull request this needs, and whether it is merged. Otherwise: "none". -->
+<!-- Directly linked stock-flow-api request/PR, adopted commit in openapi/api-source.json, and integration evidence when changing the contract. State what is blocked. Otherwise: "none". No context coordinator is required. -->
 
 ## Review
 
