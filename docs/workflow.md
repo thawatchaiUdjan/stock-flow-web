@@ -4,6 +4,8 @@ This repository owns frontend requirements, vocabulary, decisions, specs, ticket
 
 ## Choose the work mode
 
+For session boundaries, suggested model and effort settings, copyable prompts and agent-owned next-step reminders, follow the [session guide](session-guide.md). Keep related planning together, consider fresh sessions at substantial implementation ticket boundaries when context benefits, and use focused review contexts. These settings are recommendations; the guide does not configure automatic workers or grant merge permission.
+
 Before a new task, ask the owner to select Autopilot or Approval workflow unless the request already selects one. Keep that choice for the task and its continuations. Read-only questions need no selection. An explicit instruction to perform a concrete, agreed change authorises that change; it does not authorise unrelated work or merging.
 
 In Autopilot, take recommended answers within the selected scope and record them. In Approval workflow, wait for the owner's answers and approvals. Neither mode grants permission to edit another repository. Merge only when explicitly authorised, after required reviews and green checks.
