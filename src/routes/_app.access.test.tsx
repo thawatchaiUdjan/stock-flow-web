@@ -326,7 +326,15 @@ describe("the routes of the app", () => {
   it("have a row in R11 for every page under the shell", () => {
     signedIn("owner");
     const { router } = renderApp("/dashboard");
-    const notPages = ["/", "/$", "/login", "/set-password"];
+    const notPages = [
+      "/",
+      "/$",
+      "/login",
+      "/set-password",
+      "/password-setup",
+      "/forgot-password",
+      "/reset-password",
+    ];
     const addresses = Object.keys(router.routesByPath)
       .map((path) => (path.length > 1 ? path.replace(/\/$/, "") : path))
       .filter((path) => !notPages.includes(path));

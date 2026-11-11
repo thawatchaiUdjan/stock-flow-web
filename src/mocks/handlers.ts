@@ -4,6 +4,18 @@ import {
   getGetDashboardMockHandler200,
   getGetSalesReportMockHandler200,
 } from "@/api/generated/dashboard-and-reports/dashboard-and-reports.msw";
+import {
+  getCreateEmailUserMockHandler201,
+  getRequestFirstTimeCodeMockHandler202,
+  getRequestPasswordResetMockHandler202,
+  getVerifyFirstTimeCodeMockHandler410,
+  getSetEmailPasswordMockHandler410,
+  getResetEmailPasswordMockHandler410,
+} from "@/api/generated/email-access/email-access.msw";
+import {
+  CreateEmailUserBody,
+  RequestFirstTimeCodeBody,
+} from "@/api/generated/email-access/email-access.zod";
 import { getListLoginLogMockHandler200 } from "@/api/generated/login-log/login-log.msw";
 import type {
   DashboardOutputBody,
@@ -664,7 +676,53 @@ function salesReportOf(from: string | null, to: string | null): SalesReportOutpu
 }
 
 // Orval's default mocks return random strings; each handler here pins what the real API sends.
+// No external mailbox exists in mock mode: creation persists, sending fails, and no credential is issued.
+// Successful credential fixtures are explicit per test; integration tests use the real API.
+async function neutralEmailRequest({ request }: { request: Request }) {
+  const result = RequestFirstTimeCodeBody.safeParse(await request.json());
+  if (!result.success)
+    throw problem({
+      status: 422,
+      title: "Unprocessable Entity",
+      errors: [{ location: "body.email" }],
+    });
+  return { message: "If this email is eligible, we've sent instructions." };
+}
+const unavailableCredential = (
+  type: "first-time-code-invalid" | "password-setup-invalid" | "password-reset-invalid",
+) => ({ status: 410, title: "Gone", type });
+
 export const handlers = [
+  getCreateEmailUserMockHandler201(async ({ request }) => {
+    requireSession();
+    requireOwner();
+    const result = CreateEmailUserBody.safeParse(await request.json());
+    if (!result.success)
+      throw problem({
+        status: 422,
+        title: "Unprocessable Entity",
+        errors: result.error.issues.map((issue) => ({ location: `body.${String(issue.path[0])}` })),
+      });
+    const { name, email, role } = result.data;
+    if (mockApi.users.some((user) => user.email.toLowerCase() === email.toLowerCase())) {
+      throw problem({ status: 409, title: "Conflict", type: "email-taken" });
+    }
+    const user: User = {
+      id: Math.max(...mockApi.users.map(({ id }) => id)) + 1,
+      name,
+      email,
+      role,
+      status: "active",
+      passwordSet: false,
+    };
+    mockApi.users.push(user);
+    return { user, emailDelivery: "failed" };
+  }),
+  getRequestFirstTimeCodeMockHandler202(neutralEmailRequest),
+  getRequestPasswordResetMockHandler202(neutralEmailRequest),
+  getVerifyFirstTimeCodeMockHandler410(unavailableCredential("first-time-code-invalid")),
+  getSetEmailPasswordMockHandler410(unavailableCredential("password-setup-invalid")),
+  getResetEmailPasswordMockHandler410(unavailableCredential("password-reset-invalid")),
   getListUsersMockHandler200(() => {
     requireSession();
     return { users: mockApi.users };
