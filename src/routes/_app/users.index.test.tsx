@@ -8,7 +8,6 @@ import {
   getListUsersMockHandler200,
   getListUsersMockHandler403,
   getListUsersMockHandler500,
-  getResetPasswordMockHandler409,
   getUpdateUserMockHandler500,
 } from "@/api/generated/users/users.msw";
 import { mockApi, serverFailure } from "@/mocks/handlers";
@@ -229,7 +228,7 @@ async function rowOf(name: string) {
 
 describe("the actions on the Users list", () => {
   // users-and-access R18, context ADR 0004: nothing on the Owner's row.
-  it("offers no action on the Owner's row, and all three on another User's", async () => {
+  it("offers no action on the Owner's row, and editing and status actions on another User's", async () => {
     mockApi.session = "live";
     mockApi.users.push(mali);
     renderApp("/users");
@@ -240,7 +239,9 @@ describe("the actions on the Users list", () => {
     const maliRow = await rowOf("Mali Chai");
     expect(within(maliRow).getByRole("link", { name: "Edit" })).toBeInTheDocument();
     expect(within(maliRow).getByRole("button", { name: "Set Inactive" })).toBeInTheDocument();
-    expect(within(maliRow).getByRole("button", { name: "Reset password" })).toBeInTheDocument();
+    expect(
+      within(maliRow).queryByRole("button", { name: "Reset password" }),
+    ).not.toBeInTheDocument();
   });
 
   it("opens the User form for the User whose Edit was chosen", async () => {
@@ -287,7 +288,7 @@ describe("the actions on the Users list", () => {
 
       expect(within(dialog).getByText("Set Mali Chai Inactive?")).toBeInTheDocument();
       expect(dialog).toHaveTextContent(
-        "Mali Chai won't be able to log in, and any session they have ends at once. Their Setup link stops working too.",
+        "Mali Chai won't be able to log in, and any session they have ends at once. Their codes and password links stop working too.",
       );
       expect(await written()).toEqual([]);
     });
@@ -350,7 +351,7 @@ describe("the actions on the Users list", () => {
 
       expect(within(dialog).getByText("Set สมชาย ใจดี Active?")).toBeInTheDocument();
       expect(dialog).toHaveTextContent(
-        "สมชาย ใจดี will be able to log in again. Sessions that ended and Setup links that stopped working don't come back.",
+        "สมชาย ใจดี will be able to log in again. Sessions, codes and password links that ended do not come back. Ask them to request fresh instructions.",
       );
       expect(await written()).toEqual([]);
     });
@@ -370,105 +371,15 @@ describe("the actions on the Users list", () => {
     });
   });
 
-  describe("Reset password", () => {
-    async function ask(target: User = mali) {
-      mockApi.session = "live";
-      mockApi.users.push(target);
-      const written = recordWrites();
-      const view = renderApp("/users");
-      await view.user.click(
-        within(await rowOf(target.name)).getByRole("button", { name: "Reset password" }),
-      );
-      return { ...view, written, dialog: await screen.findByRole("alertdialog") };
-    }
-
-    // users-and-access R31
-    it("asks first, naming the User and the consequence", async () => {
-      const { dialog, written } = await ask();
-
-      expect(within(dialog).getByText("Reset Mali Chai's password?")).toBeInTheDocument();
-      expect(dialog).toHaveTextContent(
-        "Mali Chai's password stops working and any session they have ends at once. Any earlier Setup link stops working, and you get a new one to pass to them.",
-      );
-      expect(await written()).toEqual([]);
-    });
-
-    // users-and-access R31: with no password yet, only the link is left to end.
-    it("does not talk of a password that was never set", async () => {
-      const { dialog } = await ask({ ...mali, passwordSet: false });
-
-      expect(dialog).toHaveTextContent(
-        "Mali Chai hasn't set a password yet. Any earlier Setup link stops working, and you get a new one to pass to them.",
-      );
-    });
-
-    it("changes nothing when the Owner cancels", async () => {
-      const { user, dialog, written } = await ask();
-
-      await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
-
-      await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
-      expect(await written()).toEqual([]);
-      expect(screen.getByRole("table")).toBeInTheDocument();
-    });
-
-    // users-and-access R28, R31
-    it("resets once the Owner confirms, then shows the Setup link", async () => {
-      const { user, dialog, written } = await ask();
-
-      await user.click(within(dialog).getByRole("button", { name: "Reset password" }));
-
-      expect(await screen.findByRole("heading", { name: "Password reset" })).toBeInTheDocument();
-      expect(await written()).toEqual([
-        { method: "POST", path: "/api/users/2/reset-password", body: "" },
-      ]);
-      expect(screen.getByRole("textbox", { name: "Setup link" })).toHaveValue(
-        `${window.location.origin}/set-password#mock-reset-token-for-user-2`,
-      );
-      expect(screen.getByText(/Pass this Setup link to Mali Chai/)).toBeInTheDocument();
-      expect(screen.getByText(/won't be shown again/)).toBeInTheDocument();
-      expect(screen.getByText(/^Expires \d{1,2} \w{3}, \d{2}:\d{2}\.$/)).toBeInTheDocument();
-    });
-
-    it("can copy the link, and keeps its token out of the address", async () => {
-      const { user, dialog, router } = await ask();
-      await user.click(within(dialog).getByRole("button", { name: "Reset password" }));
-
-      await user.click(await screen.findByRole("button", { name: "Copy link" }));
-
-      expect(await navigator.clipboard.readText()).toBe(
-        `${window.location.origin}/set-password#mock-reset-token-for-user-2`,
-      );
-      expect(router.state.location.href).not.toContain("mock-reset-token");
-    });
-
-    // users-and-access R28: the link is shown once, so the list that follows cannot show it again.
-    it("goes back to the list, now marking the User's password as not set, without the link", async () => {
-      const { user, dialog } = await ask();
-      await user.click(within(dialog).getByRole("button", { name: "Reset password" }));
-      await screen.findByRole("heading", { name: "Password reset" });
-
-      await user.click(screen.getByRole("button", { name: "Back to Users" }));
-
-      const row = await rowOf("Mali Chai");
-      await waitFor(() => expect(within(row).getByText("Password not set")).toBeInTheDocument());
-      expect(screen.queryByRole("textbox", { name: "Setup link" })).not.toBeInTheDocument();
-    });
-
-    // The list was stale: the User went Inactive since it loaded.
-    it("explains a refusal because the User is Inactive, and keeps the list", async () => {
-      const { user, dialog } = await ask();
-      server.use(
-        getResetPasswordMockHandler409({ type: "user-inactive", status: 409, title: "Conflict" }),
-      );
-
-      await user.click(within(dialog).getByRole("button", { name: "Reset password" }));
-
-      expect(await within(dialog).findByRole("alert")).toHaveTextContent(
-        "This User is Inactive. Set them Active before issuing a Setup link.",
-      );
-      expect(screen.queryByRole("heading", { name: "Password reset" })).not.toBeInTheDocument();
-    });
+  // users-and-access R29, R31: self-service recovery replaces Owner resets.
+  it("offers no Owner reset, reissue, resend or copy-link control", async () => {
+    mockApi.session = "live";
+    mockApi.users.push(mali);
+    renderApp("/users");
+    await screen.findByRole("table");
+    expect(
+      screen.queryByRole("button", { name: /reset|reissue|resend|copy link/i }),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -505,5 +416,5 @@ it("pages the complete Users response, keeping actions and whole-list empty mean
   expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
   await user.click(screen.getByRole("button", { name: "First page" }));
   await screen.findByText("Staff 0");
-  expect(screen.getAllByRole("button", { name: "Reset password" })).toHaveLength(25);
+  expect(screen.queryAllByRole("button", { name: "Reset password" })).toHaveLength(0);
 });

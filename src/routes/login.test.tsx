@@ -19,6 +19,17 @@ async function logIn(user: ReturnType<typeof renderApp>["user"], email: string, 
 }
 
 describe("Login", () => {
+  it("offers self-service setup and recovery", async () => {
+    renderApp("/login");
+    expect(await screen.findByRole("link", { name: "Set up your password" })).toHaveAttribute(
+      "href",
+      "/password-setup",
+    );
+    expect(screen.getByRole("link", { name: "Forgot password" })).toHaveAttribute(
+      "href",
+      "/forgot-password",
+    );
+  });
   // users-and-access R2
   it("takes a User with the right email and password to the Dashboard", async () => {
     mockApi.password = password;
