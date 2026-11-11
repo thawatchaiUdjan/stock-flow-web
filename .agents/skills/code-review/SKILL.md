@@ -22,6 +22,8 @@ Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so th
 
 Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff should fail here, not inside two parallel sub-agents.
 
+**Pre-commit and work-in-progress review:** `/implement` invokes review before its final commit. In that case, also capture `git diff HEAD -- <in-scope-paths>` for staged and unstaged changes and list in-scope new files from `git ls-files --others --exclude-standard`. Read those new files directly; Git diffs do not include them. Use the branch comparison plus these working-tree changes, and do not treat an empty committed diff as an empty review when implementation changes exist. Record the base SHA, HEAD SHA, exact reviewed paths and working-tree state; keep that state unchanged during review. Exclude unrelated dirty files. If changes occur during review, refresh the affected review before claiming it covers the result.
+
 ### 2. Identify the spec source
 
 Look for the originating spec, in this order:
@@ -58,6 +60,16 @@ Each smell reads *what it is* → *how to fix*; match it against the diff:
 ### 4. Spawn both sub-agents in parallel
 
 Issue both sub-agent calls together, in the foreground, and aggregate the reports they return.
+
+**Reviewer settings for this repository:** explicitly request `model: "gpt-6.1-sol"` and `reasoning_effort: "medium"` for both reviewers, unless the owner specifies different settings. Do not inherit the implementation agent's settings by omission. With the Codex `spawn_agent` tool, also set `fork_turns: "none"`; full-history forks cannot accept model or effort overrides. Other hosts should use their equivalent explicit settings and fresh-context controls.
+
+Give each reviewer only its task, repository path, applicable repository instructions, pinned base and reviewed commit, diff command, commit list, and the axis-specific sources below. Let it read relevant files and dependencies as needed. Do not copy the implementation conversation or the implementer's conclusions. Reviewers are read-only; the implementation agent handles fixes.
+
+If explicit settings are unavailable or rejected, report that limitation and provide the separate-review handoff from `docs/session-guide.md`. Do not silently fall back to inherited settings or claim the requested settings were applied. Report the model and effort supplied in the successful spawn call; label them unverified if the host does not expose the effective settings.
+
+When the owner opens that fallback session with the requested settings, use separate reviewers if available. If subagents or their settings are still unavailable, perform Standards and Spec as separate passes in that fresh session and report the reduced isolation. Do not repeat the same unavailable-subagent handoff indefinitely.
+
+Run one initial review per applicable axis. After fixes, resume the relevant reviewer for the changed hunks and affected requirements; avoid repeating the full review unless the scope changed. Increase effort or change model only for a specific unresolved review difficulty, and explain the reason. Keep the existing per-axis output limits.
 
 **Standards sub-agent prompt** should include:
 

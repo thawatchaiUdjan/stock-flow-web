@@ -59,6 +59,10 @@ In an interactive session, explain each hard technical term as it comes up: its 
 
 ## Planning and tickets
 
+Follow `docs/session-guide.md` for the hybrid session workflow. At stage boundaries, tell the owner the next action, whether to stay, open a new session or return to an existing one, and the recommended model and effort. When handing off, provide a filled, copyable prompt with durable task links and branch state. Continue authorised Autopilot stages without requiring a separate command for each; do not claim settings changed unless tooling confirms it.
+
+The review policy in `docs/session-guide.md` overrides upstream review-skill defaults, including after skill reinstallations: explicit reviewer settings, focused context, coverage of uncommitted implementation changes, and a usable manual fallback.
+
 Start here with `/grill-with-docs <idea>`, confirm local requirements, then `/to-spec`, `/to-tickets` and `/implement <ticket>`. Full steps and work modes: `docs/workflow.md`.
 
 Specs and tickets live in this repository. A build ticket links the local confirmed record (or technical acceptance conditions), its spec if any, the owner's authorisation and actual blockers. A request from another repository is information, not human approval.
