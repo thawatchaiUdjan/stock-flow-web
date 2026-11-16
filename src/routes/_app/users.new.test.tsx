@@ -1,12 +1,12 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import type { CreateUserBody } from "@/api/generated/model";
 import {
-  getCreateUserMockHandler201,
-  getCreateUserMockHandler422,
-  getCreateUserMockHandler500,
-} from "@/api/generated/users/users.msw";
+  getCreateEmailUserMockHandler201,
+  getCreateEmailUserMockHandler422,
+  getCreateEmailUserMockHandler500,
+} from "@/api/generated/email-access/email-access.msw";
+import type { CreateUserBody } from "@/api/generated/model";
 import { mockApi, serverFailure } from "@/mocks/handlers";
 import { renderApp } from "@/test/render-app";
 import { server } from "@/test/server";
@@ -24,7 +24,7 @@ async function fillIn(
 function recordCreateRequests() {
   const sent: CreateUserBody[] = [];
   server.use(
-    getCreateUserMockHandler201(async ({ request }) => {
+    getCreateEmailUserMockHandler201(async ({ request }) => {
       sent.push(await request.clone().json());
       return {
         user: {
@@ -35,10 +35,7 @@ function recordCreateRequests() {
           status: "active",
           passwordSet: false,
         },
-        setupLink: {
-          token: "recorded-token",
-          expiresAt: new Date(2026, 10, 7, 14, 12).toISOString(),
-        },
+        emailDelivery: "sent",
       };
     }),
   );
@@ -151,7 +148,7 @@ describe("the User form", () => {
   it("puts a field the API refuses beside that field", async () => {
     mockApi.session = "live";
     server.use(
-      getCreateUserMockHandler422({
+      getCreateEmailUserMockHandler422({
         status: 422,
         title: "Unprocessable Entity",
         errors: [{ location: "body.email", message: "expected string to be RFC 5322 email" }],
@@ -168,7 +165,7 @@ describe("the User form", () => {
 
   it("says so when the API fails, and keeps the form", async () => {
     mockApi.session = "live";
-    server.use(getCreateUserMockHandler500(serverFailure));
+    server.use(getCreateEmailUserMockHandler500(serverFailure));
     const { user } = renderApp("/users/new");
 
     await fillIn(user, { name: "Mali Chai", email: "mali@example.com", role: "Admin" });
@@ -180,113 +177,45 @@ describe("the User form", () => {
     expect(screen.getByLabelText("Name")).toHaveValue("Mali Chai");
   });
 
-  describe("the Setup link", () => {
-    async function createMali() {
+  // users-and-access R28, R46 replace legacy Setup-link disclosure assertions.
+  it.each(["sent", "failed", "suppressed"] as const)(
+    "reports creation separately from %s delivery",
+    async (emailDelivery) => {
       mockApi.session = "live";
+      let creates = 0;
       server.use(
-        getCreateUserMockHandler201(() => {
-          const user = {
-            id: 2,
-            name: "Mali Chai",
-            email: "mali@example.com",
-            role: "admin",
-            status: "active",
-            passwordSet: false,
-          } as const;
-          mockApi.users.push(user);
-          return {
-            user,
-            setupLink: {
-              token: "token-for-mali",
-              expiresAt: new Date(2026, 10, 7, 14, 12).toISOString(),
-            },
-          };
+        getCreateEmailUserMockHandler201(async ({ request }) => {
+          creates++;
+          const body = await request.json();
+          const created = { id: 2, ...body, status: "active" as const, passwordSet: false };
+          mockApi.users.push(created);
+          return { user: created, emailDelivery };
         }),
       );
-      const app = renderApp("/users/new");
-      await fillIn(app.user, { name: "Mali Chai", email: "mali@example.com", role: "Admin" });
-      await app.user.click(screen.getByRole("button", { name: "Create User" }));
+      const { user } = renderApp("/users/new");
+      await fillIn(user, { name: "Mali Chai", email: "mali@example.com", role: "Admin" });
+      await user.click(screen.getByRole("button", { name: "Create User" }));
       await screen.findByRole("heading", { name: "User created" });
-      return app;
-    }
-
-    // users-and-access R28; stock-flow-web ADR 0022; the api returns only a token.
-    it("is built from the web app's own origin, with the token in the fragment", async () => {
-      await createMali();
-
-      expect(screen.getByLabelText("Setup link")).toHaveValue(
-        `${window.location.origin}/set-password#token-for-mali`,
-      );
-    });
-
-    // users-and-access R27
-    it("shows when it expires", async () => {
-      await createMali();
-
-      expect(screen.getByText(/Expires 7 Nov, 14:12/)).toBeInTheDocument();
-    });
-
-    it("says whose it is and that it won't be shown again", async () => {
-      await createMali();
-
-      expect(screen.getByText(/Mali Chai/)).toBeInTheDocument();
-      expect(screen.getByText(/won't be shown again/)).toBeInTheDocument();
-    });
-
-    it("can be copied", async () => {
-      const { user } = await createMali();
-
-      await user.click(screen.getByRole("button", { name: "Copy link" }));
-
-      expect(await navigator.clipboard.readText()).toBe(
-        `${window.location.origin}/set-password#token-for-mali`,
-      );
-      expect(await screen.findByRole("button", { name: "Copied" })).toBeInTheDocument();
-    });
-
-    it("keeps the token out of the address", async () => {
-      const { router } = await createMali();
-
-      expect(router.state.location.href).not.toContain("token-for-mali");
-      expect(router.state.location.pathname).toBe("/users/new");
-    });
-
-    // users-and-access R28: once.
-    it("is lost on leaving the view: coming back shows an empty form", async () => {
-      const { user, router } = await createMali();
-
-      await user.click(screen.getByRole("link", { name: "Back to Users" }));
-      expect(await screen.findByRole("heading", { name: "Users" })).toBeInTheDocument();
+      expect(screen.getByText("Mali Chai")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          emailDelivery === "sent"
+            ? "The email provider accepted the instructions. Check the inbox and spam folder."
+            : emailDelivery === "failed"
+              ? "The User was created, but the email could not be sent."
+              : "The User was created, but the email was not sent because of sending limits.",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/request instructions through Set up your password on Log in/),
+      ).toBeInTheDocument();
       expect(screen.queryByLabelText("Setup link")).not.toBeInTheDocument();
-
-      router.history.back();
-
-      expect(await screen.findByRole("heading", { name: "Create User" })).toBeInTheDocument();
-      expect(screen.getByLabelText("Name")).toHaveValue("");
-      expect(screen.queryByLabelText("Setup link")).not.toBeInTheDocument();
-      expect(screen.queryByText(/token-for-mali/)).not.toBeInTheDocument();
-    });
-
-    it("lists the new User, with no password yet, when the Owner goes back to the list", async () => {
-      const { user } = await createMali();
-
+      expect(screen.queryByRole("button", { name: "Copy link" })).not.toBeInTheDocument();
+      expect(creates).toBe(1);
       await user.click(screen.getByRole("link", { name: "Back to Users" }));
-
       const table = await screen.findByRole("table");
       await waitFor(() => expect(within(table).getAllByRole("row")).toHaveLength(3));
-      const rows = within(table).getAllByRole("row");
-      expect(rows[2]).toHaveTextContent("Mali Chai");
-      expect(within(rows[2]!).getByText("Password not set")).toBeInTheDocument();
-    });
-
-    it("lets the Owner create another User from a fresh form", async () => {
-      const { user } = await createMali();
-
-      await user.click(screen.getByRole("button", { name: "Create another User" }));
-
-      expect(await screen.findByRole("heading", { name: "Create User" })).toBeInTheDocument();
-      expect(screen.getByLabelText("Name")).toHaveValue("");
-      expect(screen.queryByLabelText("Setup link")).not.toBeInTheDocument();
-    });
-  });
+      expect(within(table).getByText("Password not set")).toBeInTheDocument();
+    },
+  );
 });

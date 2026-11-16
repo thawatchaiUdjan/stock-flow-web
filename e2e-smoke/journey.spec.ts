@@ -35,6 +35,14 @@ function openFromMenu(name: string) {
 
 // users-and-access R2, R27, R34: the Owner's first password comes from a Setup link.
 test("the Owner sets a password from the Setup link and logs in", async () => {
+  // users-and-access R34: public recovery before installation sends nothing.
+  await page.goto("/forgot-password");
+  await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Send instructions" }).click();
+  await expect(page.getByRole("status")).toHaveText(
+    "If this email is eligible, we've sent instructions.",
+  );
+  expect(await mailbox(page)).toHaveLength(0);
   await page.goto(`/set-password#${token}`);
   await expect(page.getByText(email)).toBeVisible();
   await page.getByLabel("New password").fill(password);
@@ -46,6 +54,7 @@ test("the Owner sets a password from the Setup link and logs in", async () => {
   await page.getByRole("button", { name: "Log in" }).click();
   await expect(page).toHaveURL("/dashboard");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  expect(await mailbox(page)).toHaveLength(0);
 });
 
 // products R2, R4
@@ -99,4 +108,155 @@ test("the Owner creates an Order, completes it and sees the Sale on the Dashboar
   await expect(page.getByText("Today's sales", { exact: true }).locator("..")).toContainText(
     "฿97.00",
   );
+});
+
+interface Mail {
+  to: { email: string }[];
+  textContent: string;
+}
+
+async function mailbox(from: Page): Promise<Mail[]> {
+  const response = await from.request.get(`${requiredEnv("SMOKE_MAIL_URL")}/messages`);
+  expect(response.ok()).toBe(true);
+  return response.json();
+}
+
+async function mailFor(from: Page, address: string, content: RegExp) {
+  const messages = (await mailbox(from)).filter(
+    (message) =>
+      message.to.some((recipient) => recipient.email === address) &&
+      content.test(message.textContent),
+  );
+  expect(messages.length).toBeGreaterThan(0);
+  return messages.at(-1)!.textContent;
+}
+
+async function signIn(from: Page, address: string, secret: string, landing: string) {
+  await from.goto("/login");
+  await from.getByLabel("Email").fill(address);
+  await from.getByLabel("Password").fill(secret);
+  await from.getByRole("button", { name: "Log in" }).click();
+  await expect(from).toHaveURL(landing);
+}
+
+// Real API/database and API-rendered email, with only Brevo replaced by the local provider fixture.
+test("email setup and self-service recovery preserve installation, delivery outcomes and session rules", async ({
+  browser,
+}) => {
+  test.setTimeout(180_000);
+  const staffEmail = `staff-${run}@smoke.example`;
+  await page.goto("/users/new");
+  await page.getByLabel("Name").fill("Email Smoke Staff");
+  await page.getByLabel("Email").fill(staffEmail);
+  await page.getByRole("radio", { name: "Staff" }).click();
+  await page.getByRole("button", { name: "Create User" }).click();
+  await expect(
+    page.getByText(
+      "The email provider accepted the instructions. Check the inbox and spam folder.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByLabel("Setup link")).toHaveCount(0);
+  const firstEmail = await mailFor(page, staffEmail, /Your code: /);
+  expect(firstEmail).toContain("https://stock-flow.test/password-setup");
+  const code = firstEmail.match(/Your code: ([0-9]{6})/)?.[1];
+  expect(code).toBeDefined();
+
+  // users-and-access R46: failed sending still commits exactly one User.
+  await page.request.post(`${requiredEnv("SMOKE_MAIL_URL")}/fail`);
+  await page.getByRole("button", { name: "Create another User" }).click();
+  await page.getByLabel("Name").fill("Failed Email Staff");
+  await page.getByLabel("Email").fill(`failed-${run}@smoke.example`);
+  await page.getByRole("radio", { name: "Staff" }).click();
+  await page.getByRole("button", { name: "Create User" }).click();
+  await expect(
+    page.getByText("The User was created, but the email could not be sent."),
+  ).toBeVisible();
+  await page.request.post(`${requiredEnv("SMOKE_MAIL_URL")}/resume`);
+  await page.getByRole("link", { name: "Back to Users" }).click();
+  await expect(page.getByRole("row", { name: /Failed Email Staff/ })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: /reset|reissue|copy link/i })).toHaveCount(0);
+  await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page).toHaveURL("/login");
+
+  await page.getByRole("link", { name: "Set up your password" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Set up your password", exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("Email").fill(staffEmail);
+  await page.getByLabel("First-time code").fill(code!);
+  const verification = page.waitForResponse("**/api/v2/password-setup/verify");
+  await page.getByRole("button", { name: "Verify code" }).click();
+  const verified = await verification;
+  const verifiedBody = await verified.json();
+  // Status/type/field names diagnose integration without printing a code or grant.
+  expect({
+    status: verified.status(),
+    type: verifiedBody.type,
+    fields: verifiedBody.errors?.map((error: { location?: string }) => error.location),
+  }).toEqual({ status: 200, type: undefined, fields: undefined });
+  await page.getByLabel("New password").fill(password);
+  await page.getByRole("button", { name: "Set password" }).click();
+  await expect(page).toHaveURL("/login");
+  await signIn(page, staffEmail, password, "/orders");
+  const other = await browser.newContext();
+  const otherPage = await other.newPage();
+  await signIn(otherPage, staffEmail, password, "/orders");
+
+  // Shared automatic-send/request cooldown is real; never bypass it through the database.
+  await new Promise((resolve) => setTimeout(resolve, 61_000));
+  await page.goto("/forgot-password");
+  await page.getByLabel("Email").fill(staffEmail);
+  await page.getByRole("button", { name: "Send instructions" }).click();
+  await expect(page.getByRole("status")).toHaveText(
+    "If this email is eligible, we've sent instructions.",
+  );
+  await otherPage.reload();
+  await expect(otherPage).toHaveURL("/orders");
+  const resetEmail = await mailFor(page, staffEmail, /reset-password#token=/);
+  const link = new URL(
+    resetEmail.match(/https:\/\/stock-flow\.test\/reset-password#token=[^\s]+/)![0],
+  );
+  const resetPath = link.pathname + link.hash;
+  await page.goto(resetPath);
+  await expect(page).toHaveURL("/reset-password");
+  // Opening did not consume the link or end the other device's session.
+  await otherPage.reload();
+  await expect(otherPage).toHaveURL("/orders");
+  await page.getByLabel("New password").fill(`${password}-reset`);
+  await page.getByRole("button", { name: "Set password" }).click();
+  await expect(page).toHaveURL("/login");
+  await otherPage.reload();
+  await expect(otherPage.getByRole("heading", { name: "Log in" })).toBeVisible();
+  await expect(otherPage.getByRole("alert")).toContainText("Your session has ended.");
+  await mailFor(page, staffEmail, /Your StockFlow password has changed/);
+  await page.goto(resetPath);
+  await page.getByLabel("New password").fill(`${password}-again`);
+  await page.getByRole("button", { name: "Set password" }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "This Reset link has expired or can't be used.",
+  );
+  await signIn(page, staffEmail, `${password}-reset`, "/orders");
+  await other.close();
+
+  // users-and-access R31, R34: installed Owner uses the same self-service flow.
+  const ownerContext = await browser.newContext();
+  const ownerPage = await ownerContext.newPage();
+  await signIn(ownerPage, email, password, "/dashboard");
+  await ownerPage.goto("/forgot-password");
+  await ownerPage.getByLabel("Email").fill(email);
+  await ownerPage.getByRole("button", { name: "Send instructions" }).click();
+  await expect(ownerPage.getByRole("status")).toHaveText(
+    "If this email is eligible, we've sent instructions.",
+  );
+  const ownerMail = await mailFor(ownerPage, email, /reset-password#token=/);
+  const ownerLink = new URL(
+    ownerMail.match(/https:\/\/stock-flow\.test\/reset-password#token=[^\s]+/)![0],
+  );
+  await ownerPage.goto(ownerLink.pathname + ownerLink.hash);
+  await expect(ownerPage).toHaveURL("/reset-password");
+  await ownerPage.getByLabel("New password").fill(`${password}-owner-reset`);
+  await ownerPage.getByRole("button", { name: "Set password" }).click();
+  await expect(ownerPage).toHaveURL("/login");
+  await signIn(ownerPage, email, `${password}-owner-reset`, "/dashboard");
+  await ownerContext.close();
 });

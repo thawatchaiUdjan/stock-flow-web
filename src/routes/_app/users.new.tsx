@@ -4,10 +4,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { errorMessage, hasCode, hasFieldError, messageFor } from "@/api/errors";
+import { useCreateEmailUser } from "@/api/generated/email-access/email-access";
+import { CreateEmailUserBody } from "@/api/generated/email-access/email-access.zod";
 import type { CreateUserBodyRole } from "@/api/generated/model";
-import { getListUsersQueryKey, useCreateUser } from "@/api/generated/users/users";
-import { CreateUserBody } from "@/api/generated/users/users.zod";
-import { SetupLinkDisplay } from "@/components/setup-link-display";
+import { getListUsersQueryKey } from "@/api/generated/users/users";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -19,16 +19,16 @@ export const Route = createFileRoute("/_app/users/new")({ component: NewUserPage
 // users-and-access R14. The rules are the contract's, so this can't be stricter than the API;
 // the spaces around a pasted name or email are dropped before they are checked.
 const userSchema = z.object({
-  name: z.string().trim().pipe(CreateUserBody.shape.name),
-  email: z.string().trim().pipe(CreateUserBody.shape.email),
-  role: CreateUserBody.shape.role,
+  name: z.string().trim().pipe(CreateEmailUserBody.shape.name),
+  email: z.string().trim().pipe(CreateEmailUserBody.shape.email),
+  role: CreateEmailUserBody.shape.role,
 });
 
 function NewUserPage() {
   const queryClient = useQueryClient();
-  const createUser = useCreateUser({
+  const createUser = useCreateEmailUser({
     mutation: {
-      // users-and-access R28: the Setup link is shown once, so nothing keeps it after this view.
+      // users-and-access R28: creation exposes only the User and email outcome.
       gcTime: 0,
       onSuccess: () => queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() }),
     },
@@ -49,12 +49,22 @@ function NewUserPage() {
 
   if (createUser.data) {
     return (
-      <SetupLinkDisplay
-        title="User created"
-        name={createUser.data.user.name}
-        setupLink={createUser.data.setupLink}
-        actions={
-          <>
+      <div className="flex flex-col gap-4">
+        <h1 className="text-title">User created</h1>
+        <div className="flex max-w-160 flex-col gap-4 rounded-lg border bg-card p-6">
+          <p className="font-medium">{createUser.data.user.name}</p>
+          <p>
+            {createUser.data.emailDelivery === "sent"
+              ? "The email provider accepted the instructions. Check the inbox and spam folder."
+              : createUser.data.emailDelivery === "failed"
+                ? "The User was created, but the email could not be sent."
+                : "The User was created, but the email was not sent because of sending limits."}
+          </p>
+          <p>
+            They can request instructions through Set up your password on Log in. Do not create
+            another User for the same email.
+          </p>
+          <div className="flex flex-wrap gap-2">
             <Button asChild>
               <Link to="/users">Back to Users</Link>
             </Button>
@@ -67,9 +77,9 @@ function NewUserPage() {
             >
               Create another User
             </Button>
-          </>
-        }
-      />
+          </div>
+        </div>
+      </div>
     );
   }
 

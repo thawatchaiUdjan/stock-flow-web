@@ -80,7 +80,6 @@ jobs:
 
       # Caches the Go modules and the build cache by default.
       - uses: actions/setup-go@v7
-        if: steps.api-bin.outputs.cache-hit != 'true'
         with:
           go-version-file: stock-flow-api/go.mod
           cache-dependency-path: stock-flow-api/go.sum
@@ -106,6 +105,21 @@ jobs:
         working-directory: stock-flow-api
         run: $RUNNER_TEMP/bin/goose -dir db/migrations postgres "$POSTGRES_URL" up
 
+      - name: Pinned API credential and PostgreSQL integration tests
+        working-directory: stock-flow-api
+        run: go test -count=1 -tags slow ./...
+
+      - name: Start the isolated email provider fixture
+        run: |
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout "$RUNNER_TEMP/mail.key" -out "$RUNNER_TEMP/mail.crt" \
+            -subj "/CN=api.brevo.com" -addext "subjectAltName=DNS:api.brevo.com"
+          echo "127.0.0.1 api.brevo.com" | sudo tee -a /etc/hosts
+          sudo "$(command -v node)" scripts/integration-mail.mjs "$RUNNER_TEMP/mail.key" "$RUNNER_TEMP/mail.crt" > "$RUNNER_TEMP/mail.log" 2>&1 &
+          curl --silent --show-error --fail --retry 20 --retry-delay 1 --retry-connrefused \
+            http://127.0.0.1:8025/messages
+          echo "SSL_CERT_FILE=$RUNNER_TEMP/mail.crt" >> "$GITHUB_ENV"
+
       - name: Issue the Owner's Setup link
         working-directory: stock-flow-api
         run: |
@@ -116,6 +130,12 @@ jobs:
 
       - name: Start the api
         working-directory: stock-flow-api
+        env:
+          BREVO_API_KEY: ci-fixture-only
+          EMAIL_SENDER_ADDRESS: sender@smoke.example
+          WEB_BASE_URL: https://stock-flow.test
+          EMAIL_CODE_SECRET: ci-only-email-code-secret-at-least-32-random-like-bytes
+          NO_PROXY: api.brevo.com,localhost,127.0.0.1
         run: |
           "$RUNNER_TEMP/bin/api" > "$RUNNER_TEMP/api.log" 2>&1 &
           curl --silent --show-error --fail --retry 30 --retry-delay 1 --retry-connrefused \
@@ -124,6 +144,7 @@ jobs:
       - name: Smoke test
         env:
           API_PROXY_TARGET: http://localhost:8080
+          SMOKE_MAIL_URL: http://127.0.0.1:8025
         run: bun run smoke
 
       - name: The api's log

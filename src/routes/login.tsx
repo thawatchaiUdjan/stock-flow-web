@@ -1,6 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { errorMessage, hasCode, messageFor } from "@/api/errors";
@@ -110,6 +110,14 @@ function LoginPage() {
           </Button>
         </FieldGroup>
       </form>
+      <div className="flex flex-col gap-2">
+        <Button variant="outline" asChild>
+          <Link to="/password-setup">Set up your password</Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link to="/forgot-password">Forgot password</Link>
+        </Button>
+      </div>
     </CenteredSurface>
   );
 }

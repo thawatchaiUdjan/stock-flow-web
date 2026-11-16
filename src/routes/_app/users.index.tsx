@@ -4,16 +4,10 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { errorMessage } from "@/api/errors";
-import type { SetupLink, User } from "@/api/generated/model";
-import {
-  getListUsersQueryKey,
-  useListUsers,
-  useResetPassword,
-  useUpdateUser,
-} from "@/api/generated/users/users";
+import type { User } from "@/api/generated/model";
+import { getListUsersQueryKey, useListUsers, useUpdateUser } from "@/api/generated/users/users";
 import { Confirmation } from "@/components/confirmation";
 import { ListPaging } from "@/components/list-paging";
-import { SetupLinkDisplay } from "@/components/setup-link-display";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,12 +23,6 @@ import { pagingSearch } from "@/lib/paging";
 import { roleNames, statusNames } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
-// The Setup link of a reset, and whose it is.
-interface IssuedLink {
-  name: string;
-  setupLink: SetupLink;
-}
-
 export const Route = createFileRoute("/_app/users/")({
   validateSearch: z.object(pagingSearch),
   component: UsersPage,
@@ -46,19 +34,6 @@ function UsersPage() {
   const navigate = Route.useNavigate();
   const page = search.page ?? 1;
   const size = search.size ?? 25;
-  // users-and-access R28: the Setup link of a reset, shown once and gone when the Owner leaves it.
-  const [issued, setIssued] = useState<IssuedLink | null>(null);
-
-  if (issued) {
-    return (
-      <SetupLinkDisplay
-        title="Password reset"
-        name={issued.name}
-        setupLink={issued.setupLink}
-        actions={<Button onClick={() => setIssued(null)}>Back to Users</Button>}
-      />
-    );
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -83,7 +58,6 @@ function UsersPage() {
         <UsersTable
           users={users.data.users.slice((page - 1) * size, page * size)}
           hasOthers={users.data.users.some(({ role }) => role !== "owner")}
-          onSetupLink={setIssued}
         />
       )}
       <ListPaging
@@ -103,15 +77,7 @@ function UsersPage() {
 // On a phone the columns don't fit side by side: the status and the actions take a line each.
 const phoneRow = "max-shell:grid max-shell:grid-cols-[1fr_auto]";
 
-function UsersTable({
-  users,
-  onSetupLink,
-  hasOthers,
-}: {
-  hasOthers: boolean;
-  users: User[];
-  onSetupLink: (issued: IssuedLink) => void;
-}) {
+function UsersTable({ users, hasOthers }: { hasOthers: boolean; users: User[] }) {
   // users-and-access R9: the Owner is a User, so this is how a new install looks.
 
   return (
@@ -146,7 +112,7 @@ function UsersTable({
                   </div>
                 </TableCell>
                 <TableCell className="max-shell:col-span-2 max-shell:pt-0 max-shell:empty:hidden">
-                  <UserActions user={user} onSetupLink={onSetupLink} />
+                  <UserActions user={user} />
                 </TableCell>
               </TableRow>
             ))}
@@ -162,13 +128,7 @@ function UsersTable({
   );
 }
 
-function UserActions({
-  user,
-  onSetupLink,
-}: {
-  user: User;
-  onSetupLink: (issued: IssuedLink) => void;
-}) {
+function UserActions({ user }: { user: User }) {
   // users-and-access R18, context ADR 0004: nothing can be done to the Owner here.
   if (user.role === "owner") return null;
 
@@ -180,8 +140,6 @@ function UserActions({
         </Link>
       </Button>
       <StatusAction user={user} />
-      {/* users-and-access R32: an Inactive User gets no Setup link. */}
-      {user.status === "active" && <ResetPasswordAction user={user} onSetupLink={onSetupLink} />}
     </div>
   );
 }
@@ -212,8 +170,8 @@ function StatusAction({ user }: { user: User }) {
         // users-and-access R16
         description={
           goingInactive
-            ? `${user.name} won't be able to log in, and any session they have ends at once. Their Setup link stops working too.`
-            : `${user.name} will be able to log in again. Sessions that ended and Setup links that stopped working don't come back.`
+            ? `${user.name} won't be able to log in, and any session they have ends at once. Their codes and password links stop working too.`
+            : `${user.name} will be able to log in again. Sessions, codes and password links that ended do not come back. Ask them to request fresh instructions.`
         }
         confirm={action}
         pending={update.isPending}
@@ -224,53 +182,6 @@ function StatusAction({ user }: { user: User }) {
             { onSuccess: () => setOpen(false) },
           )
         }
-      />
-    </>
-  );
-}
-
-function ResetPasswordAction({
-  user,
-  onSetupLink,
-}: {
-  user: User;
-  onSetupLink: (issued: IssuedLink) => void;
-}) {
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const reset = useResetPassword({
-    mutation: {
-      // users-and-access R28: the link is shown once, so nothing keeps it.
-      gcTime: 0,
-      onSuccess: (setupLink) => {
-        void queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
-        onSetupLink({ name: user.name, setupLink });
-      },
-    },
-  });
-
-  return (
-    <>
-      <Button variant="outline" onClick={() => setOpen(true)}>
-        Reset password
-      </Button>
-      <Confirmation
-        open={open}
-        onOpenChange={(next) => {
-          setOpen(next);
-          if (!next) reset.reset();
-        }}
-        title={`Reset ${user.name}'s password?`}
-        // users-and-access R31
-        description={
-          user.passwordSet
-            ? `${user.name}'s password stops working and any session they have ends at once. Any earlier Setup link stops working, and you get a new one to pass to them.`
-            : `${user.name} hasn't set a password yet. Any earlier Setup link stops working, and you get a new one to pass to them.`
-        }
-        confirm="Reset password"
-        pending={reset.isPending}
-        error={reset.error}
-        onConfirm={() => reset.mutate({ id: user.id })}
       />
     </>
   );

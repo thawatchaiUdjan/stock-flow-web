@@ -39,8 +39,20 @@ The Role of a person who works in the Shop day to day.
 _Avoid_: Employee, general user
 
 **Setup link**:
-A one-time link through which a person sets their own password.
+A one-time installation link through which the first Owner sets their initial password.
 _Avoid_: Invite link, reset link, temporary password
+
+**First-time code**:
+A six-digit code emailed to an Active Admin or Staff User to verify their email before they set their first password.
+_Avoid_: Login OTP, temporary password
+
+**Verification grant**:
+The single-use authority received after verifying a First-time code, allowing the person to set their first password.
+_Avoid_: Session, login token
+
+**Reset link**:
+A one-time emailed link through which an Active User sets a new password after requesting recovery.
+_Avoid_: Setup link, Owner reset
 
 **Login log**:
 The permanent list of logins, failed logins and logouts.

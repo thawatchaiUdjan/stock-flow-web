@@ -3,6 +3,13 @@ import type { ErrorModelType, ProductStock } from "./generated/model";
 
 // `satisfies` is ADR 0021's CI check: a code missing here, or not in the contract, fails tsc.
 const messages = {
+  "email-auth-unavailable": "Password setup and recovery are unavailable. Try again later.",
+  "first-time-code-invalid":
+    "This code can't be used. Check the code or request fresh instructions.",
+  "password-setup-invalid":
+    "This password setup has expired or can't be used. Start password setup again.",
+  "password-reset-invalid":
+    "This Reset link has expired or can't be used. Request another through Forgot password.",
   "about:blank": "Something went wrong. Try again.",
   // users-and-access R5: vague on purpose, or it would reveal which emails have a User.
   "login-failed": "Email or password is incorrect.",
@@ -20,7 +27,7 @@ const messages = {
   // orders R13: completed and cancelled are final; the detail refreshes to say which.
   "order-not-pending": "This order was completed or cancelled already, so it can't change.",
   "setup-link-invalid":
-    "This Setup link has been used, has expired or was replaced. Ask the Owner for a new one.",
+    "This installation link has been used, has expired or was replaced. Ask the person who installed StockFlow for help.",
 } satisfies Record<ErrorModelType, string>;
 
 export function hasCode(error: unknown, code: ErrorModelType) {

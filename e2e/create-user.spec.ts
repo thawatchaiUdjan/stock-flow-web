@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 const email = "nok@example.com";
 const token = "mock-setup-link-token";
 
-test("the Owner creates a User and gets their Setup link once", async ({ page }) => {
+test("the Owner creates a User and sees the separate email outcome", async ({ page }) => {
   const password = `correct-horse-${test.info().testId}`;
   const person = `Mali ${test.info().testId}`;
 
@@ -21,7 +21,7 @@ test("the Owner creates a User and gets their Setup link once", async ({ page })
   await expect(page.getByRole("heading", { name: "Users" })).toBeVisible();
   await page.getByRole("link", { name: "Create User" }).click();
 
-  const create = page.waitForRequest((request) => request.url().endsWith("/api/users"));
+  const create = page.waitForRequest((request) => request.url().endsWith("/api/v2/users"));
   await page.getByLabel("Name").fill(person);
   await page.getByLabel("Email").fill("mali@example.com");
   await page.getByRole("radio", { name: "Admin" }).click();
@@ -33,8 +33,11 @@ test("the Owner creates a User and gets their Setup link once", async ({ page })
     role: "admin",
   });
   await expect(page.getByRole("heading", { name: "User created" })).toBeVisible();
-  await expect(page.getByLabel("Setup link")).toHaveValue(/\/set-password#mock-token-for-user-2$/);
-  await expect(page.getByText("won't be shown again")).toBeVisible();
+  await expect(
+    page.getByText("The User was created, but the email could not be sent."),
+  ).toBeVisible();
+  await expect(page.getByLabel("Setup link")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Copy link" })).toHaveCount(0);
 
   await page.getByRole("link", { name: "Back to Users" }).click();
   await expect(page.getByRole("row", { name: new RegExp(person) })).toContainText(

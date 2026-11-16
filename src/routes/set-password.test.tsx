@@ -13,7 +13,7 @@ import { server } from "@/test/server";
 const setupLink = `/set-password#${setupToken}`;
 const tooShort = "Use at least 6 characters.";
 const noLongerWorks =
-  "This Setup link has been used, has expired or was replaced. Ask the Owner for a new one.";
+  "This installation link has been used, has expired or was replaced. Ask the person who installed StockFlow for help.";
 
 function sentToTheApi() {
   const paths: string[] = [];

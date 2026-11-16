@@ -1,4 +1,5 @@
 export * from './dashboard-and-reports/dashboard-and-reports';
+export * from './email-access/email-access';
 export * from './health/health';
 export * from './login-log/login-log';
 export * from './orders/orders';

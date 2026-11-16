@@ -27,3 +27,11 @@ Proposed contracts belong in planning docs or throwaway prototypes until publish
 ## Integration workflow
 
 `.github/workflows/integration.yml` runs manually and weekly. Select the frontend branch when running it manually; it reads that branch's API pin. It retains the real backend/database smoke journey without making backend checkout part of every frontend PR. Its outcome must be reported when adopting a new API version; a scheduled failure becomes a local investigation, not a context-coordinator task.
+
+## Email-auth adoption (#60)
+
+The email-auth frontend adopts API commit `fbcc38a2a53a9638e08a03b5a02a2f2970acf1c9` (contract 0.2.0), following its [handoff](https://github.com/thawatchaiUdjan/stock-flow-api/blob/fbcc38a2a53a9638e08a03b5a02a2f2970acf1c9/docs/handoffs/email-auth-web.md). Public pages are `/password-setup`, `/forgot-password` and `/reset-password#token=<opaque-token>`. The reset page immediately replaces its fragment and retains the credential only in memory. Reloading requires fresh instructions. `/set-password#<token>` remains the first Owner installation exception.
+
+Mock mode has no mailbox: new Users remain created with `emailDelivery: failed`, requests return the same neutral message, and unissued credentials fail with 410. Successful credential fixtures are explicit in screen tests. No mock email or credential is persisted. API templates remain exclusively in the API repo.
+
+The API integration workflow additionally runs the pinned API's fast and PostgreSQL tests and the real web email journey. An isolated HTTPS fixture captures the API's actual Brevo payloads and supports failed sends. Its runner-local certificate/hosts entry affects only that disposable runner; it never contacts Brevo or needs provider secrets. The real cooldown remains in force. This proves application integration, not inbox delivery, sender verification or production readiness. Legacy endpoint retirement remains API #49's separate, owner-authorised cutover.
