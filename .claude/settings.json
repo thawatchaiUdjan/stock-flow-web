@@ -65,7 +65,17 @@
       "Bash(bun run dev:mock)",
       "PowerShell(gh issue create *)",
       "PowerShell(gh issue list *)",
-      "PowerShell(bun run dev:mock)"
+      "PowerShell(bun run dev:mock)",
+      "Bash(gh pr diff *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh run list *)",
+      "Bash(gh run view *)",
+      "Bash(python3 .claude/skills/ui-ux-pro-max/scripts/search.py *)",
+      "PowerShell(gh pr diff *)",
+      "PowerShell(gh pr checks *)",
+      "PowerShell(gh run list *)",
+      "PowerShell(gh run view *)",
+      "PowerShell(python3 .claude/skills/ui-ux-pro-max/scripts/search.py *)"
     ],
     "deny": [
       "Bash(git -C *)",
