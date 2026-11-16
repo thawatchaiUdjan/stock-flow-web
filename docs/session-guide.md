@@ -43,7 +43,7 @@ A large ticket alone does not force a new session. Explain the expected benefit 
 | `/to-tickets` | Same planning session; Standard / medium | Split the spec into independently verifiable tickets, record dependencies and authorisation, and publish them. | Take the next unblocked, authorised ticket. The agent supplies its handoff. |
 | `/implement <ticket>`: small, clear fix | Fresh session when the handoff is useful; Light / medium | Inspect the ticket, use test-first development, make the change and run required checks. | Paste the implementation handoff. Keep this session for subsequent fixes. |
 | `/implement <ticket>`: normal feature | Stay when context is relevant; consider a fresh session at a substantial ticket boundary; Standard / medium | Build the ticket on a branch from `main`, using relevant skills and the accepted API contract. | Let implementation, verification and review proceed within scope. |
-| Difficult diagnosis or conflicting evidence | Keep the relevant task session; Standard / high | Investigate the cause or conflict. Consider Deep / high if the stronger setting still fails to resolve it. | Change settings only when the agent explains why. Unresolved product decisions still need you. |
+| Difficult diagnosis or conflicting evidence | Keep the relevant task session; Standard / high | Investigate the cause or conflict. Consider Deep / high if the stronger setting still fails to resolve it (threshold for Claude Code: see "Control usage"). | Change settings only when the agent explains why. Unresolved product decisions still need you. |
 | `code-review` | Separate review contexts; Standard / medium | Review the committed changes and any in-scope uncommitted implementation changes against a fixed starting point. Use Standards and Spec agents; skip Spec only when no spec is available. | No manual session needed when configured reviewer agents support these settings. Otherwise use the review prompt below. |
 | Fix findings and verify | Return to the implementation session and its settings | Fix findings and rerun affected checks. Record any remaining findings in the PR. | Do not start a fresh session for each finding. |
 | Commit and open PR | Same implementation session | Commit with the ticket reference and fill every PR template section with verification evidence. | Review the PR. Merge only after required checks and explicit authorisation. |
@@ -158,6 +158,10 @@ Reasoning effort controls how much internal thinking a model applies. Start at m
 
 Prompt caching reuses an unchanged beginning of the input at a discounted rate. A fresh session or model change can lose that benefit. A new session is not automatically cheaper, and a cheaper model can cost more if it requires repeated repairs.
 
+In Claude Code, move from Sonnet to Opus only when Sonnet at `high` has not resolved a stated difficulty after two focused attempts (an attempt is a fix followed by a check that still fails), and return to Sonnet once it is resolved. This threshold is a proposal made on 2026-11-16 and has not been measured here.
+
+On a Claude subscription plan, Anthropic says Opus "uses meaningfully more of your quota" than Sonnet, and that Opus costs several times more per turn than Sonnet, and Sonnet more than Haiku. Model availability depends on the account: `/model` lists what you can use, and `/usage` shows plan usage limits. To test a tier, note `/usage` before and after the ticket, with the model, effort and number of repair rounds.
+
 Compare total usage per completed ticket, including planning, handoffs, reviewer agents and fixes. Where available, record uncached input, cached input, output/reasoning, elapsed time and repair rounds. API token prices do not establish exact subscription usage. Do not promise a savings percentage without measurement.
 
 Recommendations checked on 2026-11-11. Recheck model availability and guidance when choices change:
@@ -166,6 +170,11 @@ Recommendations checked on 2026-11-11. Recheck model availability and guidance w
 - [Reasoning effort](https://developers.openai.com/api/docs/guides/reasoning)
 - [Prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching)
 - [Independent agent contexts and delegation](https://developers.openai.com/api/docs/guides/agents-api/multi-agent)
+
+Claude Code guidance checked on 2026-11-16:
+
+- [Models and usage limits in Claude Code](https://support.claude.com/en/articles/14552983-models-usage-limits-in-claude-code)
+- [Claude Code commands (`/model`, `/effort`, `/usage`)](https://code.claude.com/docs/en/commands)
 
 Verification and completion requirements still come from [AGENTS.md](../AGENTS.md), [testing policy](agents/testing.md) and [workflow](workflow.md).
 
