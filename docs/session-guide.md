@@ -4,7 +4,7 @@ Use this guide when starting work or deciding what to do next. The agent should 
 
 ## Start here
 
-For normal planning or feature work, choose **GPT-6.1 Sol / medium** in the session settings. Paste this prompt and replace the brackets:
+For normal planning or feature work, choose **Standard / medium** in the session settings. Paste this prompt and replace the brackets:
 
 ```text
 Autopilot: [describe the problem and desired result].
@@ -37,31 +37,40 @@ A large ticket alone does not force a new session. Explain the expected benefit 
 
 | Stage | Session and starting settings | What the agent does | What you do next |
 | --- | --- | --- | --- |
-| Understand and define | Planning session; Sol / medium | Read the record, inspect relevant code, identify scope and unknown rules. Use `/grill-with-docs` when requirements need definition. | Answer questions that need your product decision. Otherwise let Autopilot proceed. |
+| Understand and define | Planning session; Standard / medium | Read the record, inspect relevant code, identify scope and unknown rules. Use `/grill-with-docs` when requirements need definition. | Answer questions that need your product decision. Otherwise let Autopilot proceed. |
 | Confirm changed requirements | Same planning session | Open the record PR. Requirements become confirmed through its merge. | Review and merge, or explicitly authorise the agent to merge after checks. Dependent implementation waits for confirmation. |
-| `/to-spec` | Same planning session; Sol / medium | Turn settled requirements into a spec, define the test boundary, and publish the local spec issue. | In Autopilot, no separate command is needed when this stage is in scope. |
-| `/to-tickets` | Same planning session; Sol / medium | Split the spec into independently verifiable tickets, record dependencies and authorisation, and publish them. | Take the next unblocked, authorised ticket. The agent supplies its handoff. |
-| `/implement <ticket>`: small, clear fix | Fresh session when the handoff is useful; GPT-6.1 Terra / medium | Inspect the ticket, use test-first development, make the change and run required checks. | Paste the implementation handoff. Keep this session for subsequent fixes. |
-| `/implement <ticket>`: normal feature | Stay when context is relevant; consider a fresh session at a substantial ticket boundary; GPT-6.1 Sol / medium | Build the ticket on a branch from `main`, using relevant skills and the accepted API contract. | Let implementation, verification and review proceed within scope. |
-| Difficult diagnosis or conflicting evidence | Keep the relevant task session; Sol / high | Investigate the cause or conflict. Consider Astra / high if the stronger setting still fails to resolve it. | Change settings only when the agent explains why. Unresolved product decisions still need you. |
-| `code-review` | Separate review contexts; Sol / medium | Review the committed changes and any in-scope uncommitted implementation changes against a fixed starting point. Use Standards and Spec agents; skip Spec only when no spec is available. | No manual session needed when configured reviewer agents support these settings. Otherwise use the review prompt below. |
+| `/to-spec` | Same planning session; Standard / medium | Turn settled requirements into a spec, define the test boundary, and publish the local spec issue. | In Autopilot, no separate command is needed when this stage is in scope. |
+| `/to-tickets` | Same planning session; Standard / medium | Split the spec into independently verifiable tickets, record dependencies and authorisation, and publish them. | Take the next unblocked, authorised ticket. The agent supplies its handoff. |
+| `/implement <ticket>`: small, clear fix | Fresh session when the handoff is useful; Light / medium | Inspect the ticket, use test-first development, make the change and run required checks. | Paste the implementation handoff. Keep this session for subsequent fixes. |
+| `/implement <ticket>`: normal feature | Stay when context is relevant; consider a fresh session at a substantial ticket boundary; Standard / medium | Build the ticket on a branch from `main`, using relevant skills and the accepted API contract. | Let implementation, verification and review proceed within scope. |
+| Difficult diagnosis or conflicting evidence | Keep the relevant task session; Standard / high | Investigate the cause or conflict. Consider Deep / high if the stronger setting still fails to resolve it. | Change settings only when the agent explains why. Unresolved product decisions still need you. |
+| `code-review` | Separate review contexts; Standard / medium | Review the committed changes and any in-scope uncommitted implementation changes against a fixed starting point. Use Standards and Spec agents; skip Spec only when no spec is available. | No manual session needed when configured reviewer agents support these settings. Otherwise use the review prompt below. |
 | Fix findings and verify | Return to the implementation session and its settings | Fix findings and rerun affected checks. Record any remaining findings in the PR. | Do not start a fresh session for each finding. |
 | Commit and open PR | Same implementation session | Commit with the ticket reference and fill every PR template section with verification evidence. | Review the PR. Merge only after required checks and explicit authorisation. |
 | Finish and next ticket | Planning session, or a fresh planning session using the published issues | Report what passed, remaining blockers, PR status and the next ready ticket. Close a ticket only when its acceptance conditions are met. | Merge or give the next scoped instruction. Do not implement a blocked ticket. |
 
-Sol means GPT-6.1 Sol; Terra means GPT-6.1 Terra; Astra means GPT-6 Astra. These are starting recommendations, not measured winners for this repository. Use available equivalents only after explaining the substitution. Do not silently replace an unavailable model.
+The tiers map to models per host. These are starting recommendations, not measured winners for this repository. Use available equivalents only after explaining the substitution. Do not silently replace an unavailable model.
 
-Review starts automatically as part of `/implement`; you do not need another command. The repository's `code-review` skill explicitly requests `gpt-6.1-sol` / `medium` for each reviewer with fresh context, even when implementation uses another model or effort. In Codex this uses `fork_turns: "none"`, not an inherited conversation. If the host cannot apply those settings, the agent reports the limitation and supplies the manual review handoff below. These instructions configure how agents request reviews; they cannot add unsupported host capabilities.
+| Tier | Codex | Claude Code |
+| --- | --- | --- |
+| Standard | GPT-6.1 Sol | Claude Sonnet 5.5 (`sonnet`) |
+| Light | GPT-6.1 Terra | Claude Sonnet 5.5 (`sonnet`) |
+| Deep | GPT-6 Astra | Claude Opus 5.5 (`opus`) |
+| Routine | GPT-6 Luna | Claude Haiku 5.5 (`haiku`) |
+
+In Claude Code, change the active settings with `/model` and `/effort`; effort runs `low`, `medium`, `high`, `xhigh`, `max`. The Claude column is a proposal made on 2026-11-16 from Anthropic's published model lineup and your 2026-11-16 decision: Sonnet for everyday work, Opus reserved for deep work, Haiku for routine tasks. Standard and Light share a model on Claude Code; Light only differs by task size. It has not been measured in this repository. Recheck it when models change.
+
+Review starts automatically as part of `/implement`; you do not need another command. The repository's `code-review` skill explicitly requests the Standard tier at `medium` effort for each reviewer with fresh context, even when implementation uses another model or effort. In Codex this uses `gpt-6.1-sol` with `fork_turns: "none"`, not an inherited conversation. In Claude Code it uses the project agents `standards-reviewer` and `spec-reviewer` (`.claude/agents/`): each is pinned to `sonnet` / `medium`, has no Edit or Write tool (Bash remains, so read-only also rests on its instructions) and starts with no conversation history. For Claude Code this replaces the `gpt-6.1-sol` / `fork_turns` wording in step 4 of the installed `code-review` skill, which is not edited here (ADR 0014 and the README: refreshes overwrite skill files). If the host cannot apply those settings, the agent reports the limitation and supplies the manual review handoff below. These instructions configure how agents request reviews; they cannot add unsupported host capabilities.
 
 ### Repository review policy
 
-This policy remains authoritative if reinstalling upstream skills replaces local skill edits. Each reviewer receives the repository instructions/path, its task, pinned base and reviewed commit, diff commands, commit list and its standards or spec sources. It may inspect relevant code and dependencies, but does not inherit the implementation conversation or edit files. Request `gpt-6.1-sol` / `medium` explicitly and use fresh context (`fork_turns: "none"` in Codex). Report requested settings and whether the host confirms the effective settings; do not silently inherit implementation settings.
+This policy remains authoritative if reinstalling upstream skills replaces local skill edits. Each reviewer receives the repository instructions/path, its task, pinned base and reviewed commit, diff commands, commit list and its standards or spec sources. It may inspect relevant code and dependencies, but does not inherit the implementation conversation or edit files. Request the Standard tier at `medium` explicitly and use fresh context (`gpt-6.1-sol` with `fork_turns: "none"` in Codex; the `standards-reviewer` and `spec-reviewer` agents in Claude Code, started as a fresh agent, never a fork, with the Agent tool's `model: "sonnet"` and `effort: "medium"` where the definition cannot be used). Report requested settings and whether the host confirms the effective settings (Claude Code's Agent tool does not expose them, so label them unverified); do not silently inherit implementation settings.
 
 Pre-commit review must include the branch comparison and in-scope staged, unstaged and new files. Capture `git diff <base>...HEAD`, `git diff HEAD -- <in-scope-paths>`, and the in-scope new files listed by `git ls-files --others --exclude-standard`; read new files directly. Record exact base/HEAD SHAs and reviewed paths, keep the working state unchanged during review and exclude unrelated dirty files. Refresh affected review if the state changes.
 
 Run one initial review per applicable axis, with reports under 400 words per axis. Revisit affected hunks and requirements after fixes instead of repeating the whole review unless scope changes. Escalate settings only for a stated unresolved difficulty. If the host cannot apply explicit reviewer settings, supply the manual handoff below. If subagents remain unavailable in that fresh session, perform separate Standards and Spec passes there and disclose reduced isolation; never repeat the same failed handoff indefinitely.
 
-For a small task already in progress, staying in the current session may cost less than a handoff. Routine ticket formatting or PR drafting can use **GPT-6 Luna / low** when already running as a separate bounded task. Do not create another session solely to write a short PR description.
+For a small task already in progress, staying in the current session may cost less than a handoff. Routine ticket formatting or PR drafting can use **Routine / low** when already running as a separate bounded task. Do not create another session solely to write a short PR description.
 
 ## What the agent must handle for you
 
@@ -81,7 +90,7 @@ The outgoing agent fills every bracket before giving you a handoff. A handoff pr
 
 ### Start implementation
 
-Select **Terra / medium** for a small clear fix or **Sol / medium** for a normal feature. Open this repository in the new session and paste:
+Select **Light / medium** for a small clear fix or **Standard / medium** for a normal feature. Open this repository in the new session and paste:
 
 ```text
 [Existing work mode: Autopilot or Approval workflow]: /implement [local ticket URL or written acceptance conditions].
@@ -101,14 +110,14 @@ The outgoing agent fills the existing mode without changing it. Approval workflo
 
 ### Start a separate review when automatic reviewers are unavailable
 
-Select **Sol / medium**, open this repository in a new session, and paste:
+Select **Standard / medium**, open this repository in a new session, and paste:
 
 ```text
 Review only. Read AGENTS.md and docs/session-guide.md.
 Branch and reviewed commit: [exact branch and SHA].
 Use code-review against [exact base commit or branch].
 Ticket/spec: [exact links or written acceptance conditions].
-Use GPT-6.1 Sol / medium and separate Standards and Spec review agents where
+Use Standard / medium and separate Standards and Spec review agents where
 supported. If subagents or their explicit settings are unavailable, perform
 both review axes yourself in this fresh session and report the reduced isolation.
 Include in-scope uncommitted changes and new files; state the reviewed file list.
@@ -130,7 +139,7 @@ If the original session is unavailable, use a fresh session with its ticket, bra
 
 ## Example: fix a UI design
 
-Start with **Terra / medium** when the defect and desired result are clear; use **Sol / medium** if design decisions remain. Paste:
+Start with **Light / medium** when the defect and desired result are clear; use **Standard / medium** if design decisions remain. Paste:
 
 ```text
 Autopilot: fix the Products page on mobile. Filters overflow, spacing feels

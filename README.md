@@ -68,4 +68,6 @@ Skills live in `.agents/skills/`, with `.claude/skills/` links and provenance in
 
 The migration adopts the five planning skills from the existing local context installation without changing their upstream versions or lock entries. The installer includes them for future refreshes.
 
+Claude Code also reads `CLAUDE.md` (which imports `AGENTS.md`) and the two read-only reviewer agents in `.claude/agents/`, which `code-review` uses; the installer does not touch them. The `.claude/skills/` entries are symlinks: on Windows, Git needs `core.symlinks=true` (Developer Mode) to check them out. Model and effort tiers per host: [session guide](docs/session-guide.md).
+
 Never hand-edit installed skill files: refreshes overwrite them. Repository overrides, including the business ADR directory and requirements output, belong in `AGENTS.md` and `docs/agents/`.

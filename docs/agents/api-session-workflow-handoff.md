@@ -1,12 +1,12 @@
 # Handoff: adopt the session workflow in the API repository
 
-Open a new session rooted in `stock-flow-api`. Select **GPT-6.1 Sol / medium** and paste the prompt below. This is a documentation and skill-workflow task, not a request to change API behaviour. The web session has not edited the API repository.
+Open a new session rooted in `stock-flow-api`. Select the **Standard / medium** tier (Claude Code: Claude Sonnet 5.5 with `/model` and `/effort`; Codex: GPT-6.1 Sol) and paste the prompt below. This is a documentation and skill-workflow task, not a request to change API behaviour. The web session has not edited the API repository.
 
-The prompt is self-contained. The optional web references are local working-tree files as of 2026-11-11, not a claim that these changes have been committed, published or merged.
+The prompt is self-contained. The optional web references are working-tree files as of 2026-11-16. The tier and Claude Code files (`CLAUDE.md`, `.claude/agents/`, `.claude/settings.json`) exist only on the unmerged web branch `chore/claude-agent-support`; do not treat them as published or merged.
 
 ```text
 Autopilot: adopt a practical session and reviewer-settings guide in this API
-repository. I authorise this workflow/documentation change. Work only here;
+repository, usable from both Codex and Claude Code. I authorise this workflow/documentation change. Work only here;
 do not edit stock-flow-web or stock-flow-context. Stop before merging.
 
 Read this repository's AGENTS.md, workflow, installed skills, skill maintenance
@@ -20,6 +20,10 @@ Optional read-only examples in the sibling web checkout:
 C:/ProjectsDev/projects/stock-flow/stock-flow-web/docs/session-guide.md
 C:/ProjectsDev/projects/stock-flow/stock-flow-web/.agents/skills/code-review/SKILL.md
 C:/ProjectsDev/projects/stock-flow/stock-flow-web/docs/workflow.md
+C:/ProjectsDev/projects/stock-flow/stock-flow-web/CLAUDE.md
+C:/ProjectsDev/projects/stock-flow/stock-flow-web/.claude/agents/standards-reviewer.md
+C:/ProjectsDev/projects/stock-flow/stock-flow-web/.claude/agents/spec-reviewer.md
+C:/ProjectsDev/projects/stock-flow/stock-flow-web/.claude/settings.json
 If these files are unavailable, use the acceptance conditions below; do not
 require another checkout or block adoption solely on these examples.
 
@@ -35,17 +39,23 @@ Acceptance conditions:
 3. Record important chat decisions before handing off. Explain that changing
    model/effort and opening a new session are separate choices; use host settings
    changes where supported. Do not claim to change active settings without evidence.
-4. Starting recommendations: GPT-6.1 Sol / medium for planning and normal feature
-   implementation; GPT-6.1 Terra / medium for small clear fixes; Sol / high for
-   demonstrated difficult diagnosis, considering GPT-6 Astra / high if needed.
-   Optional GPT-6 Luna / low for an already separate routine formatting task.
-   Recheck actual availability; explain substitutions. No guaranteed savings.
+4. Starting recommendations, by tier (Codex / Claude Code): Standard / medium
+   (GPT-6.1 Sol / Claude Sonnet 5.5) for planning and normal feature
+   implementation; Light / medium (GPT-6.1 Terra / Claude Sonnet 5.5) for small
+   clear fixes; Standard / high for demonstrated difficult diagnosis, considering
+   Deep / high (GPT-6 Astra / Claude Opus 5.5) if needed. Optional Routine / low
+   (GPT-6 Luna / Claude Haiku 5.5) for an already separate routine formatting
+   task. Recheck actual availability; explain substitutions. No guaranteed savings.
 5. Make review automatic after implementation and required checks, before PR
    completion. Preserve the local Standards and Spec axes. Explicitly request
-   model gpt-6.1-sol and reasoning_effort medium for each reviewer unless the
-   owner overrides them. For Codex spawn_agent use fork_turns none so settings
-   can be overridden without inheriting the whole implementation conversation.
-   Use equivalent supported controls in other hosts.
+   the Standard tier at medium effort for each reviewer unless the owner
+   overrides them: model gpt-6.1-sol and reasoning_effort medium in Codex. For
+   Codex spawn_agent use fork_turns none so settings can be overridden without
+   inheriting the whole implementation conversation. In Claude Code use two
+   project agents in .claude/agents/ (a Standards and a Spec reviewer) pinned to
+   model sonnet and effort medium, with read-only tools (Read, Grep, Glob, Bash;
+   no Edit or Write), started as fresh agents and never forks. Use equivalent
+   supported controls in other hosts.
 6. Pass focused context: repository instructions/path, task, pinned comparison
    base and reviewed commit, diff command, commit list, standards or spec sources.
    Let reviewers inspect relevant code/dependencies; do not copy the whole chat
@@ -77,6 +87,16 @@ Acceptance conditions:
 13. Explain cached input versus new context, reasoning usage, and repeated setup.
     Compare total usage per completed ticket including reviewers and repairs;
     distinguish API costs from subscription usage. No fixed savings percentage.
+
+14. Support Claude Code as well as Codex. Make CLAUDE.md a real file that
+    imports AGENTS.md (@AGENTS.md) instead of a symlink, so a Windows checkout
+    without symlink support still loads the rules. Add the Claude Code reviewer
+    agents from condition 5 and confirm the skill installer leaves them alone.
+    Review .claude/settings.json: allow only commands this repo's workflow
+    docs name (git, read-only gh issue/pr/run, its test, build and generation
+    commands) and keep the deny list for merge, force-push and git -C. Do not
+    add GitHub write commands the owner has not approved.
+    Ignore generated bytecode such as __pycache__/.
 
 Use the API repository's maintained skill source/installer where necessary so
 updates survive reinstalling skills. Review the final instructions against these

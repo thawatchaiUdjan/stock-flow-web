@@ -20,3 +20,6 @@ dist-e2e/
 # Playwright
 test-results/
 playwright-report/
+
+# Python bytecode (ui-ux-pro-max scripts)
+__pycache__/
