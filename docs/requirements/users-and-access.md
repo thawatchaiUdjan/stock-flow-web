@@ -1,6 +1,6 @@
 # Users & access
 
-Status: Amended by domain ADR 0003, domain ADR 0004 and domain ADR 0010
+Status: Amended by domain ADR 0003, domain ADR 0004, domain ADR 0010 and domain ADR 0011 (proposed)
 
 ## Purpose
 
@@ -9,10 +9,10 @@ Everyone who works in the Shop uses this module to log in. It decides who has a 
 ## Rules
 
 - **R1** The system serves one Shop; all data in it belongs to that Shop.
-- **R2** A User logs in with an email and a password.
+- **R2** A User logs in with an email and a password. Login asks for the email first, then the password (domain ADR 0011).
 - **R3** An email belongs to one User only, and is compared without regard to letter case.
 - **R4** Nobody can sign up on their own.
-- **R5** A failed login shows the same message, whatever the reason: a wrong email, a wrong password, an Inactive User, or a User with no password yet.
+- **R5** A failed password step shows the same message, whatever the reason. The email step answers under R50 (amended by domain ADR 0011).
 - **R6** A User may be logged in on several devices at once.
 - **R7** A logged-in User can log out, which ends the session on that device only.
 - **R8** There are three Roles: Owner, Admin and Staff. Every User has exactly one.
@@ -49,7 +49,7 @@ Everyone who works in the Shop uses this module to log in. It decides who has a 
 - **R26** A User whose session has ended is sent to Login with a message saying so.
 - **R27** An Admin or Staff User sets their first password after verifying a First-time code emailed to their registered address. The code contains six digits and expires 10 minutes after issue. Subsequent logins use email and password without a code (domain ADR 0010).
 - **R28** Creating an Admin or Staff User automatically emails their First-time code. The Owner does not receive a Setup link or code to pass on (domain ADR 0010).
-- **R29** An Active Admin or Staff User without a password can request or resend a First-time code through password setup on Login. Issuing a new code invalidates the previous code; the Owner cannot issue password-reset instructions for another User (domain ADR 0010).
+- **R29** An Active Admin or Staff User without a password can request or resend a First-time code from Login's email step (R51) or the code step. Issuing a new code invalidates the previous code; the Owner cannot issue password-reset instructions for another User (domain ADR 0010).
 - **R30** After first setting or resetting a password, the person is sent to Login. Neither flow logs them in automatically (domain ADR 0010).
 - **R31** An Active User with a password, including the Owner, requests their own Reset link through Forgot password on Login. It works once, expires 30 minutes after issue, and only the newest link works. Saving the new password ends all their sessions at once. There is no Owner-triggered password-reset action (domain ADR 0010).
 - **R32** An Inactive User cannot receive password-setup or recovery instructions. Making a User Inactive invalidates their codes, verification grants, Reset links and any Setup link. Reactivation requires fresh instructions; old credentials do not revive (domain ADR 0010).
@@ -65,12 +65,18 @@ Everyone who works in the Shop uses this module to log in. It decides who has a 
 - **R41** Five incorrect First-time code attempts block code verification for that email for 10 minutes. Resending does not bypass the block or reset its failed-attempt allowance. This does not lock ordinary password login (domain ADR 0010).
 - **R42** Successfully verifying a First-time code grants 10 minutes to set the first password. This verification grant is single-use and does not create a logged-in session (domain ADR 0010).
 - **R43** First-time code and Reset link email requests share limits: one send per 60 seconds, five per email per hour, and 30 per IP address per hour. Exact windows, counter semantics and retry handling are delegated technical details within these limits (domain ADR 0010).
-- **R44** Public setup and recovery email requests return the same eligibility-neutral message. They do not reveal whether the email matches a User, their status, or whether they have set a password. Unknown and Inactive Users receive nothing (domain ADR 0010).
+- **R44** Public setup and recovery email requests return the same eligibility-neutral message. They do not reveal whether the email matches a User, their status, or whether they have set a password. Unknown and Inactive Users receive nothing (domain ADR 0010). Login's email step is the exception, under R50-R52 (domain ADR 0011).
 - **R45** A recovery request for an eligible Active Admin or Staff User without a password sends a First-time code instead of a Reset link. The initial Owner email exemption in R34 takes precedence (domain ADR 0010).
 - **R46** If sending the initial email fails, the newly created User remains without a password and can retry through password setup. The Owner sees creation success and email-sending failure separately; public requests retain the generic response (domain ADR 0010).
 - **R47** Requesting a Reset link does not change the current password or end sessions. After a successful reset, the system emails a completion notification; notification failure does not undo the password change (domain ADR 0010).
 - **R48** Password setup and recovery codes, links and verification grants work once. Successful password setup or reset invalidates all outstanding setup and recovery credentials for that User (domain ADR 0010).
 - **R49** First-time code, Reset link and reset-completion emails use English, StockFlow branding, responsive HTML and a plain-text alternative. API owns the email templates and follows the existing web design system, adapted to email clients (domain ADR 0010).
+
+- **R50** Login's email step says "no account" for an unknown email and for an Inactive User alike, and never reveals Inactive status (domain ADR 0011).
+- **R51** For an Active Admin or Staff User without a password, Login's email step sends a First-time code within R43's limits and continues to the code step (domain ADR 0011).
+- **R52** For the first Owner before installation setup, Login's email step says to use the installation Setup link and sends nothing (R34, domain ADR 0011).
+- **R53** The API limits Login's email step per IP address, high enough not to block normal logins from one shop network; exact numbers are delegated to the API (domain ADR 0011).
+- **R54** A complete six-digit First-time code is verified as soon as its last digit is entered, without pressing a button.
 
 ## Out of scope
 
