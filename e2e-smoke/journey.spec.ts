@@ -198,8 +198,11 @@ test("email setup and self-service recovery preserve installation, delivery outc
     fields: verifiedBody.errors?.map((error: { location?: string }) => error.location),
   }).toEqual({ status: 200, type: undefined, fields: undefined });
   await page.getByLabel("New password").fill(password);
+  // The saved password is what the next sign-in relies on; Login stays on /login (R30).
+  const saved = page.waitForResponse("**/api/v2/password-setup/password");
   await page.getByRole("button", { name: "Set password" }).click();
-  await expect(page).toHaveURL("/login");
+  expect((await saved).status()).toBe(204);
+  await expect(page.getByLabel("Email")).toBeVisible();
   await signIn(page, staffEmail, password, "/orders");
   const other = await browser.newContext();
   const otherPage = await other.newPage();
