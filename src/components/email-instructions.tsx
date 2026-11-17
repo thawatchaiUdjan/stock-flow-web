@@ -47,6 +47,8 @@ export function EmailInstructions({
   pending,
   error,
   success,
+  sendLabel,
+  pendingLabel,
 }: {
   email: string;
   onEmailChange: (email: string) => void;
@@ -54,6 +56,8 @@ export function EmailInstructions({
   pending: boolean;
   error: unknown;
   success: boolean;
+  sendLabel: string;
+  pendingLabel: string;
 }) {
   const form = useForm({
     defaultValues: { email },
@@ -95,10 +99,10 @@ export function EmailInstructions({
           newest instructions work.
         </FieldDescription>
         {success ? (
-          <RequestAgain pending={pending} />
+          <RequestAgain pending={pending} label={sendLabel} />
         ) : (
           <Button type="submit" disabled={pending}>
-            {pending ? "Requesting instructions" : "Send instructions"}
+            {pending ? pendingLabel : sendLabel}
           </Button>
         )}
       </FieldGroup>
@@ -106,15 +110,22 @@ export function EmailInstructions({
   );
 }
 
-function RequestAgain({ pending }: { pending: boolean }) {
-  const [coolingDown, setCoolingDown] = useState(true);
-  useEffect(() => {
-    const timer = window.setTimeout(() => setCoolingDown(false), 60_000);
-    return () => window.clearTimeout(timer);
-  }, []);
+function RequestAgain({ pending, label }: { pending: boolean; label: string }) {
+  const coolingDown = useCoolingDown(1);
   return (
     <Button type="submit" disabled={pending || coolingDown}>
-      Send instructions
+      {label}
     </Button>
   );
+}
+
+// users-and-access R43: one send per 60 seconds. `sends` counts successful sends; each restarts the wait.
+export function useCoolingDown(sends: number) {
+  const [cooledFor, setCooledFor] = useState(0);
+  useEffect(() => {
+    if (sends === 0) return;
+    const timer = window.setTimeout(() => setCooledFor(sends), 60_000);
+    return () => window.clearTimeout(timer);
+  }, [sends]);
+  return sends > 0 && cooledFor !== sends;
 }

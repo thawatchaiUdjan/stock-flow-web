@@ -11,17 +11,19 @@ test("a person requests first-time instructions and can retry an invalid code", 
   ).toBeVisible();
   await page.getByLabel("Email").fill("staff@example.com");
   const request = page.waitForRequest("**/api/v2/password-setup/request");
-  await page.getByRole("button", { name: "Send instructions" }).click();
+  await page.getByRole("button", { name: "Send code" }).click();
   expect((await request).postDataJSON()).toEqual({ email: "staff@example.com" });
-  await expect(page.getByRole("status")).toHaveText(
-    "If this email is eligible, we've sent instructions.",
-  );
-  await expect(page.getByRole("button", { name: "Send instructions" })).toBeDisabled();
-  await page.getByLabel("First-time code").fill("001234");
+  await expect(page.getByRole("status")).toContainText("If staff@example.com is eligible");
+  await expect(page.getByRole("button", { name: "Resend code" })).toBeDisabled();
+  const code = page.getByLabel("First-time code");
+  await expect(code).toBeFocused();
   const verify = page.waitForRequest("**/api/v2/password-setup/verify");
-  await page.getByRole("button", { name: "Verify code" }).click();
+  await page.keyboard.type("001234");
   expect((await verify).postDataJSON()).toEqual({ email: "staff@example.com", code: "001234" });
   await expect(page.getByRole("alert")).toContainText("This code can't be used.");
+  await expect(code).toHaveValue("");
+  await expect(code).toBeFocused();
+  await page.getByRole("button", { name: "Change email" }).click();
   await expect(page.getByLabel("Email")).toHaveValue("staff@example.com");
 });
 

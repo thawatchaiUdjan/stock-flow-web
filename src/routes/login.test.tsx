@@ -25,7 +25,7 @@ describe("Login", () => {
       "href",
       "/password-setup",
     );
-    expect(screen.getByRole("link", { name: "Forgot password" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Forgot password?" })).toHaveAttribute(
       "href",
       "/forgot-password",
     );

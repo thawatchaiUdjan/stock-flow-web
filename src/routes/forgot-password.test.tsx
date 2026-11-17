@@ -22,7 +22,7 @@ it("requests recovery only on submit and shows an eligibility-neutral result", a
   await screen.findByLabelText("Email");
   expect(sent).toEqual([]);
   await user.type(screen.getByLabelText("Email"), "NOK@example.com");
-  await user.click(screen.getByRole("button", { name: "Send instructions" }));
+  await user.click(screen.getByRole("button", { name: "Send reset link" }));
   expect(await screen.findByRole("status")).toHaveTextContent(
     "If this email is eligible, we've sent instructions.",
   );
@@ -45,11 +45,11 @@ it.each([
   );
   const { user } = renderApp("/forgot-password");
   await user.type(await screen.findByLabelText("Email"), "person@example.com");
-  await user.click(screen.getByRole("button", { name: "Send instructions" }));
+  await user.click(screen.getByRole("button", { name: "Send reset link" }));
   expect(await screen.findByRole("status")).toHaveTextContent(
     "If this email is eligible, we've sent instructions.",
   );
-  expect(screen.getByRole("button", { name: "Send instructions" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Send reset link" })).toBeDisabled();
 });
 
 it.each([
@@ -69,7 +69,7 @@ it.each([
   server.use(handler);
   const { user } = renderApp("/forgot-password");
   await user.type(await screen.findByLabelText("Email"), "person@example.com");
-  await user.click(screen.getByRole("button", { name: "Send instructions" }));
+  await user.click(screen.getByRole("button", { name: "Send reset link" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(message);
   expect(screen.getByLabelText("Email")).toHaveValue("person@example.com");
   expect(screen.queryByText("private")).not.toBeInTheDocument();
@@ -80,7 +80,7 @@ it("shows API email validation beside the field", async () => {
     getRequestPasswordResetMockHandler422({ status: 422, errors: [{ location: "body.email" }] }),
   );
   const { user } = renderApp("/forgot-password");
-  await user.click(await screen.findByRole("button", { name: "Send instructions" }));
+  await user.click(await screen.findByRole("button", { name: "Send reset link" }));
   expect(await screen.findByText("Enter a valid email address.")).toBeInTheDocument();
   expect(screen.getByLabelText("Email")).toHaveAttribute("aria-invalid", "true");
 });

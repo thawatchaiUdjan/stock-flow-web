@@ -21,8 +21,10 @@ function ForgotPasswordPage() {
         pending={request.isPending}
         error={request.error}
         success={request.isSuccess}
+        sendLabel="Send reset link"
+        pendingLabel="Sending reset link"
       />
-      <Button variant="outline" asChild>
+      <Button variant="link" size="sm" className="h-auto min-h-6 self-start p-0" asChild>
         <Link to="/password-setup">Enter a first-time code</Link>
       </Button>
       <Button variant="outline" asChild>

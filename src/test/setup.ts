@@ -37,3 +37,6 @@ globalThis.ResizeObserver = class {
   unobserve() {}
   disconnect() {}
 };
+
+// jsdom has no layout, and input-otp probes the point beside its boxes for password-manager badges.
+document.elementFromPoint = () => null;
