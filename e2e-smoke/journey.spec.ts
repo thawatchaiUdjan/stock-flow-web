@@ -38,7 +38,7 @@ test("the Owner sets a password from the Setup link and logs in", async () => {
   // users-and-access R34: public recovery before installation sends nothing.
   await page.goto("/forgot-password");
   await page.getByLabel("Email").fill(email);
-  await page.getByRole("button", { name: "Send instructions" }).click();
+  await page.getByRole("button", { name: "Send reset link" }).click();
   await expect(page.getByRole("status")).toHaveText(
     "If this email is eligible, we've sent instructions.",
   );
@@ -209,7 +209,7 @@ test("email setup and self-service recovery preserve installation, delivery outc
   await new Promise((resolve) => setTimeout(resolve, 61_000));
   await page.goto("/forgot-password");
   await page.getByLabel("Email").fill(staffEmail);
-  await page.getByRole("button", { name: "Send instructions" }).click();
+  await page.getByRole("button", { name: "Send reset link" }).click();
   await expect(page.getByRole("status")).toHaveText(
     "If this email is eligible, we've sent instructions.",
   );
@@ -247,7 +247,7 @@ test("email setup and self-service recovery preserve installation, delivery outc
   await signIn(ownerPage, email, password, "/dashboard");
   await ownerPage.goto("/forgot-password");
   await ownerPage.getByLabel("Email").fill(email);
-  await ownerPage.getByRole("button", { name: "Send instructions" }).click();
+  await ownerPage.getByRole("button", { name: "Send reset link" }).click();
   await expect(ownerPage.getByRole("status")).toHaveText(
     "If this email is eligible, we've sent instructions.",
   );
