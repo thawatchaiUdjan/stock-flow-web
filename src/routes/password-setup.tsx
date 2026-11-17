@@ -76,13 +76,8 @@ function PasswordSetupPage() {
         <CodeStep
           email={email}
           sends={sends}
-          verify={(code, onError) => verify.mutate({ data: { email, code } }, { onError })}
-          verifying={verify.isPending}
-          verifyError={verify.error}
-          resend={() => request.mutate({ data: { email } })}
-          resending={request.isPending}
-          resendError={request.error}
-          onEdit={() => verify.reset()}
+          request={request}
+          verify={verify}
           changeEmail={changeEmail}
         />
       ) : (
@@ -112,38 +107,28 @@ function PasswordSetupPage() {
 function CodeStep({
   email,
   sends,
+  request,
   verify,
-  verifying,
-  verifyError,
-  resend,
-  resending,
-  resendError,
-  onEdit,
   changeEmail,
 }: {
   email: string;
   sends: number;
-  verify: (code: string, onError: () => void) => void;
-  verifying: boolean;
-  verifyError: unknown;
-  resend: () => void;
-  resending: boolean;
-  resendError: unknown;
-  onEdit: () => void;
+  request: ReturnType<typeof useRequestFirstTimeCode>;
+  verify: ReturnType<typeof useVerifyFirstTimeCode>;
   changeEmail: () => void;
 }) {
   const [code, setCode] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const coolingDown = useCoolingDown(sends);
-  const busy = verifying || resending;
-  const invalidCode = hasFieldError(verifyError, "code");
+  const busy = verify.isPending || request.isPending;
+  const invalidCode = hasFieldError(verify.error, "code");
 
   // The code step opens with its first box focused; a rejected code returns focus there.
   useEffect(() => {
     if (!busy) input.current?.focus();
-  }, [busy, verifyError]);
+  }, [busy, verify.error]);
 
-  const error = (invalidCode ? null : verifyError) ?? resendError;
+  const error = (invalidCode ? null : verify.error) ?? request.error;
 
   return (
     <div className="flex flex-col gap-4">
@@ -170,11 +155,12 @@ function CodeStep({
           disabled={busy}
           onChange={(value) => {
             setCode(value);
-            onEdit();
+            verify.reset();
           }}
           // users-and-access R54: a complete code is verified without a button.
           onComplete={(value: string) => {
-            if (!busy) verify(value, () => setCode(""));
+            if (!busy)
+              verify.mutate({ data: { email, code: value } }, { onError: () => setCode("") });
           }}
           aria-invalid={invalidCode}
           aria-describedby={invalidCode ? "code-error" : undefined}
@@ -190,7 +176,7 @@ function CodeStep({
             ))}
           </InputOTPGroup>
         </InputOTP>
-        {verifying && <FieldDescription>Checking code</FieldDescription>}
+        {verify.isPending && <FieldDescription>Checking code</FieldDescription>}
         {invalidCode && (
           <FieldError id="code-error">Enter the six-digit code from your email.</FieldError>
         )}
@@ -201,7 +187,7 @@ function CodeStep({
           variant="link"
           className="h-auto p-0"
           disabled={busy || coolingDown}
-          onClick={resend}
+          onClick={() => request.mutate({ data: { email } })}
         >
           Resend code
         </Button>
