@@ -5,26 +5,26 @@ test("a person without a password continues from Login to the code step and can 
   page,
 }) => {
   await page.goto("/login");
-  await page.getByLabel("Email").fill("staff@example.com");
+  await page.getByLabel("Email").fill("suda@example.com");
   const identify = page.waitForRequest("**/api/v2/login/identify");
   await page.getByRole("button", { name: "Continue" }).click();
-  expect((await identify).postDataJSON()).toEqual({ email: "staff@example.com" });
+  expect((await identify).postDataJSON()).toEqual({ email: "suda@example.com" });
   await expect(
     page.getByRole("heading", { name: "Set up your password", exact: true }),
   ).toBeVisible();
   // Mock mode has no mailbox, so the check answers that no new code was sent.
-  await expect(page.getByRole("status")).toContainText("No new code was sent to staff@example.com");
+  await expect(page.getByRole("status")).toContainText("No new code was sent to suda@example.com");
   await expect(page.getByLabel("Email")).toHaveCount(0);
   const code = page.getByLabel("First-time code");
   await expect(code).toBeFocused();
   const verify = page.waitForRequest("**/api/v2/password-setup/verify");
   await page.keyboard.type("001234");
-  expect((await verify).postDataJSON()).toEqual({ email: "staff@example.com", code: "001234" });
+  expect((await verify).postDataJSON()).toEqual({ email: "suda@example.com", code: "001234" });
   await expect(page.getByRole("alert")).toContainText("This code can't be used.");
   await expect(code).toHaveValue("");
   await expect(code).toBeFocused();
   await page.getByRole("button", { name: "Change email" }).click();
-  await expect(page.getByLabel("Email")).toHaveValue("staff@example.com");
+  await expect(page.getByLabel("Email")).toHaveValue("suda@example.com");
 });
 
 test("reset fragments are removed from history and storage before any password submission", async ({

@@ -199,6 +199,15 @@ describe("Login", () => {
     },
   );
 
+  // The default mock: a User who has not set a password gets the code step, as the API would answer.
+  it("opens the code step for a User without a password by default", async () => {
+    const { user } = renderApp("/login");
+
+    await continueWith(user, "suda@example.com");
+
+    expect(await screen.findByLabelText("First-time code")).toBeInTheDocument();
+  });
+
   it("maps a throttled email check to its message from the published error list", async () => {
     server.use(
       getIdentifyLoginEmailMockHandler429({
