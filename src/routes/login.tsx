@@ -93,7 +93,12 @@ function LoginPage() {
           <form.Field name="password">
             {(field) => (
               <Field>
-                <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                <div className="flex items-center justify-between gap-2">
+                  <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                  <Button variant="link" size="sm" className="h-auto min-h-6 p-0" asChild>
+                    <Link to="/forgot-password">Forgot password?</Link>
+                  </Button>
+                </div>
                 <Input
                   id={field.name}
                   type="password"
@@ -110,14 +115,12 @@ function LoginPage() {
           </Button>
         </FieldGroup>
       </form>
-      <div className="flex flex-col gap-2">
-        <Button variant="outline" asChild>
+      <p className="text-small text-muted-foreground">
+        First time here?{" "}
+        <Button variant="link" size="sm" className="h-auto p-0" asChild>
           <Link to="/password-setup">Set up your password</Link>
         </Button>
-        <Button variant="outline" asChild>
-          <Link to="/forgot-password">Forgot password</Link>
-        </Button>
-      </div>
+      </p>
     </CenteredSurface>
   );
 }
