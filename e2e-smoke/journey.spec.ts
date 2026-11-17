@@ -180,8 +180,7 @@ test("email setup and self-service recovery preserve installation, delivery outc
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL("/login");
 
-  // domain ADR 0011: Login's email step opens the code step. The code sent at creation is still
-  // inside the shared send cooldown, so no new one goes out and the earlier one is entered.
+  // domain ADR 0011: the creation code is inside the send cooldown, so Login sends none and it is used.
   await page.getByLabel("Email").fill(staffEmail);
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(

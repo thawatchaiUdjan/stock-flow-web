@@ -37,7 +37,7 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-// users-and-access R2: the email first, then what the API says that email may do next (domain ADR 0011).
+// users-and-access R2: the email first, then what the API says it may do next.
 type Step =
   | { name: "email" }
   | { name: "password"; email: string }
@@ -66,7 +66,7 @@ function LoginPage() {
           setStep({
             name: "code",
             email,
-            codeSent: codeDelivery !== "suppressed" && codeDelivery !== "failed",
+            codeSent: codeDelivery === "sent",
           });
         }
       },
@@ -118,7 +118,8 @@ function LoginPage() {
     step.name === "email" && (answer === "no-account" || answer === "installation-link")
       ? notices[answer]
       : undefined;
-  const failure = logIn.error ?? (hasFieldError(identify.error, "email") ? null : identify.error);
+  const emailRejected = hasFieldError(identify.error, "email");
+  const failure = logIn.error ?? (emailRejected ? null : identify.error);
 
   return (
     <CenteredSurface title="Log in">
@@ -153,7 +154,7 @@ function LoginPage() {
                     email={field.state.value}
                     onChange={field.handleChange}
                     disabled={identify.isPending}
-                    invalid={hasFieldError(identify.error, "email")}
+                    invalid={emailRejected}
                   />
                 )}
               </form.Field>

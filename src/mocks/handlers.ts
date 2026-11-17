@@ -690,8 +690,7 @@ async function neutralEmailRequest({ request }: { request: Request }) {
     });
   return { message: "If this email is eligible, we've sent instructions." };
 }
-// users-and-access R50-R52: what Login's email step answers. An unknown email and an Inactive User
-// get the same answer. No mailbox exists here, so a code for a User without a password "fails".
+// users-and-access R50-R52: unknown and Inactive alike answer no-account; no mailbox, so codes "fail".
 async function identifyLoginEmail({ request }: { request: Request }): Promise<IdentifyOutputBody> {
   const result = RequestFirstTimeCodeBody.safeParse(await request.json());
   if (!result.success)

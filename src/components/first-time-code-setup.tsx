@@ -16,9 +16,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 
 const codeLength = 6;
 
-// users-and-access R27, R29, R42, R54: the First-time code step and the password it unlocks, for an
-// email a code was just requested for. `codeSent` is false when the request went out but sent no
-// new code (domain ADR 0011): an earlier code may still work, and Resend asks for another.
+// users-and-access R27, R42, R54: the code step and the password it unlocks. `codeSent` is false when no new code went out.
 export function FirstTimeCodeSetup({
   email,
   codeSent = true,
