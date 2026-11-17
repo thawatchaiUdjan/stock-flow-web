@@ -38,7 +38,7 @@ test("the Owner sets a password from the Setup link and logs in", async () => {
   // users-and-access R34: public recovery before installation sends nothing.
   await page.goto("/forgot-password");
   await page.getByLabel("Email").fill(email);
-  await page.getByRole("button", { name: "Send instructions" }).click();
+  await page.getByRole("button", { name: "Send reset link" }).click();
   await expect(page.getByRole("status")).toHaveText(
     "If this email is eligible, we've sent instructions.",
   );
@@ -198,8 +198,11 @@ test("email setup and self-service recovery preserve installation, delivery outc
     fields: verifiedBody.errors?.map((error: { location?: string }) => error.location),
   }).toEqual({ status: 200, type: undefined, fields: undefined });
   await page.getByLabel("New password").fill(password);
+  // The saved password is what the next sign-in relies on; Login stays on /login (R30).
+  const saved = page.waitForResponse("**/api/v2/password-setup/password");
   await page.getByRole("button", { name: "Set password" }).click();
-  await expect(page).toHaveURL("/login");
+  expect((await saved).status()).toBe(204);
+  await expect(page.getByLabel("Email")).toBeVisible();
   await signIn(page, staffEmail, password, "/orders");
   const other = await browser.newContext();
   const otherPage = await other.newPage();
@@ -209,7 +212,7 @@ test("email setup and self-service recovery preserve installation, delivery outc
   await new Promise((resolve) => setTimeout(resolve, 61_000));
   await page.goto("/forgot-password");
   await page.getByLabel("Email").fill(staffEmail);
-  await page.getByRole("button", { name: "Send instructions" }).click();
+  await page.getByRole("button", { name: "Send reset link" }).click();
   await expect(page.getByRole("status")).toHaveText(
     "If this email is eligible, we've sent instructions.",
   );
@@ -247,7 +250,7 @@ test("email setup and self-service recovery preserve installation, delivery outc
   await signIn(ownerPage, email, password, "/dashboard");
   await ownerPage.goto("/forgot-password");
   await ownerPage.getByLabel("Email").fill(email);
-  await ownerPage.getByRole("button", { name: "Send instructions" }).click();
+  await ownerPage.getByRole("button", { name: "Send reset link" }).click();
   await expect(ownerPage.getByRole("status")).toHaveText(
     "If this email is eligible, we've sent instructions.",
   );
