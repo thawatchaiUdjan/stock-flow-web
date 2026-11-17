@@ -21,6 +21,7 @@ import type {
   EmailRequestInputBody,
   EmailRequestOutputBody,
   ErrorModel,
+  IdentifyOutputBody,
   VerifyFirstTimeCodeInputBody,
   VerifyFirstTimeCodeOutputBody
 } from '../model';
@@ -60,7 +61,95 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
-export const getResetEmailPasswordUrl = () => {
+export const getIdentifyLoginEmailUrl = () => {
+
+
+
+
+  return `/api/v2/login/identify`
+}
+
+/**
+ * Login's email step. Answers `password` for an Active User with a password; `no-account` alike for an unknown email and an Inactive User; `installation-link` for the Owner before installation setup, sending nothing; and `first-time-code` for an Active Admin or Staff User without a password, after sending a First-time code within the shared send limits (`codeDelivery` says whether one went out). Answers 429 `login-check-limited` with Retry-After after 100 checks from one IP address in a rolling hour, and 503 `email-auth-unavailable` only where a code would be sent and email access is not configured. Not recorded in the Login log.
+ * @summary Say what an email may do next on Login
+ */
+export const identifyLoginEmail = async (emailRequestInputBody: NonReadonly<EmailRequestInputBody>, options?: Parameters<typeof apiFetch>[1]): Promise<IdentifyOutputBody> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<IdentifyOutputBody>(getIdentifyLoginEmailUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(emailRequestInputBody)
+  }
+);}
+
+
+
+
+
+export const getIdentifyLoginEmailMutationKey = () => ['identifyLoginEmail'] as const;
+
+export const getIdentifyLoginEmailMutationOptions = <TError = ErrorType<ErrorModel>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identifyLoginEmail>>, TError,IdentifyLoginEmailMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof identifyLoginEmail>>, TError,IdentifyLoginEmailMutationVariables, TContext> => {
+
+const mutationKey = getIdentifyLoginEmailMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof identifyLoginEmail>>, IdentifyLoginEmailMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  identifyLoginEmail(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IdentifyLoginEmailMutationResult = NonNullable<Awaited<ReturnType<typeof identifyLoginEmail>>>
+    export type IdentifyLoginEmailMutationBody = NonReadonly<EmailRequestInputBody>
+    export type IdentifyLoginEmailMutationError = ErrorType<ErrorModel>
+    export type IdentifyLoginEmailMutationVariables = {data: NonReadonly<EmailRequestInputBody>}
+
+    /**
+ * @summary Say what an email may do next on Login
+ */
+export const useIdentifyLoginEmail = <TError = ErrorType<ErrorModel>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof identifyLoginEmail>>, TError,IdentifyLoginEmailMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof identifyLoginEmail>>,
+        TError,
+        IdentifyLoginEmailMutationVariables,
+        TContext
+      > => {
+      return useMutation(getIdentifyLoginEmailMutationOptions(options), queryClient);
+    }
+    export const getResetEmailPasswordUrl = () => {
 
 
 

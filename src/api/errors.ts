@@ -4,6 +4,8 @@ import type { ErrorModelType, ProductStock } from "./generated/model";
 // `satisfies` is ADR 0021's CI check: a code missing here, or not in the contract, fails tsc.
 const messages = {
   "email-auth-unavailable": "Password setup and recovery are unavailable. Try again later.",
+  // users-and-access R53
+  "login-check-limited": "Too many attempts from this network. Try again later.",
   "first-time-code-invalid":
     "This code can't be used. Check the code or request fresh instructions.",
   "password-setup-invalid":

@@ -224,7 +224,8 @@ it("offers fresh setup when the verified grant expires and retains no grant afte
   expect(router.state.location.href).toBe("/password-setup");
   await user.click(screen.getByRole("link", { name: "Back to Log in" }));
   await screen.findByRole("heading", { name: "Log in" });
-  await user.click(screen.getByRole("link", { name: "Set up your password" }));
+  // Login no longer links here (domain ADR 0011); the page is still reachable by its address.
+  await act(() => router.navigate({ to: "/password-setup" }));
   expect(await screen.findByLabelText("Email")).toHaveValue("");
   expect(screen.queryByLabelText("New password")).not.toBeInTheDocument();
 });

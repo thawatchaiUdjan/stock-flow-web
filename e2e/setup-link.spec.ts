@@ -19,6 +19,7 @@ test("a person sets a password through a Setup link and logs in", async ({ page 
   await expect(page).toHaveURL("/login");
 
   await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
 

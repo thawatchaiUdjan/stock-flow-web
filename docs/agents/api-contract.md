@@ -32,6 +32,10 @@ Proposed contracts belong in planning docs or throwaway prototypes until publish
 
 The email-auth frontend adopts API commit `fbcc38a2a53a9638e08a03b5a02a2f2970acf1c9` (contract 0.2.0), following its [handoff](https://github.com/thawatchaiUdjan/stock-flow-api/blob/fbcc38a2a53a9638e08a03b5a02a2f2970acf1c9/docs/handoffs/email-auth-web.md). Public pages are `/password-setup`, `/forgot-password` and `/reset-password#token=<opaque-token>`. The reset page immediately replaces its fragment and retains the credential only in memory. Reloading requires fresh instructions. `/set-password#<token>` remains the first Owner installation exception.
 
+## Email-first Login adoption (#69)
+
+Login's email step adopts API commit `f502f08bf129e79a663d3259a5a056d8dae6f12c` (contract 0.2.0; API #53, #57): `identify-login-email` (`POST /v2/login/identify`) and the 429 `login-check-limited` code. Login routes on `next` (`password`, `first-time-code`, `no-account`, `installation-link`); a `first-time-code` answer opens the code step even when `codeDelivery` is `suppressed` or `failed`. Mock mode has no mailbox, so a User without a password answers `first-time-code` with `codeDelivery: failed`. Reported to API #53 after the integration run.
+
 Mock mode has no mailbox: new Users remain created with `emailDelivery: failed`, requests return the same neutral message, and unissued credentials fail with 410. Successful credential fixtures are explicit in screen tests. No mock email or credential is persisted. API templates remain exclusively in the API repo.
 
 The API integration workflow additionally runs the pinned API's fast and PostgreSQL tests and the real web email journey. An isolated HTTPS fixture captures the API's actual Brevo payloads and supports failed sends. Its runner-local certificate/hosts entry affects only that disposable runner; it never contacts Brevo or needs provider secrets. The real cooldown remains in force. This proves application integration, not inbox delivery, sender verification or production readiness. Legacy endpoint retirement remains API #49's separate, owner-authorised cutover.

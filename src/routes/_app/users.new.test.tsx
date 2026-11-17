@@ -206,9 +206,7 @@ describe("the User form", () => {
               : "The User was created, but the email was not sent because of sending limits.",
         ),
       ).toBeInTheDocument();
-      expect(
-        screen.getByText(/request instructions through Set up your password on Log in/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/enter their email on Log in to get a code/)).toBeInTheDocument();
       expect(screen.queryByLabelText("Setup link")).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Copy link" })).not.toBeInTheDocument();
       expect(creates).toBe(1);

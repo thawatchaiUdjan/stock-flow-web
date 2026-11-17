@@ -21,6 +21,7 @@
  * first-time-code-invalid: The First-time code cannot be used: it is wrong, expired, consumed, replaced, blocked or ineligible.
  * password-setup-invalid: The password-setup grant is expired, consumed, replaced or ineligible.
  * password-reset-invalid: The Reset link is expired, consumed, replaced or ineligible.
+ * login-check-limited: Too many Login email checks came from this IP address in the last hour. Retry-After says when to try again.
  */
 export type ErrorModelType = typeof ErrorModelType[keyof typeof ErrorModelType];
 
@@ -41,4 +42,5 @@ export const ErrorModelType = {
   'first-time-code-invalid': 'first-time-code-invalid',
   'password-setup-invalid': 'password-setup-invalid',
   'password-reset-invalid': 'password-reset-invalid',
+  'login-check-limited': 'login-check-limited',
 } as const;

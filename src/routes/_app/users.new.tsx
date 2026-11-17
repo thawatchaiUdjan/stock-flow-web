@@ -61,8 +61,8 @@ function NewUserPage() {
                 : "The User was created, but the email was not sent because of sending limits."}
           </p>
           <p>
-            They can request instructions through Set up your password on Log in. Do not create
-            another User for the same email.
+            They can enter their email on Log in to get a code. Do not create another User for the
+            same email.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button asChild>

@@ -6,6 +6,7 @@ import {
 } from "@/api/generated/dashboard-and-reports/dashboard-and-reports.msw";
 import {
   getCreateEmailUserMockHandler201,
+  getIdentifyLoginEmailMockHandler200,
   getRequestFirstTimeCodeMockHandler202,
   getRequestPasswordResetMockHandler202,
   getVerifyFirstTimeCodeMockHandler410,
@@ -20,6 +21,7 @@ import { getListLoginLogMockHandler200 } from "@/api/generated/login-log/login-l
 import type {
   DashboardOutputBody,
   ErrorModel,
+  IdentifyOutputBody,
   LoginLogEntryBody,
   Order,
   OrderSummary,
@@ -688,6 +690,25 @@ async function neutralEmailRequest({ request }: { request: Request }) {
     });
   return { message: "If this email is eligible, we've sent instructions." };
 }
+// users-and-access R50-R52: unknown and Inactive alike answer no-account; no mailbox, so codes "fail".
+async function identifyLoginEmail({ request }: { request: Request }): Promise<IdentifyOutputBody> {
+  const result = RequestFirstTimeCodeBody.safeParse(await request.json());
+  if (!result.success)
+    throw problem({
+      status: 422,
+      title: "Unprocessable Entity",
+      errors: [{ location: "body.email" }],
+    });
+  const email = result.data.email.toLowerCase();
+  const listed = mockApi.users.find((user) => user.email.toLowerCase() === email);
+  const person = listed ?? Object.values(people).find((one) => one.email === email);
+  if (!person || listed?.status === "inactive") return { next: "no-account" };
+  if (person.role === "owner") {
+    return { next: mockApi.password === undefined ? "installation-link" : "password" };
+  }
+  const hasPassword = listed ? listed.passwordSet : mockApi.password !== undefined;
+  return hasPassword ? { next: "password" } : { next: "first-time-code", codeDelivery: "failed" };
+}
 const unavailableCredential = (
   type: "first-time-code-invalid" | "password-setup-invalid" | "password-reset-invalid",
 ) => ({ status: 410, title: "Gone", type });
@@ -718,6 +739,7 @@ export const handlers = [
     mockApi.users.push(user);
     return { user, emailDelivery: "failed" };
   }),
+  getIdentifyLoginEmailMockHandler200(identifyLoginEmail),
   getRequestFirstTimeCodeMockHandler202(neutralEmailRequest),
   getRequestPasswordResetMockHandler202(neutralEmailRequest),
   getVerifyFirstTimeCodeMockHandler410(unavailableCredential("first-time-code-invalid")),
