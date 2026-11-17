@@ -265,7 +265,8 @@ describe("where a User lands", () => {
     mockApi.password = password;
     const { user, router } = renderApp(address);
     await user.type(await screen.findByLabelText("Email"), people[role].email);
-    await user.type(screen.getByLabelText("Password"), password);
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.type(await screen.findByLabelText("Password"), password);
     await user.click(screen.getByRole("button", { name: "Log in" }));
     return router;
   }

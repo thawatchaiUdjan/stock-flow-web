@@ -19,6 +19,7 @@ export async function install(page: Page, password: string, state: object = {}) 
 export async function attemptLogIn(page: Page, email: string, password: string) {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
 }

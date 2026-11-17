@@ -13,6 +13,7 @@ test("the Owner creates a User and sees the separate email outcome", async ({ pa
   await page.getByLabel("New password").fill(password);
   await page.getByRole("button", { name: "Set password" }).click();
   await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
   await expect(page).toHaveURL("/dashboard");

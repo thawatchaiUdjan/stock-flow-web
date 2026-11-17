@@ -81,7 +81,8 @@ describe("Set password", () => {
     await user.type(await screen.findByLabelText("New password"), "correct-horse");
     await user.click(screen.getByRole("button", { name: "Set password" }));
     await user.type(await screen.findByLabelText("Email"), owner.email);
-    await user.type(screen.getByLabelText("Password"), "correct-horse");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.type(await screen.findByLabelText("Password"), "correct-horse");
     await user.click(screen.getByRole("button", { name: "Log in" }));
 
     expect(await screen.findByRole("heading", { name: "Dashboard" })).toBeInTheDocument();

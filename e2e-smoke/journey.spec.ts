@@ -50,6 +50,7 @@ test("the Owner sets a password from the Setup link and logs in", async () => {
   await expect(page).toHaveURL("/login");
 
   await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Log in" }).click();
   await expect(page).toHaveURL("/dashboard");
@@ -134,6 +135,7 @@ async function mailFor(from: Page, address: string, content: RegExp) {
 async function signIn(from: Page, address: string, secret: string, landing: string) {
   await from.goto("/login");
   await from.getByLabel("Email").fill(address);
+  await from.getByRole("button", { name: "Continue" }).click();
   await from.getByLabel("Password").fill(secret);
   await from.getByRole("button", { name: "Log in" }).click();
   await expect(from).toHaveURL(landing);
@@ -178,14 +180,16 @@ test("email setup and self-service recovery preserve installation, delivery outc
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL("/login");
 
-  await page.getByRole("link", { name: "Set up your password" }).click();
+  // domain ADR 0011: Login's email step opens the code step. The code sent at creation is still
+  // inside the shared send cooldown, so no new one goes out and the earlier one is entered.
+  await page.getByLabel("Email").fill(staffEmail);
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(
     page.getByRole("heading", { name: "Set up your password", exact: true }),
   ).toBeVisible();
-  await page.getByLabel("Email").fill(staffEmail);
-  await page.getByLabel("First-time code").fill(code!);
   const verification = page.waitForResponse("**/api/v2/password-setup/verify");
-  await page.getByRole("button", { name: "Verify code" }).click();
+  await expect(page.getByLabel("First-time code")).toBeFocused();
+  await page.keyboard.type(code!);
   const verified = await verification;
   const verifiedBody = await verified.json();
   // Status/type/field names diagnose integration without printing a code or grant.

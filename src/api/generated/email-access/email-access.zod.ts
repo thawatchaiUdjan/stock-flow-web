@@ -8,6 +8,20 @@ import * as zod from 'zod';
 
 
 /**
+ * Login's email step. Answers `password` for an Active User with a password; `no-account` alike for an unknown email and an Inactive User; `installation-link` for the Owner before installation setup, sending nothing; and `first-time-code` for an Active Admin or Staff User without a password, after sending a First-time code within the shared send limits (`codeDelivery` says whether one went out). Answers 429 `login-check-limited` with Retry-After after 100 checks from one IP address in a rolling hour, and 503 `email-auth-unavailable` only where a code would be sent and email access is not configured. Not recorded in the Login log.
+ * @summary Say what an email may do next on Login
+ */
+export const IdentifyLoginEmailBody = zod.object({
+  "email": zod.email()
+})
+
+export const IdentifyLoginEmailResponse = zod.object({
+  "$schema": zod.url().optional().describe('A URL to the JSON Schema for this object.'),
+  "codeDelivery": zod.enum(['sent', 'failed', 'suppressed']).optional().describe('Only with first-time-code. sent means provider acceptance, not inbox delivery; suppressed means no new code went out because of the send limits; failed means the provider refused. A previous unexpired code keeps working.'),
+  "next": zod.enum(['password', 'first-time-code', 'no-account', 'installation-link'])
+})
+
+/**
  * Answers 410 `password-reset-invalid` for expired, used, replaced or ineligible links, and 503 `email-auth-unavailable` when not configured. Ends all sessions and starts none. Notification failure does not undo the change.
  * @summary Set a new password using an emailed Reset link
  */

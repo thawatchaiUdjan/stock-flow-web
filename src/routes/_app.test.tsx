@@ -177,7 +177,8 @@ describe("the app shell", () => {
       );
 
       await user.type(screen.getByLabelText("Email"), "nok@example.com");
-      await user.type(screen.getByLabelText("Password"), "correct-horse");
+      await user.click(screen.getByRole("button", { name: "Continue" }));
+      await user.type(await screen.findByLabelText("Password"), "correct-horse");
       await user.click(screen.getByRole("button", { name: "Log in" }));
 
       await waitFor(() => expect(router.state.location.pathname).toBe("/no-such-page"));

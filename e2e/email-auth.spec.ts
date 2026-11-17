@@ -1,20 +1,20 @@
 import { expect, test } from "@playwright/test";
 
 // Successful mail journeys run against the real API in e2e-smoke. No mailbox exists in mock mode.
-test("a person requests first-time instructions and can retry an invalid code", async ({
+test("a person without a password continues from Login to the code step and can retry an invalid code", async ({
   page,
 }) => {
   await page.goto("/login");
-  await page.getByRole("link", { name: "Set up your password" }).click();
+  await page.getByLabel("Email").fill("staff@example.com");
+  const identify = page.waitForRequest("**/api/v2/login/identify");
+  await page.getByRole("button", { name: "Continue" }).click();
+  expect((await identify).postDataJSON()).toEqual({ email: "staff@example.com" });
   await expect(
     page.getByRole("heading", { name: "Set up your password", exact: true }),
   ).toBeVisible();
-  await page.getByLabel("Email").fill("staff@example.com");
-  const request = page.waitForRequest("**/api/v2/password-setup/request");
-  await page.getByRole("button", { name: "Send code" }).click();
-  expect((await request).postDataJSON()).toEqual({ email: "staff@example.com" });
-  await expect(page.getByRole("status")).toContainText("If staff@example.com is eligible");
-  await expect(page.getByRole("button", { name: "Resend code" })).toBeDisabled();
+  // Mock mode has no mailbox, so the check answers that no new code was sent.
+  await expect(page.getByRole("status")).toContainText("No new code was sent to staff@example.com");
+  await expect(page.getByLabel("Email")).toHaveCount(0);
   const code = page.getByLabel("First-time code");
   await expect(code).toBeFocused();
   const verify = page.waitForRequest("**/api/v2/password-setup/verify");
