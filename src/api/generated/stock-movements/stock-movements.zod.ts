@@ -45,6 +45,7 @@ export const ListStockMovementsResponse = zod.object({
   "kind": zod.enum(['receive', 'adjustment', 'order', 'cancellation']).describe('receive and adjustment are made on the Stock Movements page; order and cancellation by Orders.'),
   "note": zod.string().describe('Why, in up to 200 characters. Empty when there is none; an adjustment always has one.'),
   "order": zod.union([zod.object({
+  "deleted": zod.boolean().describe('True when the Order has been deleted: the number stays, but the Order can no longer be opened, so do not link to it.'),
   "id": zod.int().describe('Identifies the Order.'),
   "number": zod.int().describe('The Order\'s number.')
 }),zod.null()]).describe('The Order that made it, or null for receive and adjustment.'),
@@ -87,6 +88,7 @@ export const AdjustStockResponse = zod.object({
   "kind": zod.enum(['receive', 'adjustment', 'order', 'cancellation']).describe('receive and adjustment are made on the Stock Movements page; order and cancellation by Orders.'),
   "note": zod.string().describe('Why, in up to 200 characters. Empty when there is none; an adjustment always has one.'),
   "order": zod.union([zod.object({
+  "deleted": zod.boolean().describe('True when the Order has been deleted: the number stays, but the Order can no longer be opened, so do not link to it.'),
   "id": zod.int().describe('Identifies the Order.'),
   "number": zod.int().describe('The Order\'s number.')
 }),zod.null()]).describe('The Order that made it, or null for receive and adjustment.'),
@@ -125,6 +127,7 @@ export const ReceiveStockResponse = zod.object({
   "kind": zod.enum(['receive', 'adjustment', 'order', 'cancellation']).describe('receive and adjustment are made on the Stock Movements page; order and cancellation by Orders.'),
   "note": zod.string().describe('Why, in up to 200 characters. Empty when there is none; an adjustment always has one.'),
   "order": zod.union([zod.object({
+  "deleted": zod.boolean().describe('True when the Order has been deleted: the number stays, but the Order can no longer be opened, so do not link to it.'),
   "id": zod.int().describe('Identifies the Order.'),
   "number": zod.int().describe('The Order\'s number.')
 }),zod.null()]).describe('The Order that made it, or null for receive and adjustment.'),

@@ -257,8 +257,11 @@ function MovementsTable({ movements }: { movements: StockMovement[] }) {
               </TableCell>
               <TableCell className="whitespace-nowrap max-shell:col-start-1 max-shell:row-start-3 max-shell:pt-0">
                 <p>{kindNames[movement.kind]}</p>
-                {/* orders R17 */}
-                {movement.order && (
+                {/* orders R17; stock-movements R13: a Deleted Order's number no longer opens it */}
+                {movement.order?.deleted && (
+                  <span className="text-small text-muted-foreground">#{movement.order.number}</span>
+                )}
+                {movement.order && !movement.order.deleted && (
                   <Link
                     to="/orders/$number"
                     params={{ number: String(movement.order.number) }}

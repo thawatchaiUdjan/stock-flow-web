@@ -6,6 +6,8 @@
  */
 
 export interface StockMovementOrder {
+  /** True when the Order has been deleted: the number stays, but the Order can no longer be opened, so do not link to it. */
+  deleted: boolean;
   /** Identifies the Order. */
   id: number;
   /** The Order's number. */
