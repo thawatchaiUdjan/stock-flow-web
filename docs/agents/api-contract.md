@@ -42,4 +42,4 @@ The API integration workflow additionally runs the pinned API's fast and Postgre
 
 ## Soft-delete adoption (#73)
 
-Soft-delete of Products, Users and Orders adopts API commit `53b4232dda5954a944bda6dcc030a5f45f03ae89` (contract 0.2.0): `delete-product`, `delete-user`, `delete-order` and the codes `product-not-archived`, `user-not-inactive`, `order-pending`. Gap reported on #73: `StockMovement.order` has no marker for a Deleted Order, so stock-movements R13 ("do not link") waits for the API.
+Soft-delete of Products, Users and Orders adopts API commit `53b4232dda5954a944bda6dcc030a5f45f03ae89` (contract 0.2.0): `delete-product`, `delete-user`, `delete-order` and the codes `product-not-archived`, `user-not-inactive`, `order-pending`. Stock movements R13 (do not link a Deleted Order) adopts API commit `a7d3517e78527aebcb8d963965408520961b0dd0`, which adds the required `StockMovementOrder.deleted`.

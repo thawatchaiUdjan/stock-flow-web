@@ -20,7 +20,7 @@ Every change to a Product's stock is a Stock movement, so the stock shown always
 - **R10** The Stock Movements page lists Stock movements newest first, and can be filtered by Product, by kind and by a range of the Shop's days (Dashboard & reports R1).
 - **R11** Each entry shows the time, the Product and its SKU, the kind, the change in stock, the stock after, the User and the note. One made by an Order links to that Order.
 - **R12** Every Role sees every Stock movement.
-- **R13** Stock movements of a Deleted Product or Order stay in the list. One made by a Deleted Order names its number but no longer opens it. **Blocked on the contract:** `StockMovement.order` carries only `id` and `number`, so the app cannot tell a Deleted Order; the link stays and opens "not found" until the API publishes a marker (web issue #73).
+- **R13** Stock movements of a Deleted Product or Order stay in the list. One made by a Deleted Order names its number but no longer opens it (the API marks it `order.deleted`).
 ## Out of scope
 
 - Purchase prices, suppliers and purchase orders.

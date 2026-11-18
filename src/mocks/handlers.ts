@@ -344,7 +344,7 @@ function recordMovement(
   kind: StockMovement["kind"],
   change: number,
   note: string | undefined,
-  order: StockMovement["order"],
+  order: { id: number; number: number } | null,
 ) {
   const movement: StockMovement = {
     id: Math.max(0, ...mockApi.stockMovements.map(({ id }) => id)) + 1,
@@ -355,7 +355,7 @@ function recordMovement(
     stockAfter: product.stock + change,
     user: actor(),
     note: note ?? "",
-    order,
+    order: order && { ...order, deleted: false },
   };
   mockApi.stockMovements.push(movement);
   mockApi.products = mockApi.products.map((one) =>
@@ -1079,6 +1079,10 @@ export const handlers = [
       throw conflict("order-pending", "The Order is Pending: cancel it first.");
     }
     mockApi.orders = mockApi.orders.filter((one) => one !== order);
+    // stock-movements R13: its movements stay, marked as made by a Deleted Order.
+    mockApi.stockMovements = mockApi.stockMovements.map((one) =>
+      one.order?.id === order.id ? { ...one, order: { ...one.order, deleted: true } } : one,
+    );
   }),
   getGetDashboardMockHandler200(() => {
     requireSession();

@@ -145,12 +145,17 @@ describe("the Stock Movements list", () => {
     signedIn("owner");
     mockApi.products = [helmet];
     mockApi.stockMovements = [
-      movement(1, { kind: "order", change: -4, stockAfter: 14, order: { id: 7, number: 1007 } }),
+      movement(1, {
+        kind: "order",
+        change: -4,
+        stockAfter: 14,
+        order: { id: 7, number: 1007, deleted: false },
+      }),
       movement(2, {
         kind: "cancellation",
         change: 4,
         stockAfter: 18,
-        order: { id: 7, number: 1007 },
+        order: { id: 7, number: 1007, deleted: false },
       }),
     ];
     renderApp("/stock-movements");
@@ -167,7 +172,12 @@ describe("the Stock Movements list", () => {
     signedIn("owner");
     mockApi.products = [helmet];
     mockApi.stockMovements = [
-      movement(1, { kind: "order", change: -4, stockAfter: 14, order: { id: 7, number: 1007 } }),
+      movement(1, {
+        kind: "order",
+        change: -4,
+        stockAfter: 14,
+        order: { id: 7, number: 1007, deleted: false },
+      }),
     ];
     const { user, router } = renderApp("/stock-movements");
 
@@ -175,6 +185,25 @@ describe("the Stock Movements list", () => {
 
     expect(await screen.findByRole("heading", { name: "Order not found" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/orders/1007");
+  });
+
+  // stock-movements R13: a Deleted Order's number stays, but it no longer opens.
+  it("names a Deleted Order's number without linking to it", async () => {
+    signedIn("owner");
+    mockApi.products = [helmet];
+    mockApi.stockMovements = [
+      movement(1, {
+        kind: "order",
+        change: -4,
+        stockAfter: 14,
+        order: { id: 7, number: 1007, deleted: true },
+      }),
+    ];
+    renderApp("/stock-movements");
+
+    expect(await screen.findByText("#1007")).toBeInTheDocument();
+    expect(rowOf(/Order/)).toHaveTextContent("Order#1007−414");
+    expect(screen.queryByRole("link", { name: "#1007" })).not.toBeInTheDocument();
   });
 
   it("says what belongs here when there are no entries", async () => {
