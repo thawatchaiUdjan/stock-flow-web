@@ -8,7 +8,7 @@ import { renderApp } from "@/test/render-app";
 import { menuButtonOf, openRowMenu } from "@/test/row-menu";
 import { server } from "@/test/server";
 
-// products R17, users-and-access R54, orders R20, domain ADR 0013: each list deletes one kind of
+// products R17, users-and-access R55, orders R20, domain ADR 0013: each list deletes one kind of
 // record, permanently, from the row's actions menu. The same rules, so the same tests.
 
 const archived = productOf({

@@ -116,6 +116,7 @@ function OrderActions({ order }: { order: OrderSummary }) {
   const refresh = () => {
     queryClient.removeQueries({ queryKey: getGetOrderQueryKey(order.number) });
     void queryClient.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
+    // dashboard-and-reports R10: the key without its params reaches every range of the report.
     void queryClient.invalidateQueries({ queryKey: getGetSalesReportQueryKey().slice(0, 1) });
     return queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
   };

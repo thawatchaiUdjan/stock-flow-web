@@ -30,7 +30,7 @@ const messages = {
   "order-not-pending": "This order was completed or cancelled already, so it can't change.",
   // products R17: the row only offers Delete for an Archived Product; it changed since.
   "product-not-archived": "This product is active again. Archive it before deleting it.",
-  // users-and-access R54
+  // users-and-access R55
   "user-not-inactive": "This User is active again. Set them Inactive before deleting them.",
   // orders R20: the row only offers Delete for a Completed or Cancelled Order.
   "order-pending": "This order is still pending. Cancel it before deleting it.",

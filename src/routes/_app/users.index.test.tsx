@@ -243,7 +243,7 @@ describe("the actions on the Users list", () => {
     expect(
       within(menu).queryByRole("menuitem", { name: "Reset password" }),
     ).not.toBeInTheDocument();
-    // users-and-access R54: an Active User cannot be deleted.
+    // users-and-access R55: an Active User cannot be deleted.
     expect(within(menu).queryByRole("menuitem", { name: "Delete" })).not.toBeInTheDocument();
   });
 

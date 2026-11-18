@@ -149,7 +149,7 @@ function updateMockUser(user: User, changes: Partial<User>) {
   return changed;
 }
 
-// products R17, users-and-access R54, orders R20: refused while the record is not in the state
+// products R17, users-and-access R55, orders R20: refused while the record is not in the state
 // that may be deleted.
 function conflict(
   type: "product-not-archived" | "user-not-inactive" | "order-pending",
@@ -843,7 +843,7 @@ export const handlers = [
   }),
   getDeleteUserMockHandler204(({ params }) => {
     requireSession();
-    // users-and-access R54: the Owner only; a Deleted User opens as 404 and leaves the list.
+    // users-and-access R55: the Owner only; a Deleted User opens as 404 and leaves the list.
     requireOwner();
     const user = mockApi.users.find(({ id }) => id === Number(params.id));
     if (!user) throw problem({ status: 404, title: "Not Found" });

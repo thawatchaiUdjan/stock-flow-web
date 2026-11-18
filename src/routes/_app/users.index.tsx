@@ -160,7 +160,7 @@ function UserActions({ user }: { user: User }) {
         <DropdownMenuItem className={rowActionItem} onSelect={() => setStatusOpen(true)}>
           {user.status === "active" ? "Set Inactive" : "Set Active"}
         </DropdownMenuItem>
-        {/* users-and-access R54: only the Owner deletes, and only an Inactive User. */}
+        {/* users-and-access R55: only the Owner deletes, and only an Inactive User. */}
         {role === "owner" && user.status === "inactive" && (
           <DropdownMenuItem
             variant="destructive"
