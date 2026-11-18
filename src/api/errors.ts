@@ -28,9 +28,20 @@ const messages = {
   "product-archived": "This product is archived. Choose an active product instead.",
   // orders R13: completed and cancelled are final; the detail refreshes to say which.
   "order-not-pending": "This order was completed or cancelled already, so it can't change.",
+  // products R17: the row only offers Delete for an Archived Product; it changed since.
+  "product-not-archived": "This product is active again. Archive it before deleting it.",
+  // users-and-access R54
+  "user-not-inactive": "This User is active again. Set them Inactive before deleting them.",
+  // orders R20: the row only offers Delete for a Completed or Cancelled Order.
+  "order-pending": "This order is still pending. Cancel it before deleting it.",
   "setup-link-invalid":
     "This installation link has been used, has expired or was replaced. Ask the person who installed StockFlow for help.",
 } satisfies Record<ErrorModelType, string>;
+
+// A deleted record answers 404, for a second delete as for a page that was open on it.
+export function isNotFound(error: unknown) {
+  return error instanceof ApiError && error.status === 404;
+}
 
 export function hasCode(error: unknown, code: ErrorModelType) {
   return error instanceof ApiError && error.problem.type === code;

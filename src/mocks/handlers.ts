@@ -39,11 +39,13 @@ import {
   getCancelOrderMockHandler200,
   getCompleteOrderMockHandler200,
   getCreateOrderMockHandler201,
+  getDeleteOrderMockHandler204,
   getGetOrderMockHandler200,
   getListOrdersMockHandler200,
 } from "@/api/generated/orders/orders.msw";
 import {
   getCreateProductMockHandler201,
+  getDeleteProductMockHandler204,
   getGetProductMockHandler200,
   getListProductsMockHandler200,
   getUpdateProductMockHandler200,
@@ -64,6 +66,7 @@ import {
 } from "@/api/generated/stock-movements/stock-movements.msw";
 import {
   getCreateUserMockHandler201,
+  getDeleteUserMockHandler204,
   getListUsersMockHandler200,
   getResetPasswordMockHandler200,
   getUpdateUserMockHandler200,
@@ -118,7 +121,7 @@ export const serverFailure = {
 };
 
 // Thrown from a resolver: the generated handlers answer one status, and MSW sends a thrown Response.
-function problem(body: ErrorModel & { status: number }) {
+export function problem(body: ErrorModel & { status: number }) {
   return HttpResponse.json(body, {
     status: body.status,
     headers: { "Content-Type": "application/problem+json" },
@@ -144,6 +147,15 @@ function updateMockUser(user: User, changes: Partial<User>) {
   const changed = { ...user, ...changes };
   mockApi.users = mockApi.users.map((one) => (one === user ? changed : one));
   return changed;
+}
+
+// products R17, users-and-access R54, orders R20: refused while the record is not in the state
+// that may be deleted.
+function conflict(
+  type: "product-not-archived" | "user-not-inactive" | "order-pending",
+  detail: string,
+) {
+  return problem({ type, status: 409, title: "Conflict", detail });
 }
 
 function targetIsOwner() {
@@ -829,6 +841,18 @@ export const handlers = [
       ...(status !== undefined && { status }),
     });
   }),
+  getDeleteUserMockHandler204(({ params }) => {
+    requireSession();
+    // users-and-access R54: the Owner only; a Deleted User opens as 404 and leaves the list.
+    requireOwner();
+    const user = mockApi.users.find(({ id }) => id === Number(params.id));
+    if (!user) throw problem({ status: 404, title: "Not Found" });
+    if (user.role === "owner") throw targetIsOwner();
+    if (user.status !== "inactive") {
+      throw conflict("user-not-inactive", "The User is Active: set them Inactive first.");
+    }
+    mockApi.users = mockApi.users.filter((one) => one !== user);
+  }),
   getResetPasswordMockHandler200(({ params }) => {
     requireSession();
     const user = mockApi.users.find(({ id }) => id === Number(params.id));
@@ -916,6 +940,17 @@ export const handlers = [
     });
     mockApi.products = mockApi.products.map((one) => (one === product ? changed : one));
     return changed;
+  }),
+  getDeleteProductMockHandler204(({ params }) => {
+    requireSession();
+    // products R17: the Owner and Admins, only an Archived Product. Its movements and Orders stay.
+    requireAdminOrOwner();
+    const product = mockApi.products.find(({ id }) => id === Number(params.id));
+    if (!product) throw problem({ status: 404, title: "Not Found" });
+    if (product.status !== "archived") {
+      throw conflict("product-not-archived", "The Product is Active: archive it first.");
+    }
+    mockApi.products = mockApi.products.filter((one) => one !== product);
   }),
   getListStockMovementsMockHandler200(({ request }) => {
     requireSession();
@@ -1033,6 +1068,17 @@ export const handlers = [
       status: "cancelled",
       cancelled: { at: new Date().toISOString(), by: actor() },
     });
+  }),
+  getDeleteOrderMockHandler204(({ params }) => {
+    requireSession();
+    // orders R20: the Owner and Admins, only a Completed or Cancelled Order; no stock changes.
+    requireAdminOrOwner();
+    const order = mockApi.orders.find((one) => one.number === Number(params.number));
+    if (!order) throw problem({ status: 404, title: "Not Found" });
+    if (order.status === "pending") {
+      throw conflict("order-pending", "The Order is Pending: cancel it first.");
+    }
+    mockApi.orders = mockApi.orders.filter((one) => one !== order);
   }),
   getGetDashboardMockHandler200(() => {
     requireSession();

@@ -77,7 +77,7 @@ Everyone who works in the Shop uses this module to log in. It decides who has a 
 - **R52** For the first Owner before installation setup, Login's email step says to use the installation Setup link and sends nothing (R34, domain ADR 0011).
 - **R53** The API limits Login's email step per IP address, high enough not to block normal logins from one shop network; exact numbers are delegated to the API (domain ADR 0011).
 - **R54** A complete six-digit First-time code is verified as soon as its last digit is entered, without pressing a button.
-
+- **R55** Only the Owner deletes a User, and only an Inactive one, never the Owner. Deleting is permanent from the app's point of view. A Deleted User leaves the Users list and Login and opens as not found; what they did stays under their name in Orders, Stock movements and the Login log, and their email can be used again. (The API's record numbers this rule R54, domain ADR 0013; R54 here is the First-time code rule.)
 ## Out of scope
 
 - Locking a User out after failed logins. The requirements owner left it out because this is a practice project (2026-11-06). Together with the 6-character minimum (R19), it needs revisiting before any real data goes in.

@@ -8,6 +8,7 @@ import {
 } from "@/api/generated/products/products.msw";
 import { mockApi, productOf, serverFailure } from "@/mocks/handlers";
 import { renderApp } from "@/test/render-app";
+import { openRowMenu } from "@/test/row-menu";
 import { server } from "@/test/server";
 
 const helmet = productOf({
@@ -204,16 +205,18 @@ describe("the Product List", () => {
   it.each(["owner", "admin"] as const)("offers %s Add product and Edit", async (role) => {
     signedIn(role);
     mockApi.products = [helmet];
-    renderApp("/products");
+    const { user } = renderApp("/products");
 
     await screen.findByText("Safety helmet");
     expect(screen.getByRole("link", { name: "Add product" })).toHaveAttribute(
       "href",
       "/products/new",
     );
-    expect(
-      within(rowOf("Safety helmet")).getByRole("link", { name: "Edit Safety helmet" }),
-    ).toHaveAttribute("href", "/products/1/edit");
+    const menu = await openRowMenu(user, rowOf("Safety helmet"));
+    expect(within(menu).getByRole("menuitem", { name: "Edit" })).toHaveAttribute(
+      "href",
+      "/products/1/edit",
+    );
   });
 
   it("offers Staff neither Add product nor Edit", async () => {
@@ -223,7 +226,7 @@ describe("the Product List", () => {
 
     await screen.findByText("Safety helmet");
     expect(screen.queryByRole("link", { name: "Add product" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Edit/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Actions for/ })).not.toBeInTheDocument();
     // They still see everything else, price included (R15).
     expect(rowOf("Safety helmet")).toHaveTextContent("฿48,210.00");
   });

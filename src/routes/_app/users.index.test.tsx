@@ -12,6 +12,7 @@ import {
 } from "@/api/generated/users/users.msw";
 import { mockApi, serverFailure } from "@/mocks/handlers";
 import { renderApp } from "@/test/render-app";
+import { openRowMenu } from "@/test/row-menu";
 import { server } from "@/test/server";
 
 describe("the Users list", () => {
@@ -231,17 +232,19 @@ describe("the actions on the Users list", () => {
   it("offers no action on the Owner's row, and editing and status actions on another User's", async () => {
     mockApi.session = "live";
     mockApi.users.push(mali);
-    renderApp("/users");
+    const { user } = renderApp("/users");
 
     const ownerRow = await rowOf("Nok Srisuk");
     expect(within(ownerRow).queryByRole("link")).not.toBeInTheDocument();
     expect(within(ownerRow).queryByRole("button")).not.toBeInTheDocument();
-    const maliRow = await rowOf("Mali Chai");
-    expect(within(maliRow).getByRole("link", { name: "Edit" })).toBeInTheDocument();
-    expect(within(maliRow).getByRole("button", { name: "Set Inactive" })).toBeInTheDocument();
+    const menu = await openRowMenu(user, await rowOf("Mali Chai"));
+    expect(within(menu).getByRole("menuitem", { name: "Edit" })).toBeInTheDocument();
+    expect(within(menu).getByRole("menuitem", { name: "Set Inactive" })).toBeInTheDocument();
     expect(
-      within(maliRow).queryByRole("button", { name: "Reset password" }),
+      within(menu).queryByRole("menuitem", { name: "Reset password" }),
     ).not.toBeInTheDocument();
+    // users-and-access R54: an Active User cannot be deleted.
+    expect(within(menu).queryByRole("menuitem", { name: "Delete" })).not.toBeInTheDocument();
   });
 
   it("opens the User form for the User whose Edit was chosen", async () => {
@@ -249,7 +252,8 @@ describe("the actions on the Users list", () => {
     mockApi.users.push(mali);
     const { user, router } = renderApp("/users");
 
-    await user.click(within(await rowOf("Mali Chai")).getByRole("link", { name: "Edit" }));
+    const menu = await openRowMenu(user, await rowOf("Mali Chai"));
+    await user.click(within(menu).getByRole("menuitem", { name: "Edit" }));
 
     expect(await screen.findByRole("heading", { name: "Edit User" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/users/2/edit");
@@ -259,15 +263,20 @@ describe("the actions on the Users list", () => {
   it("offers Set Active, and no Reset password, for an Inactive User", async () => {
     mockApi.session = "live";
     mockApi.users.push(mali, somchai);
-    renderApp("/users");
+    const { user } = renderApp("/users");
 
-    const row = await rowOf("สมชาย ใจดี");
-    expect(within(row).getByRole("button", { name: "Set Active" })).toBeInTheDocument();
-    expect(within(row).queryByRole("button", { name: "Set Inactive" })).not.toBeInTheDocument();
-    expect(within(row).queryByRole("button", { name: "Reset password" })).not.toBeInTheDocument();
-    expect(within(row).getByRole("link", { name: "Edit" })).toBeInTheDocument();
-    const activeRow = await rowOf("Mali Chai");
-    expect(within(activeRow).queryByRole("button", { name: "Set Active" })).not.toBeInTheDocument();
+    const menu = await openRowMenu(user, await rowOf("สมชาย ใจดี"));
+    expect(within(menu).getByRole("menuitem", { name: "Set Active" })).toBeInTheDocument();
+    expect(within(menu).queryByRole("menuitem", { name: "Set Inactive" })).not.toBeInTheDocument();
+    expect(
+      within(menu).queryByRole("menuitem", { name: "Reset password" }),
+    ).not.toBeInTheDocument();
+    expect(within(menu).getByRole("menuitem", { name: "Edit" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    const activeMenu = await openRowMenu(user, await rowOf("Mali Chai"));
+    expect(
+      within(activeMenu).queryByRole("menuitem", { name: "Set Active" }),
+    ).not.toBeInTheDocument();
   });
 
   describe("Set Inactive", () => {
@@ -276,9 +285,8 @@ describe("the actions on the Users list", () => {
       mockApi.users.push(mali);
       const written = recordWrites();
       const view = renderApp("/users");
-      await view.user.click(
-        within(await rowOf("Mali Chai")).getByRole("button", { name: "Set Inactive" }),
-      );
+      const menu = await openRowMenu(view.user, await rowOf("Mali Chai"));
+      await view.user.click(within(menu).getByRole("menuitem", { name: "Set Inactive" }));
       return { ...view, written, dialog: await screen.findByRole("alertdialog") };
     }
 
@@ -315,8 +323,11 @@ describe("the actions on the Users list", () => {
       const row = await rowOf("Mali Chai");
       await waitFor(() => expect(within(row).getByText("Inactive")).toBeInTheDocument());
       // The row now offers the reverse, and no password reset.
-      expect(within(row).getByRole("button", { name: "Set Active" })).toBeInTheDocument();
-      expect(within(row).queryByRole("button", { name: "Reset password" })).not.toBeInTheDocument();
+      const menu = await openRowMenu(user, row);
+      expect(within(menu).getByRole("menuitem", { name: "Set Active" })).toBeInTheDocument();
+      expect(
+        within(menu).queryByRole("menuitem", { name: "Reset password" }),
+      ).not.toBeInTheDocument();
     });
 
     it("keeps the question open and says so when the API fails", async () => {
@@ -340,9 +351,8 @@ describe("the actions on the Users list", () => {
       mockApi.users.push(somchai);
       const written = recordWrites();
       const view = renderApp("/users");
-      await view.user.click(
-        within(await rowOf("สมชาย ใจดี")).getByRole("button", { name: "Set Active" }),
-      );
+      const menu = await openRowMenu(view.user, await rowOf("สมชาย ใจดี"));
+      await view.user.click(within(menu).getByRole("menuitem", { name: "Set Active" }));
       return { ...view, written, dialog: await screen.findByRole("alertdialog") };
     }
 
@@ -367,7 +377,8 @@ describe("the actions on the Users list", () => {
       ]);
       const row = await rowOf("สมชาย ใจดี");
       await waitFor(() => expect(within(row).getByText("Active")).toBeInTheDocument());
-      expect(within(row).getByRole("button", { name: "Set Inactive" })).toBeInTheDocument();
+      const menu = await openRowMenu(user, row);
+      expect(within(menu).getByRole("menuitem", { name: "Set Inactive" })).toBeInTheDocument();
     });
   });
 

@@ -115,7 +115,7 @@ for (const { width, phone } of [
     const search = page.getByLabel("Search");
     expect((await search.boundingBox())!.height).toBe(phone ? 44 : 38);
     await expect(search).toHaveCSS("font-size", phone ? "16px" : "15px");
-    const edit = row.getByRole("link", { name: "Edit Work gloves" });
+    const edit = row.getByRole("button", { name: "Actions for Work gloves" });
     expect((await edit.boundingBox())!.height).toBe(phone ? 44 : 38);
 
     const surface = (await page.getByRole("table").boundingBox())!;
@@ -159,7 +159,7 @@ test("Staff see the Product List without actions, and the Product Form says No a
     .click();
   await expect(page.getByRole("row", { name: /Safety helmet/ })).toContainText("฿123.45");
   await expect(page.getByRole("link", { name: "Add product" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /^Edit/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Actions for/ })).toHaveCount(0);
 
   await page.goto("/products/new");
   await expect(page.getByRole("heading", { name: "No access" })).toBeVisible();
