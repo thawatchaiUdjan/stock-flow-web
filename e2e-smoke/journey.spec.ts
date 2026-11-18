@@ -111,6 +111,35 @@ test("the Owner creates an Order, completes it and sees the Sale on the Dashboar
   );
 });
 
+// orders R20, products R17: deleting answers 204 from the real API, and the records leave the
+// lists. An Order must be Completed or Cancelled, a Product Archived.
+test("the Owner deletes the Completed Order and the Archived Product", async () => {
+  await openFromMenu("Orders");
+  const orderRow = page.getByRole("row", { name: /Completed/ });
+  await orderRow.getByRole("button", { name: /^Actions for order #/ }).click();
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
+  await expect(orderRow).toHaveCount(0);
+
+  // dashboard-and-reports R10: the Sale is gone with its Order.
+  await openFromMenu("Dashboard");
+  await expect(page.getByText("Today's sales", { exact: true }).locator("..")).not.toContainText(
+    "฿97.00",
+  );
+
+  await openFromMenu("Products");
+  await page.getByRole("button", { name: `Actions for ${product.name}` }).click();
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  await page.getByRole("button", { name: "Archive" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Archive" }).click();
+  await page.getByRole("button", { name: "Archived" }).click();
+  const productRow = page.getByRole("row", { name: new RegExp(product.name) });
+  await productRow.getByRole("button", { name: `Actions for ${product.name}` }).click();
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
+  await expect(productRow).toHaveCount(0);
+});
+
 interface Mail {
   to: { email: string }[];
   textContent: string;

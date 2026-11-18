@@ -17,7 +17,7 @@ The Owner and Admins see at a glance how sales are going and what needs restocki
 - **R7** Reports show, for a range of up to 366 days (this month so far by default): total Sales, the number of Orders completed, the average Sales per completed Order, and Sales for each day.
 - **R8** Reports list up to 20 Products with the highest Sales in the range, each with the quantity sold and its Sales.
 - **R9** Every figure matches the Orders as they stand when the page is opened.
-
+- **R10** A Deleted Completed Order is gone from the Dashboard and Reports figures. The app caches no old figures: deleting an Order re-reads them.
 ## Out of scope
 
 - Exporting figures to a file.

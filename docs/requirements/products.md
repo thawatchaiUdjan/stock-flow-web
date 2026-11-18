@@ -24,7 +24,7 @@ The Owner and Admins keep the list of what the Shop sells. Everyone in the Shop 
 - **R14** The Product List can be searched by name or SKU, and filtered by stock state and by status. It shows Active Products unless asked for Archived ones.
 - **R15** Every Role sees the same Product List, prices included. Staff are offered no action that changes a Product.
 - **R16** Each Product in the Product List links to its Stock movements.
-
+- **R17** The Owner and Admins delete an Archived Product from the Product List. Deleting is permanent from the app's point of view: nothing restores it. A Deleted Product leaves every list, including the Archived filter, and opens as not found. Its Orders and Stock movements keep showing its name, and its SKU can be used again. Receive, Adjust and an Order for it are refused as for an Archived Product. Source: `stock-flow-api` Products R17, domain ADR 0013; asked for by the requirements owner on 2026-11-18.
 ## Out of scope
 
 - Product images. They need a storage bucket set up in Supabase (`stock-flow-api` ADR 0009), which only the requirements owner can do. A later feature.

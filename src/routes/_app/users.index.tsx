@@ -1,16 +1,24 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { z } from "zod";
 
-import { errorMessage } from "@/api/errors";
+import { errorMessage, isNotFound } from "@/api/errors";
 import type { User } from "@/api/generated/model";
-import { getListUsersQueryKey, useListUsers, useUpdateUser } from "@/api/generated/users/users";
+import {
+  getListUsersQueryKey,
+  useDeleteUser,
+  useListUsers,
+  useUpdateUser,
+} from "@/api/generated/users/users";
 import { Confirmation } from "@/components/confirmation";
+import { DeleteConfirmation } from "@/components/delete-confirmation";
 import { ListPaging } from "@/components/list-paging";
+import { RowActions, rowActionItem } from "@/components/row-actions";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -19,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useCurrentUser } from "@/lib/current-user";
 import { pagingSearch } from "@/lib/paging";
 import { roleNames, statusNames } from "@/lib/roles";
 import { cn } from "@/lib/utils";
@@ -129,24 +138,86 @@ function UsersTable({ users, hasOthers }: { hasOthers: boolean; users: User[] })
 }
 
 function UserActions({ user }: { user: User }) {
+  const { role } = useCurrentUser();
+  const queryClient = useQueryClient();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const remove = useDeleteUser();
   // users-and-access R18, context ADR 0004: nothing can be done to the Owner here.
   if (user.role === "owner") return null;
 
+  const refresh = () => queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
+
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button variant="outline" asChild>
-        <Link to="/users/$id/edit" params={{ id: String(user.id) }}>
-          Edit
-        </Link>
-      </Button>
-      <StatusAction user={user} />
-    </div>
+    <>
+      <RowActions label={user.name} triggerRef={triggerRef}>
+        <DropdownMenuItem asChild className={rowActionItem}>
+          <Link to="/users/$id/edit" params={{ id: String(user.id) }}>
+            Edit
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem className={rowActionItem} onSelect={() => setStatusOpen(true)}>
+          {user.status === "active" ? "Set Inactive" : "Set Active"}
+        </DropdownMenuItem>
+        {/* users-and-access R55: only the Owner deletes, and only an Inactive User. */}
+        {role === "owner" && user.status === "inactive" && (
+          <DropdownMenuItem
+            variant="destructive"
+            className={rowActionItem}
+            onSelect={() => setDeleteOpen(true)}
+          >
+            Delete
+          </DropdownMenuItem>
+        )}
+      </RowActions>
+      <StatusConfirmation
+        user={user}
+        open={statusOpen}
+        onOpenChange={setStatusOpen}
+        triggerRef={triggerRef}
+      />
+      <DeleteConfirmation
+        subject={user.name}
+        consequence={`${user.name} leaves the Users list and can't log in. What they did stays under their name, and their email can be used again.`}
+        whenForbidden="Your role can't delete Users. Only the Owner can."
+        pending={remove.isPending}
+        error={remove.error && !isNotFound(remove.error) ? remove.error : null}
+        open={deleteOpen}
+        onOpenChange={(next) => {
+          setDeleteOpen(next);
+          if (!next) remove.reset();
+        }}
+        returnFocusTo={triggerRef}
+        onConfirm={() =>
+          remove.mutate(
+            { id: user.id },
+            {
+              onSuccess: () => void refresh().then(() => setDeleteOpen(false)),
+              onError: (error) => {
+                void refresh();
+                if (isNotFound(error)) setDeleteOpen(false);
+              },
+            },
+          )
+        }
+      />
+    </>
   );
 }
 
-function StatusAction({ user }: { user: User }) {
+function StatusConfirmation({
+  user,
+  open,
+  onOpenChange,
+  triggerRef,
+}: {
+  user: User;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
+}) {
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
   const update = useUpdateUser({
     mutation: {
       onSuccess: () => queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() }),
@@ -157,13 +228,10 @@ function StatusAction({ user }: { user: User }) {
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}>
-        {action}
-      </Button>
       <Confirmation
         open={open}
         onOpenChange={(next) => {
-          setOpen(next);
+          onOpenChange(next);
           if (!next) update.reset();
         }}
         title={`Set ${user.name} ${goingInactive ? "Inactive" : "Active"}?`}
@@ -174,12 +242,16 @@ function StatusAction({ user }: { user: User }) {
             : `${user.name} will be able to log in again. Sessions, codes and password links that ended do not come back. Ask them to request fresh instructions.`
         }
         confirm={action}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          triggerRef.current?.focus();
+        }}
         pending={update.isPending}
         error={update.error}
         onConfirm={() =>
           update.mutate(
             { id: user.id, data: { status: goingInactive ? "inactive" : "active" } },
-            { onSuccess: () => setOpen(false) },
+            { onSuccess: () => onOpenChange(false) },
           )
         }
       />

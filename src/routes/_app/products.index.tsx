@@ -1,15 +1,24 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { z } from "zod";
 
-import { errorMessage } from "@/api/errors";
+import { errorMessage, isNotFound } from "@/api/errors";
 import { ListProductsStockItem } from "@/api/generated/model";
 import type { Product } from "@/api/generated/model";
-import { useListProducts } from "@/api/generated/products/products";
+import {
+  getGetProductQueryKey,
+  getListProductsQueryKey,
+  useDeleteProduct,
+  useListProducts,
+} from "@/api/generated/products/products";
+import { DeleteConfirmation } from "@/components/delete-confirmation";
 import { ListPaging } from "@/components/list-paging";
+import { RowActions, rowActionItem } from "@/components/row-actions";
 import { StockLevelBar, StockStateBadge, stockStateNames } from "@/components/stock-level";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -283,16 +292,8 @@ function ProductsTable({ products, canChange }: { products: Product[]; canChange
                 <StockStateBadge state={product.stockState} />
               </TableCell>
               {canChange && (
-                <TableCell className="max-shell:col-span-2 max-shell:pt-0">
-                  <Button variant="outline" asChild>
-                    <Link
-                      to="/products/$id/edit"
-                      params={{ id: String(product.id) }}
-                      aria-label={`Edit ${product.name}`}
-                    >
-                      Edit
-                    </Link>
-                  </Button>
+                <TableCell className="max-shell:col-span-2 max-shell:pt-0 max-shell:text-right">
+                  <ProductActions product={product} />
                 </TableCell>
               )}
             </TableRow>
@@ -300,6 +301,65 @@ function ProductsTable({ products, canChange }: { products: Product[]; canChange
         </TableBody>
       </Table>
     </div>
+  );
+}
+
+function ProductActions({ product }: { product: Product }) {
+  const queryClient = useQueryClient();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const remove = useDeleteProduct();
+  // Gone or changed under us (404, 409): the list shows what is true now.
+  const refresh = () => {
+    queryClient.removeQueries({ queryKey: getGetProductQueryKey(product.id) });
+    return queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
+  };
+
+  return (
+    <>
+      <RowActions label={product.name} triggerRef={triggerRef}>
+        <DropdownMenuItem asChild className={rowActionItem}>
+          <Link to="/products/$id/edit" params={{ id: String(product.id) }}>
+            Edit
+          </Link>
+        </DropdownMenuItem>
+        {/* products R17: only an Archived Product can be deleted. */}
+        {product.status === "archived" && (
+          <DropdownMenuItem
+            variant="destructive"
+            className={rowActionItem}
+            onSelect={() => setOpen(true)}
+          >
+            Delete
+          </DropdownMenuItem>
+        )}
+      </RowActions>
+      <DeleteConfirmation
+        subject={product.name}
+        consequence={`${product.name} leaves the product list, including Archived. Its orders and stock movements keep showing it, and its SKU can be used again.`}
+        whenForbidden="Your role can't delete products. Only the Owner and Admins can."
+        pending={remove.isPending}
+        error={remove.error && !isNotFound(remove.error) ? remove.error : null}
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) remove.reset();
+        }}
+        returnFocusTo={triggerRef}
+        onConfirm={() =>
+          remove.mutate(
+            { id: product.id },
+            {
+              onSuccess: () => void refresh().then(() => setOpen(false)),
+              onError: (error) => {
+                void refresh();
+                if (isNotFound(error)) setOpen(false);
+              },
+            },
+          )
+        }
+      />
+    </>
   );
 }
 

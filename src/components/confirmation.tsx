@@ -20,6 +20,7 @@ export function Confirmation({
   title,
   description,
   confirm,
+  destructive = false,
   dismiss = "Cancel",
   pending,
   error,
@@ -32,6 +33,8 @@ export function Confirmation({
   title: string;
   description: ReactNode;
   confirm: string;
+  // Permanent actions: the confirm button is red (docs/design.md, Danger).
+  destructive?: boolean;
   // What the button that leaves the order as it was says.
   dismiss?: string;
   pending: boolean;
@@ -57,7 +60,11 @@ export function Confirmation({
         <AlertDialogFooter>
           <AlertDialogCancel>{dismiss}</AlertDialogCancel>
           {/* Not AlertDialogAction: that closes the question before the API has answered. */}
-          <Button disabled={pending} onClick={onConfirm}>
+          <Button
+            variant={destructive ? "destructive" : "default"}
+            disabled={pending}
+            onClick={onConfirm}
+          >
             {confirm}
           </Button>
         </AlertDialogFooter>

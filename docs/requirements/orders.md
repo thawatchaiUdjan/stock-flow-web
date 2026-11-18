@@ -27,7 +27,7 @@ An Order records a sale to one customer. Staff create and complete Orders throug
 - **R17** Opening an Order from the Orders List shows its lines, its total, who created it and, once it is no longer Pending, who completed or cancelled it and when. It follows the Orders List's access (Users & access R11).
 - **R18** Every Role sees every Order.
 - **R19** While an Order is being created, each Product offered shows its stock, and the Order's total updates as lines change.
-
+- **R20** The Owner and Admins delete a Completed or Cancelled Order from the Orders List, never a Pending one (cancel it first). Deleting is permanent from the app's point of view and changes no stock. A Deleted Order leaves the Orders List, the Dashboard and Reports and opens as not found. Source: `stock-flow-api` Orders R20, domain ADR 0013.
 ## Out of scope
 
 - Customers as records: the customer is a name on the Order only.

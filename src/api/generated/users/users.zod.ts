@@ -56,6 +56,16 @@ export const CreateUserResponse = zod.object({
 })
 
 /**
+ * Takes an Inactive User out of the Users list and out of Login, for good: nothing restores them. What they did stays under their name, and their email can be used again. Answers 409 `user-not-inactive` when the User is Active. Answers 403 `target-is-owner` when the target is the Owner, and a plain 404 when there is no such User. Owner only: answers 403 to an Admin or Staff. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
+ * @summary Delete a User
+ */
+export const DeleteUserParams = zod.object({
+  "id": zod.int().describe('The User\'s id.')
+})
+
+export const DeleteUserResponse = zod.void()
+
+/**
  * Changes the fields the body names and leaves the rest. Answers 403 `target-is-owner` when the target is the Owner, and a plain 404 when there is no such User. Owner only: answers 403 to an Admin or Staff. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
  * @summary Change a User's name, Role or status
  */

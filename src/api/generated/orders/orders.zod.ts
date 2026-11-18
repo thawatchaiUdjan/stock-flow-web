@@ -101,6 +101,16 @@ export const CreateOrderResponse = zod.object({
 })
 
 /**
+ * Takes a completed or cancelled Order out of the Orders List and out of the Dashboard and Reports, for good: nothing restores it. Its stock movements stay, and no stock changes. Answers 409 `order-pending` when it is pending. Answers a plain 404 when there is no such Order. It also answers 404 when the Order is deleted already. Owner and Admins only: answers 403 to Staff. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
+ * @summary Delete an Order
+ */
+export const DeleteOrderParams = zod.object({
+  "number": zod.int().describe('The Order\'s number.')
+})
+
+export const DeleteOrderResponse = zod.void()
+
+/**
  * Every Role sees every Order, with its lines. Answers a plain 404 when there is no such Order. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
  * @summary Get an Order
  */

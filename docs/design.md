@@ -109,6 +109,17 @@ Desktop                                  Phone (below 800 px, navigation above c
 - **Navigation:** main navigation contains destinations, with creation actions in their lists. Product forms select Products; Order forms and details select Orders; User forms select Users. Receive stock and Adjust stock have separate pages with Stock movements as their parent and selected main destination. Access to forms is independent of shortcut visibility. A white top bar above the work shows the current page; nested pages show a parent-list link, a quiet slash and the current page label. Parent links have 44 px touch height on phones. Unknown addresses say "Page not found"; denied addresses say "No access". Labels wrap when space is tight. Preserve the Forest palette, Figtree type and 4 px spacing rhythm.
 - **Icons:** Lucide, 16 to 18 px, always beside a word unless the control has an accessible name.
 
+## Row actions (#73)
+
+A list row with more than one action, or an action with consequences, has one "more actions" menu instead of a series of buttons. It is shadcn/ui's `DropdownMenu` (Radix), via `RowActions` in `src/components/row-actions.tsx`.
+
+- **Trigger:** an outline icon button with the vertical ellipsis, named "Actions for <row>" ("Actions for Safety helmet", "Actions for order #12"), so a screen reader can tell the rows apart. 38 px on desktop and 44 px on phones, like other controls. Placed in the row's last column; on a phone it sits at the end of the row, as the other controls do.
+- **Items:** a verb ("Edit", "Set Inactive", "View order", "Delete"), 44 px high on phones. Navigation items are links (`asChild`); the rest open a question. Delete is the last item and red (Danger, `variant="destructive"`), never the first and never alone-by-default.
+- **Keyboard and screen reader (from Radix):** Enter, Space or ArrowDown on the button opens the menu with focus on the first item; arrows move, a letter jumps, Escape closes and focus returns to the button; the menu has `role="menu"` and its items `role="menuitem"`.
+- **Who sees what:** an item appears only where the record allows it (Delete: an Archived Product, an Inactive User for the Owner, a Completed or Cancelled Order). A row with no item has no menu: Staff see none on Products and Orders; a Pending Order has none (its number opens it). The API's 403 and 409 answers are still handled, because state changes after the page loads.
+- **Delete is confirmed:** the existing `Confirmation` alert dialog titled "Delete <name>?", saying what leaves with it and "This can't be undone: there is no way to restore it.", with a red "Delete" button and "Cancel". It stays open with the reason on 409 or 403; 404 means it is gone already, so it closes and the list refreshes. Focus goes back to the row's menu button when it closes without deleting.
+- **Not changed:** Archive and Restore stay on the Product's edit page, Complete and Cancel on the Order's page, as before.
+
 ## Principles
 
 - **Stock is the one bold thing.** The count is the heaviest figure in its row, and beside it a level bar shows where stock stands against its threshold, once the record defines one. The rest of the screen stays quiet.

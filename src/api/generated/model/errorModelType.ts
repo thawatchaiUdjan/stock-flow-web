@@ -22,6 +22,9 @@
  * password-setup-invalid: The password-setup grant is expired, consumed, replaced or ineligible.
  * password-reset-invalid: The Reset link is expired, consumed, replaced or ineligible.
  * login-check-limited: Too many Login email checks came from this IP address in the last hour. Retry-After says when to try again.
+ * product-not-archived: The Product is Active: only an Archived Product can be deleted.
+ * user-not-inactive: The User is Active: only an Inactive User can be deleted.
+ * order-pending: The Order is Pending and still holds stock: cancel it before deleting it.
  */
 export type ErrorModelType = typeof ErrorModelType[keyof typeof ErrorModelType];
 
@@ -43,4 +46,7 @@ export const ErrorModelType = {
   'password-setup-invalid': 'password-setup-invalid',
   'password-reset-invalid': 'password-reset-invalid',
   'login-check-limited': 'login-check-limited',
+  'product-not-archived': 'product-not-archived',
+  'user-not-inactive': 'user-not-inactive',
+  'order-pending': 'order-pending',
 } as const;

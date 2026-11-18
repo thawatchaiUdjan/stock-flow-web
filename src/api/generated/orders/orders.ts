@@ -277,6 +277,80 @@ export const useCreateOrder = <TError = ErrorType<ErrorModel>,
       > => {
       return useMutation(getCreateOrderMutationOptions(options), queryClient);
     }
+    export const getDeleteOrderUrl = (number: number,) => {
+
+
+
+
+  return `/api/orders/${number}`
+}
+
+/**
+ * Takes a completed or cancelled Order out of the Orders List and out of the Dashboard and Reports, for good: nothing restores it. Its stock movements stay, and no stock changes. Answers 409 `order-pending` when it is pending. Answers a plain 404 when there is no such Order. It also answers 404 when the Order is deleted already. Owner and Admins only: answers 403 to Staff. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
+ * @summary Delete an Order
+ */
+export const deleteOrder = async (number: number, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+
+  return apiFetch<void>(getDeleteOrderUrl(number),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteOrderMutationKey = () => ['deleteOrder'] as const;
+
+export const getDeleteOrderMutationOptions = <TError = ErrorType<ErrorModel>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteOrder>>, TError,DeleteOrderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteOrder>>, TError,DeleteOrderMutationVariables, TContext> => {
+
+const mutationKey = getDeleteOrderMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteOrder>>, DeleteOrderMutationVariables> = (props) => {
+          const {number} = props ?? {};
+
+          return  deleteOrder(number,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteOrderMutationResult = NonNullable<Awaited<ReturnType<typeof deleteOrder>>>
+
+    export type DeleteOrderMutationError = ErrorType<ErrorModel>
+    export type DeleteOrderMutationVariables = {number: number}
+
+    /**
+ * @summary Delete an Order
+ */
+export const useDeleteOrder = <TError = ErrorType<ErrorModel>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteOrder>>, TError,DeleteOrderMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteOrder>>,
+        TError,
+        DeleteOrderMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteOrderMutationOptions(options), queryClient);
+    }
     export const getGetOrderUrl = (number: number,) => {
 
 
