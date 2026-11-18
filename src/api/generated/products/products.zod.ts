@@ -91,6 +91,16 @@ export const CreateProductResponse = zod.object({
 })
 
 /**
+ * Takes an Archived Product out of every list and lookup, for good: nothing restores it. Its Orders and Stock movements keep showing it, and its SKU can be used again. Answers 409 `product-not-archived` when it is Active, and a plain 404 when there is no such Product or it is Deleted already. Owner and Admins only: answers 403 to Staff. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
+ * @summary Delete a Product
+ */
+export const DeleteProductParams = zod.object({
+  "id": zod.int().describe('The Product\'s id.')
+})
+
+export const DeleteProductResponse = zod.void()
+
+/**
  * Answers a plain 404 when there is no such Product. Answers a plain 401 with no session cookie, and 401 `session-ended` with a cookie that matches no live session.
  * @summary Get a Product
  */

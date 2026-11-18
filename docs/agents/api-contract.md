@@ -39,3 +39,7 @@ Login's email step adopts API commit `f502f08bf129e79a663d3259a5a056d8dae6f12c` 
 Mock mode has no mailbox: new Users remain created with `emailDelivery: failed`, requests return the same neutral message, and unissued credentials fail with 410. Successful credential fixtures are explicit in screen tests. No mock email or credential is persisted. API templates remain exclusively in the API repo.
 
 The API integration workflow additionally runs the pinned API's fast and PostgreSQL tests and the real web email journey. An isolated HTTPS fixture captures the API's actual Brevo payloads and supports failed sends. Its runner-local certificate/hosts entry affects only that disposable runner; it never contacts Brevo or needs provider secrets. The real cooldown remains in force. This proves application integration, not inbox delivery, sender verification or production readiness. Legacy endpoint retirement remains API #49's separate, owner-authorised cutover.
+
+## Soft-delete adoption (#73)
+
+Soft-delete of Products, Users and Orders adopts API commit `53b4232dda5954a944bda6dcc030a5f45f03ae89` (contract 0.2.0): `delete-product`, `delete-user`, `delete-order` and the codes `product-not-archived`, `user-not-inactive`, `order-pending`. Gap reported on #73: `StockMovement.order` has no marker for a Deleted Order, so stock-movements R13 ("do not link") waits for the API.
