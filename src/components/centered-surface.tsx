@@ -3,15 +3,14 @@ import type { ReactNode } from "react";
 
 import stockflowMark from "@/assets/stockflow.svg";
 
-// docs/design.md, Layout: wording only. No chart or sample figure, which would pretend to be stock.
+// Wording only: a sample figure here would pretend to be real stock (docs/design.md, Layout).
 const purposes = [
   { Icon: Package, text: "See what is in stock" },
   { Icon: TrendingDown, text: "Spot what is running low" },
   { Icon: ClipboardList, text: "Create orders and see stock update" },
 ];
 
-// The screens a person reaches with no User to show a sidebar for: a Fern brand panel beside the form.
-// Below the shell breakpoint the panel shrinks to the brand alone and the form comes first.
+// Screens with no User to show a sidebar for: a Fern brand panel beside the form (docs/design.md, Layout).
 export function CenteredSurface({
   title,
   subtitle,
@@ -24,8 +23,8 @@ export function CenteredSurface({
   return (
     <main className="flex min-h-dvh items-center justify-center p-3">
       <div className="grid w-full max-w-215 overflow-hidden rounded-lg border bg-card shell:grid-cols-2">
-        <section className="flex flex-col justify-between gap-16 border-b bg-secondary p-4 shell:border-b-0 shell:p-8">
-          <p className="flex items-center gap-2.5 font-semibold">
+        <section className="flex flex-col justify-between gap-8 border-b bg-secondary p-4 shell:border-b-0 shell:p-8">
+          <p className="flex items-center gap-2 font-semibold">
             <img src={stockflowMark} alt="" width={32} height={32} />
             StockFlow
           </p>

@@ -12,7 +12,7 @@ const screens = [
   ["Password setup", "/password-setup"],
 ] as const;
 
-describe("Pre-login screens", () => {
+describe("CenteredSurface on the pre-login screens", () => {
   it.each(screens)("%s shows the StockFlow brand panel beside its form", async (_name, path) => {
     renderApp(path);
 
