@@ -39,11 +39,11 @@ function FormSide({ title, subtitle, children }: ShellProps) {
 }
 
 // Shared by A, B, D: the 800 px split frame. Left content differs per variant.
-function Split({ left, ...props }: ShellProps & { left: ReactNode }) {
+function Split({ left, top = false, ...props }: ShellProps & { left: ReactNode; top?: boolean }) {
   return (
     <main className="flex min-h-dvh items-center justify-center p-3">
       <div className="grid w-full max-w-215 overflow-hidden rounded-lg border bg-card min-[800px]:grid-cols-2">
-        <section className="relative flex flex-col justify-between gap-16 overflow-hidden border-b bg-secondary p-4 min-[800px]:border-b-0 min-[800px]:p-8">
+        <section className={`relative flex flex-col ${top ? "gap-4" : "justify-between gap-16"} overflow-hidden border-b bg-secondary p-4 min-[800px]:border-b-0 min-[800px]:p-8`}>
           <Brand />
           <div className="hidden min-[800px]:block">{left}</div>
         </section>
@@ -115,7 +115,7 @@ function VariantC({ title, subtitle, children }: ShellProps) {
         </div>
         {children}
       </div>
-      <p className="max-w-80 text-center text-sm text-muted-foreground">{tagline}</p>
+      <p className="max-w-80 text-center text-sm text-balance text-muted-foreground">{tagline}</p>
     </main>
   );
 }
@@ -125,6 +125,7 @@ function VariantD(props: ShellProps) {
   return (
     <Split
       {...props}
+      top
       left={
         <>
           <p className="max-w-64 font-medium">{tagline}</p>
@@ -132,7 +133,7 @@ function VariantD(props: ShellProps) {
             aria-hidden
             viewBox="0 0 32 32"
             fill="none"
-            className="pointer-events-none absolute -right-16 -bottom-16 size-96 text-primary"
+            className="pointer-events-none absolute -right-16 -bottom-20 size-80 text-primary"
           >
             <g stroke="currentColor" strokeWidth="0.9" strokeLinejoin="round" strokeLinecap="round">
               <path d="m8 12 8-4 8 4v9l-8 4-8-4zM8 12l8 4 8-4M16 16v9" />
@@ -151,7 +152,7 @@ function VariantE({ title, subtitle, children }: ShellProps) {
     <main className="min-h-dvh">
       <div className="flex h-56 flex-col items-center justify-start gap-2 bg-secondary px-3 pt-10 text-center">
         <Brand />
-        <p className="max-w-80 text-muted-foreground">{tagline}</p>
+        <p className="max-w-96 text-balance text-muted-foreground">{tagline}</p>
       </div>
       <div className="-mt-20 flex justify-center px-3 pb-10">
         <div className="flex w-full max-w-100 flex-col gap-6 rounded-lg border bg-card p-8">
