@@ -77,6 +77,7 @@ function AppShell() {
             "flex min-h-11 items-center gap-2 border-b px-3 py-2 font-semibold transition-colors duration-150 shell:border-0 shell:bg-transparent shell:py-0",
             theme.side,
             theme.side === "bg-sidebar" && "hover:text-primary",
+            theme.brand,
           )}
         >
           {theme.inverseMark ? (

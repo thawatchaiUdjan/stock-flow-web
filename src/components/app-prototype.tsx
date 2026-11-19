@@ -23,6 +23,7 @@ type Theme = {
   link: string;
   active: string;
   userText: string;
+  brand: string; // wordmark size
   inverseMark: boolean; // E: the mark is white with Forest strokes, so it stands out on Forest
 };
 
@@ -34,6 +35,7 @@ const base: Theme = {
   link: "hover:bg-muted",
   active: "bg-accent text-accent-foreground hover:bg-accent",
   userText: "",
+  brand: "",
   inverseMark: false,
 };
 
@@ -55,6 +57,7 @@ export const themes: Record<VariantKey, Theme> = {
   E: {
     ...base,
     inverseMark: true,
+    brand: "text-lg tracking-tight",
     asideDesktop: "shell:bg-primary",
     side: "bg-primary text-primary-foreground",
     link: "hover:bg-white/10",
