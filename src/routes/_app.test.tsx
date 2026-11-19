@@ -27,6 +27,17 @@ describe("the app shell", () => {
     expect(router.state.location.pathname).toBe(path);
   });
 
+  // docs/design.md, Brand (#82): the original mark vanishes on the Forest sidebar.
+  it("shows the inverted brand mark on the Forest sidebar", async () => {
+    mockApi.session = "live";
+    renderApp("/dashboard");
+
+    const mark = (await screen.findByRole("link", { name: "StockFlow home" })).querySelector("img");
+    // Vite inlines the small SVG, so the test reads its drawing: a white square, not Forest.
+    const drawing = decodeURIComponent(mark?.getAttribute("src") ?? "");
+    expect(drawing).toMatch(/<rect[^>]*fill=.#fff./);
+  });
+
   // navigation-and-lists R2, R3
   it.each([
     ["/products/new", "New product", "Products", "/products"],
