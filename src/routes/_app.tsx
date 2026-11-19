@@ -15,7 +15,12 @@ import { errorMessage } from "@/api/errors";
 import type { CurrentUser } from "@/api/generated/model";
 import { getGetCurrentUserQueryOptions, useEndSession } from "@/api/generated/sessions/sessions";
 import stockflowMark from "@/assets/stockflow.svg";
-import { PrototypeSwitcher, themes, usePrototypeVariant } from "@/components/app-prototype"; // PROTOTYPE
+import {
+  InverseMark,
+  PrototypeSwitcher,
+  themes,
+  usePrototypeVariant,
+} from "@/components/app-prototype"; // PROTOTYPE
 import { CenteredSurface } from "@/components/centered-surface";
 import { NoAccess } from "@/components/no-access";
 import { Button } from "@/components/ui/button";
@@ -74,7 +79,11 @@ function AppShell() {
             theme.side === "bg-sidebar" && "hover:text-primary",
           )}
         >
-          <img src={stockflowMark} alt="" className="size-8 shrink-0" />
+          {theme.inverseMark ? (
+            <InverseMark className="size-8 shrink-0" />
+          ) : (
+            <img src={stockflowMark} alt="" className="size-8 shrink-0" />
+          )}
           StockFlow
         </Link>
         <nav

@@ -23,6 +23,7 @@ type Theme = {
   link: string;
   active: string;
   userText: string;
+  inverseMark: boolean; // E: the mark is white with Forest strokes, so it stands out on Forest
 };
 
 const base: Theme = {
@@ -33,6 +34,7 @@ const base: Theme = {
   link: "hover:bg-muted",
   active: "bg-accent text-accent-foreground hover:bg-accent",
   userText: "",
+  inverseMark: false,
 };
 
 export const themes: Record<VariantKey, Theme> = {
@@ -52,6 +54,7 @@ export const themes: Record<VariantKey, Theme> = {
   // E: Forest sidebar with white text; the selected link is Fern with Ink.
   E: {
     ...base,
+    inverseMark: true,
     asideDesktop: "shell:bg-primary",
     side: "bg-primary text-primary-foreground",
     link: "hover:bg-white/10",
@@ -103,5 +106,27 @@ export function PrototypeSwitcher() {
         <ArrowRight size={16} />
       </button>
     </div>
+  );
+}
+
+// PROTOTYPE: the StockFlow mark with its colours swapped: a white rounded square, Forest strokes.
+export function InverseMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden className={className}>
+      <rect width="32" height="32" rx="8" fill="#ffffff" />
+      <path
+        d="m8 12 8-4 8 4v9l-8 4-8-4zM8 12l8 4 8-4M16 16v9"
+        stroke="#3a6b4f"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M19 7h6v6m0-6-6 6"
+        stroke="#3a6b4f"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
