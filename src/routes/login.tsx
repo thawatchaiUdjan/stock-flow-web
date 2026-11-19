@@ -25,7 +25,7 @@ import { addressAfterLogin } from "@/lib/session";
 export const Route = createFileRoute("/login")({
   validateSearch: z.object({
     redirect: z.string().optional().catch(undefined),
-    variant: z.enum(["A", "B", "C"]).optional().catch(undefined), // PROTOTYPE
+    variant: z.enum(["A", "B", "C", "D", "E"]).optional().catch(undefined), // PROTOTYPE
   }),
   beforeLoad: async ({ context }) => {
     let user;
