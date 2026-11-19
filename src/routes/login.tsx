@@ -13,6 +13,7 @@ import {
 } from "@/api/generated/sessions/sessions";
 import { CenteredSurface } from "@/components/centered-surface";
 import { EmailField } from "@/components/email-instructions";
+import { LoginPrototypeShell } from "@/components/login-prototype";
 import { FirstTimeCodeSetup } from "@/components/first-time-code-setup";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,10 @@ import { landingPageOf } from "@/lib/access";
 import { addressAfterLogin } from "@/lib/session";
 
 export const Route = createFileRoute("/login")({
-  validateSearch: z.object({ redirect: z.string().optional().catch(undefined) }),
+  validateSearch: z.object({
+    redirect: z.string().optional().catch(undefined),
+    variant: z.enum(["A", "B", "C"]).optional().catch(undefined), // PROTOTYPE
+  }),
   beforeLoad: async ({ context }) => {
     let user;
     try {
@@ -122,7 +126,18 @@ function LoginPage() {
   const failure = logIn.error ?? (emailRejected ? null : identify.error);
 
   return (
-    <CenteredSurface title="Log in">
+    <LoginPrototypeShell
+      title="Log in"
+      subtitle={
+        step.name === "email"
+          ? "Use your work email to continue."
+          : "Enter your password to continue."
+      }
+      variant={search.variant ?? "A"}
+      onVariant={(variant) =>
+        void navigate({ to: ".", search: (prev) => ({ ...prev, variant }), replace: true })
+      }
+    >
       {failure != null && (
         <Alert variant="destructive">
           <AlertDescription>{errorMessage(failure)}</AlertDescription>
@@ -205,6 +220,6 @@ function LoginPage() {
           )}
         </FieldGroup>
       </form>
-    </CenteredSurface>
+    </LoginPrototypeShell>
   );
 }
