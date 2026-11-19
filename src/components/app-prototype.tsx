@@ -60,7 +60,7 @@ export const themes: Record<VariantKey, Theme> = {
     link: "hover:bg-white/10",
     active: "bg-secondary text-foreground hover:bg-secondary",
     userText:
-      "[&_.text-muted-foreground]:text-white/80 [&_button]:border-white/50 [&_button]:bg-transparent [&_button]:text-white [&_button:hover]:bg-white/10",
+      "[&_.text-muted-foreground]:text-white/80 [&_button]:border-white/50 [&_button]:bg-transparent [&_button]:text-white [&_button:hover]:bg-white/10 [&_button:hover]:text-white",
   },
 };
 
