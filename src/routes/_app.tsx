@@ -15,6 +15,7 @@ import { errorMessage } from "@/api/errors";
 import type { CurrentUser } from "@/api/generated/model";
 import { getGetCurrentUserQueryOptions, useEndSession } from "@/api/generated/sessions/sessions";
 import stockflowMark from "@/assets/stockflow.svg";
+import { PrototypeSwitcher, themes, usePrototypeVariant } from "@/components/app-prototype"; // PROTOTYPE
 import { CenteredSurface } from "@/components/centered-surface";
 import { NoAccess } from "@/components/no-access";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,6 @@ export const Route = createFileRoute("/_app")({
 
 const navLinkClass =
   "flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-3 text-body font-medium transition-colors hover:bg-muted shell:h-9.5 shell:min-h-0 shell:flex-none";
-const activeNavLink = "bg-accent text-accent-foreground hover:bg-accent";
 
 // navigation-and-lists R3: the phone's navigation stays in flow, clear of the work.
 function AppShell() {
@@ -54,29 +54,42 @@ function AppShell() {
   const current = reachable ? pageAt(pathname) : undefined;
   const parent = current && "parent" in current ? pageAt(current.parent) : undefined;
   const selected = parent ?? current;
+  const theme = themes[usePrototypeVariant()]; // PROTOTYPE
 
   return (
-    <div className="app-shell flex min-h-dvh flex-col shell:flex-row">
-      <aside className="contents shell:sticky shell:top-0 shell:flex shell:h-dvh shell:w-54 shell:shrink-0 shell:flex-col shell:gap-6 shell:border-r shell:bg-sidebar shell:p-3">
+    <div className={cn("app-shell flex min-h-dvh flex-col shell:flex-row", theme.root)}>
+      <aside
+        className={cn(
+          "contents shell:sticky shell:top-0 shell:flex shell:h-dvh shell:w-54 shell:shrink-0 shell:flex-col shell:gap-6 shell:border-r shell:p-3",
+          theme.asideDesktop,
+        )}
+      >
         {/* navigation-and-lists R1; users-and-access R12 */}
         <Link
           to={landingPageOf(user.role).path}
           aria-label="StockFlow home"
-          className="flex min-h-11 items-center gap-2 border-b bg-sidebar px-3 py-2 font-semibold transition-colors duration-150 hover:text-primary shell:border-0 shell:py-0"
+          className={cn(
+            "flex min-h-11 items-center gap-2 border-b px-3 py-2 font-semibold transition-colors duration-150 shell:border-0 shell:bg-transparent shell:py-0",
+            theme.side,
+            theme.side === "bg-sidebar" && "hover:text-primary",
+          )}
         >
           <img src={stockflowMark} alt="" className="size-8 shrink-0" />
           StockFlow
         </Link>
         <nav
           aria-label="Main"
-          className="grid grid-cols-1 gap-2 border-b bg-sidebar p-3 shell:flex shell:flex-1 shell:flex-col shell:border-b-0 shell:p-0"
+          className={cn(
+            "grid grid-cols-1 gap-2 border-b p-3 shell:flex shell:flex-1 shell:flex-col shell:border-b-0 shell:bg-transparent shell:p-0",
+            theme.side,
+          )}
         >
           {/* users-and-access R11, R22: only the pages of the User's Role. */}
           {pagesOf(user.role).map((page) => (
             <Link
               key={page.path}
               to={page.path}
-              className={cn(navLinkClass, page === selected && activeNavLink)}
+              className={cn(navLinkClass, theme.link, page === selected && theme.active)}
               aria-current={page === selected ? "page" : undefined}
             >
               <page.icon aria-hidden size={18} className="shrink-0" />
@@ -90,7 +103,10 @@ function AppShell() {
         {/* navigation-and-lists R3 */}
         <nav
           aria-label="Current page"
-          className="flex min-h-14 flex-wrap items-center gap-x-2 border-b bg-sidebar px-3 py-2 shell:px-8"
+          className={cn(
+            "flex min-h-14 flex-wrap items-center gap-x-2 border-b px-3 py-2 shell:px-8",
+            theme.top,
+          )}
         >
           {parent && (
             <>
@@ -114,11 +130,13 @@ function AppShell() {
           {reachable ? <Outlet /> : <NoAccess landingPage={landingPageOf(user.role)} />}
         </main>
       </div>
+      <PrototypeSwitcher />
     </div>
   );
 }
 
 function UserPanel({ user }: { user: CurrentUser }) {
+  const theme = themes[usePrototypeVariant()]; // PROTOTYPE
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const logOut = useEndSession({
@@ -132,7 +150,13 @@ function UserPanel({ user }: { user: CurrentUser }) {
   });
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-sidebar px-3 py-2 shell:order-none shell:flex-col shell:items-stretch shell:border-t shell:border-b-0 shell:px-0 shell:pt-3 shell:pb-0">
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-3 py-2 shell:order-none shell:flex-col shell:items-stretch shell:border-t shell:border-b-0 shell:bg-transparent shell:px-0 shell:pt-3 shell:pb-0",
+        theme.side,
+        theme.userText,
+      )}
+    >
       <div className="min-w-0 flex-1 shell:flex-none shell:px-3">
         <p className="truncate font-medium">{user.name}</p>
         <p className="text-small text-muted-foreground">{roleNames[user.role]}</p>

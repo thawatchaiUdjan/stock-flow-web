@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { errorMessage } from "@/api/errors";
 import { useGetDashboard } from "@/api/generated/dashboard-and-reports/dashboard-and-reports";
 import type { DashboardOutputBody, RestockProduct } from "@/api/generated/model";
+import { usePrototypeVariant } from "@/components/app-prototype"; // PROTOTYPE
 import { Figure } from "@/components/figure";
 import { OrdersTable } from "@/components/orders-table";
 import { SalesByDay } from "@/components/sales-by-day";
@@ -18,10 +19,24 @@ export const Route = createFileRoute("/_app/dashboard")({
 // dashboard-and-reports R9: dropped when the page closes, so it never opens on the last visit's figures.
 function DashboardPage() {
   const dashboard = useGetDashboard({ query: { gcTime: 0 } });
+  const variant = usePrototypeVariant(); // PROTOTYPE
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-title">Dashboard</h1>
+      {variant === "C" ? (
+        <div className="flex flex-col gap-1 rounded-lg bg-secondary p-6">
+          <h1 className="text-title">Dashboard</h1>
+          {dashboard.isSuccess && (
+            <p className="text-body text-muted-foreground">
+              Today so far: {formatBaht(dashboard.data.sales)} in sales from{" "}
+              {dashboard.data.ordersCompleted} completed orders, with {dashboard.data.pendingOrders}{" "}
+              still pending.
+            </p>
+          )}
+        </div>
+      ) : (
+        <h1 className="text-title">Dashboard</h1>
+      )}
       {dashboard.isPending && <output className="text-muted-foreground">Loading dashboard</output>}
       {dashboard.isError && (
         <>
