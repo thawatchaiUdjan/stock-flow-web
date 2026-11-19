@@ -7,7 +7,7 @@ import {
   useSetEmailPassword,
   useVerifyFirstTimeCode,
 } from "@/api/generated/email-access/email-access";
-import { useCoolingDown } from "@/components/email-instructions";
+import { useCooldownSeconds } from "@/components/email-instructions";
 import { EmailPasswordForm } from "@/components/email-password-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -74,6 +74,8 @@ export function FirstTimeCodeSetup({
     <CodeStep
       email={email}
       sends={sends}
+      // A step opened without a new code still follows a send attempt, so its wait starts now.
+      cooldownRound={codeSent ? sends : sends + 1}
       request={request}
       verify={verify}
       changeEmail={onRestart}
@@ -84,19 +86,21 @@ export function FirstTimeCodeSetup({
 function CodeStep({
   email,
   sends,
+  cooldownRound,
   request,
   verify,
   changeEmail,
 }: {
   email: string;
   sends: number;
+  cooldownRound: number;
   request: ReturnType<typeof useRequestFirstTimeCode>;
   verify: ReturnType<typeof useVerifyFirstTimeCode>;
   changeEmail: () => void;
 }) {
   const [code, setCode] = useState("");
   const input = useRef<HTMLInputElement>(null);
-  const coolingDown = useCoolingDown(sends);
+  const secondsLeft = useCooldownSeconds(cooldownRound);
   const busy = verify.isPending || request.isPending;
   const invalidCode = hasFieldError(verify.error, "code");
 
@@ -170,11 +174,12 @@ function CodeStep({
         <Button
           variant="link"
           className="h-auto p-0"
-          disabled={busy || coolingDown}
+          disabled={busy || secondsLeft > 0}
           onClick={() => request.mutate({ data: { email } })}
         >
           Resend code
         </Button>
+        {secondsLeft > 0 && <span> You can resend in {secondsLeft}s.</span>}
       </p>
       <Button
         variant="link"

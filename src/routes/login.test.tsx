@@ -51,9 +51,10 @@ describe("Login", () => {
 
     expect(await screen.findByLabelText("Password")).toBeInTheDocument();
     expect(screen.getByText(owner.email)).toBeInTheDocument();
+    // The email already given travels with the link, so Forgot password does not ask again.
     expect(screen.getByRole("link", { name: "Forgot password?" })).toHaveAttribute(
       "href",
-      "/forgot-password",
+      `/forgot-password?email=${encodeURIComponent(owner.email)}`,
     );
     await user.click(screen.getByRole("button", { name: "Change email" }));
     expect(await screen.findByLabelText("Email")).toHaveValue(owner.email);
@@ -195,7 +196,9 @@ describe("Login", () => {
 
       expect(await screen.findByLabelText("First-time code")).toBeInTheDocument();
       expect(screen.getByRole("status")).toHaveTextContent(/no new code was sent/i);
-      expect(screen.getByRole("button", { name: "Resend code" })).toBeEnabled();
+      // The wait for another send starts on entry, without a first Resend click.
+      expect(screen.getByRole("button", { name: "Resend code" })).toBeDisabled();
+      expect(screen.getByText("You can resend in 60s.")).toBeInTheDocument();
     },
   );
 

@@ -45,16 +45,19 @@ function ResetPasswordPage() {
           error={reset.error}
         />
       ) : (
-        <Alert variant="destructive">
-          <AlertDescription>{messageFor("password-reset-invalid")}</AlertDescription>
-        </Alert>
+        // Only a link that can't be used needs a way out; a working link goes straight to the new password.
+        <>
+          <Alert variant="destructive">
+            <AlertDescription>{messageFor("password-reset-invalid")}</AlertDescription>
+          </Alert>
+          <Button variant="outline" asChild>
+            <Link to="/forgot-password">Forgot password</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/login">Back to Log in</Link>
+          </Button>
+        </>
       )}
-      <Button variant="outline" asChild>
-        <Link to="/forgot-password">Forgot password</Link>
-      </Button>
-      <Button variant="outline" asChild>
-        <Link to="/login">Back to Log in</Link>
-      </Button>
     </CenteredSurface>
   );
 }
