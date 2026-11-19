@@ -42,6 +42,18 @@ describe("Login", () => {
     expect(screen.queryByRole("link", { name: "Set up your password" })).not.toBeInTheDocument();
   });
 
+  // docs/design.md, Layout: a line under the title says what to do at each step (#79).
+  it("tells the User what to do next, on both steps", async () => {
+    mockApi.password = password;
+    const { user } = renderApp("/login");
+
+    expect(await screen.findByText("Use your work email to continue.")).toBeInTheDocument();
+    await continueWith(user, owner.email);
+
+    expect(await screen.findByText("Enter your password to continue.")).toBeInTheDocument();
+    expect(screen.queryByText("Use your work email to continue.")).not.toBeInTheDocument();
+  });
+
   // users-and-access R2, R5: the password step names the email and offers recovery.
   it("shows the email, Forgot password and a way to change the email on the password step", async () => {
     mockApi.password = password;
