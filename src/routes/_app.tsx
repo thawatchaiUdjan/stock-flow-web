@@ -57,12 +57,13 @@ function AppShell() {
 
   return (
     <div className="app-shell flex min-h-dvh flex-col shell:flex-row">
+      {/* docs/design.md, Focus: Forest vanishes on this surface, so every focus ring inside it is White. */}
       <aside className="contents **:focus-visible:outline-primary-foreground shell:sticky shell:top-0 shell:flex shell:h-dvh shell:w-54 shell:shrink-0 shell:flex-col shell:gap-6 shell:bg-primary shell:p-3">
         {/* navigation-and-lists R1; users-and-access R12 */}
         <Link
           to={landingPageOf(user.role).path}
           aria-label="StockFlow home"
-          className="flex min-h-11 items-center gap-2 border-b border-white/20 bg-primary px-3 py-2 text-lg font-semibold tracking-tight text-primary-foreground transition-colors duration-150 hover:bg-white/10 shell:rounded-lg shell:border-0 shell:bg-transparent shell:py-0 shell:hover:bg-white/10"
+          className="flex min-h-11 items-center gap-2 border-b border-white/20 bg-primary px-3 py-2 text-lg/6 font-semibold tracking-[-0.015em] text-primary-foreground transition-colors duration-150 hover:bg-white/10 shell:rounded-lg shell:border-0 shell:bg-transparent shell:py-0 shell:hover:bg-white/10"
         >
           <img src={stockflowMark} alt="" className="size-8 shrink-0" />
           StockFlow
