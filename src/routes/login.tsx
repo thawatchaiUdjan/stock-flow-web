@@ -122,7 +122,14 @@ function LoginPage() {
   const failure = logIn.error ?? (emailRejected ? null : identify.error);
 
   return (
-    <CenteredSurface title="Log in">
+    <CenteredSurface
+      title="Log in"
+      subtitle={
+        step.name === "email"
+          ? "Use your work email to continue."
+          : "Enter your password to continue."
+      }
+    >
       {failure != null && (
         <Alert variant="destructive">
           <AlertDescription>{errorMessage(failure)}</AlertDescription>
