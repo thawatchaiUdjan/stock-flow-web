@@ -45,28 +45,19 @@ function VariantA({ title, subtitle, children }: ShellProps) {
   );
 }
 
-// B: two panels. Left says what the product is for and shows a level bar; right is the form.
+// B: two panels. Left is a Fern panel with the brand and one line; right is the form.
+// Below 800 px the panel shrinks to a brand strip so the form stays first.
 function VariantB({ title, subtitle, children }: ShellProps) {
   return (
     <main className="flex min-h-dvh items-center justify-center p-3">
-      <div className="grid w-full max-w-215 overflow-hidden rounded-lg border bg-card md:grid-cols-2">
-        <section className="flex flex-col justify-between gap-10 bg-secondary p-8">
+      <div className="grid w-full max-w-215 overflow-hidden rounded-lg border bg-card min-[800px]:grid-cols-2">
+        <section className="flex flex-col justify-between gap-16 border-b bg-secondary p-4 min-[800px]:border-b-0 min-[800px]:p-8">
           <Brand />
-          <div className="flex flex-col gap-5">
-            <p className="text-title">See what is in stock and what is running low, at a glance.</p>
-            <div className="flex flex-col gap-2 rounded-lg border bg-card p-4">
-              <div className="flex items-baseline justify-between">
-                <span className="font-medium">Safety helmet</span>
-                <span className="font-semibold">18 of 60</span>
-              </div>
-              <div className="h-2 rounded-full bg-border">
-                <div className="h-2 w-[30%] rounded-full bg-primary" />
-              </div>
-              <span className="text-sm text-muted-foreground">Low</span>
-            </div>
-          </div>
+          <p className="hidden max-w-64 font-medium min-[800px]:block">
+            See what's in stock and what's running low, at a glance.
+          </p>
         </section>
-        <section className="flex flex-col justify-center gap-6 p-8">
+        <section className="flex flex-col justify-center gap-6 p-6 min-[800px]:p-8">
           <div className="flex flex-col gap-1.5">
             <h1 className="text-title">{title}</h1>
             <p className="text-muted-foreground">{subtitle}</p>
