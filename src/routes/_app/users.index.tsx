@@ -14,7 +14,7 @@ import {
 import { Confirmation } from "@/components/confirmation";
 import { DeleteConfirmation } from "@/components/delete-confirmation";
 import { ListPaging } from "@/components/list-paging";
-import { RowActions, rowActionItem } from "@/components/row-actions";
+import { RowActions, rowActionItem, rowActionsColumn } from "@/components/row-actions";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -83,7 +83,7 @@ function UsersPage() {
   );
 }
 
-// On a phone the columns don't fit side by side: the status and the actions take a line each.
+// On a phone the columns don't fit side by side: the name and role, then the status and the actions.
 const phoneRow = "max-shell:grid max-shell:grid-cols-[1fr_auto]";
 
 function UsersTable({ users, hasOthers }: { hasOthers: boolean; users: User[] }) {
@@ -98,7 +98,7 @@ function UsersTable({ users, hasOthers }: { hasOthers: boolean; users: User[] })
               <TableHead>Name</TableHead>
               <TableHead>Role</TableHead>
               <TableHead className="max-shell:hidden">Status</TableHead>
-              <TableHead className="max-shell:hidden">
+              <TableHead className={cn("max-shell:hidden", rowActionsColumn)}>
                 <span className="sr-only">Actions</span>
               </TableHead>
             </TableRow>
@@ -111,7 +111,7 @@ function UsersTable({ users, hasOthers }: { hasOthers: boolean; users: User[] })
                   <p className="text-small break-all text-muted-foreground">{user.email}</p>
                 </TableCell>
                 <TableCell>{roleNames[user.role]}</TableCell>
-                <TableCell className="max-shell:col-span-2 max-shell:pt-0">
+                <TableCell className="max-shell:col-start-1 max-shell:row-start-2 max-shell:pt-0">
                   <div className="flex flex-wrap gap-1">
                     <Badge variant={user.status === "active" ? "secondary" : "outline"}>
                       {statusNames[user.status]}
@@ -120,7 +120,12 @@ function UsersTable({ users, hasOthers }: { hasOthers: boolean; users: User[] })
                     {!user.passwordSet && <Badge variant="outline">Password not set</Badge>}
                   </div>
                 </TableCell>
-                <TableCell className="max-shell:col-span-2 max-shell:pt-0 max-shell:empty:hidden">
+                <TableCell
+                  className={cn(
+                    rowActionsColumn,
+                    "max-shell:col-start-2 max-shell:row-start-2 max-shell:pt-0 max-shell:text-right max-shell:empty:hidden",
+                  )}
+                >
                   <UserActions user={user} />
                 </TableCell>
               </TableRow>
