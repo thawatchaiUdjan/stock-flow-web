@@ -14,7 +14,12 @@ import {
 import { Confirmation } from "@/components/confirmation";
 import { DeleteConfirmation } from "@/components/delete-confirmation";
 import { ListPaging } from "@/components/list-paging";
-import { RowActions, rowActionItem, rowActionsColumn } from "@/components/row-actions";
+import {
+  RowActions,
+  rowActionItem,
+  rowActionsCell,
+  rowActionsColumn,
+} from "@/components/row-actions";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -120,12 +125,7 @@ function UsersTable({ users, hasOthers }: { hasOthers: boolean; users: User[] })
                     {!user.passwordSet && <Badge variant="outline">Password not set</Badge>}
                   </div>
                 </TableCell>
-                <TableCell
-                  className={cn(
-                    rowActionsColumn,
-                    "max-shell:col-start-2 max-shell:row-start-2 max-shell:pt-0 max-shell:text-right max-shell:empty:hidden",
-                  )}
-                >
+                <TableCell className={cn(rowActionsCell, "max-shell:row-start-2")}>
                   <UserActions user={user} />
                 </TableCell>
               </TableRow>

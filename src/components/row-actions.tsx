@@ -45,9 +45,15 @@ export function RowActions({
   );
 }
 
-// The Actions column on desktop: as narrow as the button, flush right, so the button sits at the
-// table's edge on every list. On a phone the cell is a grid item and each table places it itself.
+// The Actions column's header on desktop: as narrow as the button, flush right, so the button sits
+// at the table's edge on every list.
 export const rowActionsColumn = "shell:w-px shell:text-right";
+
+// The Actions cell. On a phone it is a grid item at the right end of the row's last line, which
+// each table names with its own `max-shell:row-start-N`; a row with no menu leaves it empty and
+// hidden.
+export const rowActionsCell =
+  "shell:w-px text-right max-shell:col-start-2 max-shell:pt-0 max-shell:empty:hidden";
 
 // Every item in the menu, so a phone's finger fits.
 export const rowActionItem = "max-shell:min-h-11";

@@ -14,7 +14,12 @@ import {
 } from "@/api/generated/products/products";
 import { DeleteConfirmation } from "@/components/delete-confirmation";
 import { ListPaging } from "@/components/list-paging";
-import { RowActions, rowActionItem, rowActionsColumn } from "@/components/row-actions";
+import {
+  RowActions,
+  rowActionItem,
+  rowActionsCell,
+  rowActionsColumn,
+} from "@/components/row-actions";
 import { StockLevelBar, StockStateBadge, stockStateNames } from "@/components/stock-level";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -292,12 +297,7 @@ function ProductsTable({ products, canChange }: { products: Product[]; canChange
                 <StockStateBadge state={product.stockState} />
               </TableCell>
               {canChange && (
-                <TableCell
-                  className={cn(
-                    rowActionsColumn,
-                    "max-shell:col-start-2 max-shell:row-start-2 max-shell:pt-0 max-shell:text-right",
-                  )}
-                >
+                <TableCell className={cn(rowActionsCell, "max-shell:row-start-2")}>
                   <ProductActions product={product} />
                 </TableCell>
               )}
