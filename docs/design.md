@@ -24,8 +24,8 @@ Light theme only. Dark mode would be a change of direction. Values live in `src/
 
 | Name | Value | Token | Role |
 | --- | --- | --- | --- |
-| Forest | `#3A6B4F` | `primary`, `ring`, `chart-1` | The one accent: primary buttons, selected navigation, focus, chart bars, healthy stock level |
-| Fern | `#E6F0E8` | `secondary`, `accent` | Soft tint behind selected navigation, and the brand panel on pre-login screens (Ink on Fern is 13.2:1; Forest on Fern is 5.3:1) |
+| Forest | `#3A6B4F` | `primary`, `ring`, `chart-1` | The one accent: primary buttons, focus, chart bars, healthy stock level, and the sidebar's own surface (#82) |
+| Fern | `#E6F0E8` | `secondary`, `accent` | Soft tint behind selected navigation (on the Forest sidebar, the selected link itself), and the brand panel on pre-login screens (Ink on Fern is 13.2:1; Forest on Fern is 5.3:1) |
 | Ink | `#20261F` | `foreground` | Text and the minimum marker |
 | Moss | `#5C6558` | `muted-foreground` | Secondary text: SKUs, labels, table headers |
 | Page | `#F6F7F4` | `background` | The page behind surfaces, table header rows |
@@ -59,6 +59,7 @@ Numbers are always tabular (`font-variant-numeric: tabular-nums`, set on `body`)
 | Section heading | 15 / 22.5 px | 600 |
 | Body, table cells | 15 / 22.5 px | 400 |
 | Names, navigation, buttons | 15 / 22.5 px | 500 or 600 |
+| StockFlow wordmark in the sidebar | 18 / 24 px | 600 |
 | Small: SKUs, table headers, badges, chart axes | 13 / 18 px | 400 to 600 |
 
 Inputs are 16 px on a phone, so the browser doesn't zoom on focus. Nothing is smaller than 12 px. Headings get `-0.015em` tracking; nothing is set in capitals.
@@ -69,7 +70,7 @@ Calendar columns have a 4 px gap between day backgrounds, with weekday headings 
 
 ## Layout
 
-A white sidebar on the left and the work on the page beside it. Everything is left-aligned, except numbers.
+A Forest sidebar on the left and the work on the page beside it. Everything is left-aligned, except numbers.
 
 ```
 Desktop                                  Phone (below 800 px, navigation above content)
@@ -89,7 +90,9 @@ Desktop                                  Phone (below 800 px, navigation above c
 └────────┴──────────────────────────┘    └──────────────────┘
 ```
 
-- **Sidebar:** 216 px, sticky, with an icon and a word for each item, and the User's name, Role and Log out at its foot. Below 800 px, show every permitted destination in a single-column grid between the home link and account strip, above the content. Links have full labels, a minimum 44 px height and 8 px gaps on an opaque White surface. Navigation scrolls with the page; there is no bottom overlay to obscure content or paging. The shell pads all four device safe areas.
+- **Sidebar:** 216 px, sticky, with an icon and a word for each item, and the User's name, Role and Log out at its foot. Below 800 px, show every permitted destination in a single-column grid between the home link and account strip, above the content. Links have full labels, a minimum 44 px height and 8 px gaps on an opaque Forest surface. Navigation scrolls with the page; there is no bottom overlay to obscure content or paging. The shell pads all four device safe areas.
+- **Sidebar colors (#82):** the surface is Forest (`primary`; the `sidebar` token stays White and is the page-title bar's). Text and icons are White; the Role line is White at 85% (5.0:1). Links highlight on hover with White at 10% over Forest, text staying White (4.9:1). The selected link is Fern with Ink text (13.2:1). Rules between the strips are White at 20%. Log out is the outline button with White text and icon, a 1 px White border at 70% (4.0:1) and the same 10% hover, never dark text on Forest. A Log out error shows on a White chip with Danger text, since red on Forest is unreadable. White on Forest is 6.2:1. Everything outside the sidebar, including the page-title bar and the work, stays as before.
+- **Key figures:** in a row, each label sits at the top of its cell and its number at the bottom, so numbers share one baseline when a label wraps (Dashboard, Reports).
 - **Content:** 32 px side padding (12 px on a phone), up to 1280 px wide.
 - **Spacing:** a 4 px base: 4, 8, 12, 16, 24, 32. Gaps between surfaces are 16 px.
 - **Surfaces:** white, a 1 px Line border, 8 px radius, no shadow, no gradient. Related figures share one surface, split by rules, rather than sitting in separate cards.
@@ -106,9 +109,9 @@ Desktop                                  Phone (below 800 px, navigation above c
 - **This page didn't open:** the same surface, with Try again, when the check for a session fails with anything but a 401.
 - **Page not found:** inside the shell: a page title, one line, and a link to the landing page.
 - **Breakpoints:** 800 px switches the sidebar and stacks two-column sections. Check at 375, 768, 1024 and 1440 px; no page scrolls sideways.
-- **Focus:** a 2 px Forest outline, offset 2 px, on everything that takes focus. shadcn's default `ring/50` alone falls below 3:1 on Page, so it needs the solid border beside it.
+- **Focus:** a 2 px Forest outline, offset 2 px, on everything that takes focus; White inside the Forest sidebar, where Forest would vanish (6.2:1). shadcn's default `ring/50` alone falls below 3:1 on Page, so it needs the solid border beside it.
 - **Motion:** 150 ms on hover and focus, nothing that plays by itself, and none under `prefers-reduced-motion`.
-- **Brand:** `src/assets/stockflow.svg` is the original StockFlow mark: an outlined inventory carton with a rising outbound arrow, white on a Forest rounded square. The 32-unit drawing uses 2-unit strokes for readability at 16 px (favicon) and 32 px (shell). Keep the artwork square and beside the StockFlow wordmark. The pair is one link named "StockFlow home", leading Owner/Admin to Dashboard and Staff to Orders. It appears above navigation on desktop and above the account strip on phones. The favicon uses the same SVG.
+- **Brand:** `src/assets/stockflow.svg` is the original StockFlow mark: an outlined inventory carton with a rising outbound arrow, white on a Forest rounded square. The 32-unit drawing uses 2-unit strokes for readability at 16 px (favicon) and 32 px (shell). Keep the artwork square and beside the StockFlow wordmark. On the Forest sidebar the mark is inverted, a white rounded square with Forest strokes (`src/assets/stockflow-inverse.svg`), because the original vanishes on Forest, and the wordmark is White, 18 px, 600, tracked `-0.015em`; the favicon and the pre-login screens keep the original. The pair is one link named "StockFlow home", leading Owner/Admin to Dashboard and Staff to Orders. It appears above navigation on desktop and above the account strip on phones. The favicon uses the original SVG.
 - **Navigation:** main navigation contains destinations, with creation actions in their lists. Product forms select Products; Order forms and details select Orders; User forms select Users. Receive stock and Adjust stock have separate pages with Stock movements as their parent and selected main destination. Access to forms is independent of shortcut visibility. A white top bar above the work shows the current page; nested pages show a parent-list link, a quiet slash and the current page label. Parent links have 44 px touch height on phones. Unknown addresses say "Page not found"; denied addresses say "No access". Labels wrap when space is tight. Preserve the Forest palette, Figtree type and 4 px spacing rhythm.
 - **Icons:** Lucide, 16 to 18 px, always beside a word unless the control has an accessible name.
 
@@ -127,7 +130,7 @@ A list row with more than one action, or an action with consequences, has one "m
 ## Principles
 
 - **Stock is the one bold thing.** The count is the heaviest figure in its row, and beside it a level bar shows where stock stands against its threshold, once the record defines one. The rest of the screen stays quiet.
-- **One accent.** Forest marks what can be acted on or what is selected. Amber and red appear only for stock or actions that need attention.
+- **One accent.** Forest marks what can be acted on and is the brand's own surface, the sidebar, where the selected link is Fern. Amber and red appear only for stock or actions that need attention.
 - **Say it in words too.** Every state has text, so it survives color blindness, a bad screen and a phone.
 - **Rules, not boxes.** Prefer a line between rows to another card around them. Nothing is decorated: no shadows, gradients, capitals, numbered markers or eyebrow labels.
 - **Density serves reading.** Tables stay compact on a desktop; a row is never so tight that its text is hard to read.
