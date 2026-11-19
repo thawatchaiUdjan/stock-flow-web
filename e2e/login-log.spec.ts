@@ -251,7 +251,8 @@ for (const { width, phone } of [
     const bar = (await navigation.boundingBox())!;
     if (phone) {
       await expect(navigation).toBeInViewport();
-      await expect(navigation).toHaveCSS("background-color", "rgb(255, 255, 255)");
+      // Forest and opaque (#82): nothing shows through the phone navigation.
+      await expect(navigation).toHaveCSS("background-color", "rgb(58, 107, 79)");
       await expect(navigation).toHaveCSS("opacity", "1");
       await expect(navigation.getByRole("link")).toHaveText([
         "Dashboard",

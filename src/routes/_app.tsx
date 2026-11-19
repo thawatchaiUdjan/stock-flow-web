@@ -14,7 +14,7 @@ import { LogOut } from "lucide-react";
 import { errorMessage } from "@/api/errors";
 import type { CurrentUser } from "@/api/generated/model";
 import { getGetCurrentUserQueryOptions, useEndSession } from "@/api/generated/sessions/sessions";
-import stockflowMark from "@/assets/stockflow.svg";
+import stockflowMark from "@/assets/stockflow-inverse.svg";
 import { CenteredSurface } from "@/components/centered-surface";
 import { NoAccess } from "@/components/no-access";
 import { Button } from "@/components/ui/button";
@@ -43,8 +43,8 @@ export const Route = createFileRoute("/_app")({
 });
 
 const navLinkClass =
-  "flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-3 text-body font-medium transition-colors hover:bg-muted shell:h-9.5 shell:min-h-0 shell:flex-none";
-const activeNavLink = "bg-accent text-accent-foreground hover:bg-accent";
+  "flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-3 text-body font-medium transition-colors hover:bg-white/10 shell:h-9.5 shell:min-h-0 shell:flex-none";
+const activeNavLink = "bg-secondary text-foreground hover:bg-secondary";
 
 // navigation-and-lists R3: the phone's navigation stays in flow, clear of the work.
 function AppShell() {
@@ -57,19 +57,20 @@ function AppShell() {
 
   return (
     <div className="app-shell flex min-h-dvh flex-col shell:flex-row">
-      <aside className="contents shell:sticky shell:top-0 shell:flex shell:h-dvh shell:w-54 shell:shrink-0 shell:flex-col shell:gap-6 shell:border-r shell:bg-sidebar shell:p-3">
+      {/* docs/design.md, Focus: Forest vanishes on this surface, so every focus ring inside it is White. */}
+      <aside className="contents **:focus-visible:outline-primary-foreground shell:sticky shell:top-0 shell:flex shell:h-dvh shell:w-54 shell:shrink-0 shell:flex-col shell:gap-6 shell:bg-primary shell:p-3">
         {/* navigation-and-lists R1; users-and-access R12 */}
         <Link
           to={landingPageOf(user.role).path}
           aria-label="StockFlow home"
-          className="flex min-h-11 items-center gap-2 border-b bg-sidebar px-3 py-2 font-semibold transition-colors duration-150 hover:text-primary shell:border-0 shell:py-0"
+          className="flex min-h-11 items-center gap-2 border-b border-white/20 bg-primary px-3 py-2 text-lg/6 font-semibold tracking-[-0.015em] text-primary-foreground transition-colors duration-150 hover:bg-white/10 shell:rounded-lg shell:border-0 shell:bg-transparent shell:py-0 shell:hover:bg-white/10"
         >
           <img src={stockflowMark} alt="" className="size-8 shrink-0" />
           StockFlow
         </Link>
         <nav
           aria-label="Main"
-          className="grid grid-cols-1 gap-2 border-b bg-sidebar p-3 shell:flex shell:flex-1 shell:flex-col shell:border-b-0 shell:p-0"
+          className="grid grid-cols-1 gap-2 border-b border-white/20 bg-primary p-3 text-primary-foreground shell:flex shell:flex-1 shell:flex-col shell:border-b-0 shell:bg-transparent shell:p-0"
         >
           {/* users-and-access R11, R22: only the pages of the User's Role. */}
           {pagesOf(user.role).map((page) => (
@@ -132,17 +133,22 @@ function UserPanel({ user }: { user: CurrentUser }) {
   });
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-sidebar px-3 py-2 shell:order-none shell:flex-col shell:items-stretch shell:border-t shell:border-b-0 shell:px-0 shell:pt-3 shell:pb-0">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-white/20 bg-primary px-3 py-2 text-primary-foreground shell:order-none shell:flex-col shell:items-stretch shell:border-t shell:border-b-0 shell:bg-transparent shell:px-0 shell:pt-3 shell:pb-0">
       <div className="min-w-0 flex-1 shell:flex-none shell:px-3">
         <p className="truncate font-medium">{user.name}</p>
-        <p className="text-small text-muted-foreground">{roleNames[user.role]}</p>
+        <p className="text-small text-primary-foreground/85">{roleNames[user.role]}</p>
       </div>
-      <Button variant="outline" disabled={logOut.isPending} onClick={() => logOut.mutate()}>
+      <Button
+        variant="outline"
+        className="border-white/70 bg-transparent text-primary-foreground hover:bg-white/10 hover:text-primary-foreground"
+        disabled={logOut.isPending}
+        onClick={() => logOut.mutate()}
+      >
         <LogOut aria-hidden data-icon="inline-start" />
         {logOut.isPending ? "Logging out" : "Log out"}
       </Button>
       {logOut.isError && (
-        <p role="alert" className="w-full text-small text-destructive shell:px-3">
+        <p role="alert" className="w-full rounded-lg bg-card px-3 py-2 text-small text-destructive">
           {errorMessage(logOut.error)}
         </p>
       )}

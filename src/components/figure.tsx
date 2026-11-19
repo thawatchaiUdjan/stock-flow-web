@@ -13,7 +13,7 @@ export function Figure({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col gap-1 bg-card p-4", className)}>
+    <div className={cn("flex flex-col justify-between gap-1 bg-card p-4", className)}>
       <dt className="text-small text-muted-foreground">{label}</dt>
       <dd className="text-figure wrap-anywhere">
         <span className={tone}>{value}</span>
