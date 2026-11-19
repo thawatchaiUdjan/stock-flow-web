@@ -49,6 +49,7 @@ export function EmailInstructions({
   success,
   sendLabel,
   pendingLabel,
+  emailFixed = false,
 }: {
   email: string;
   onEmailChange: (email: string) => void;
@@ -58,6 +59,8 @@ export function EmailInstructions({
   success: boolean;
   sendLabel: string;
   pendingLabel: string;
+  // The email is already known (asked on Login): show it, don't ask again.
+  emailFixed?: boolean;
 }) {
   const form = useForm({
     defaultValues: { email },
@@ -75,24 +78,28 @@ export function EmailInstructions({
       }}
     >
       <FieldGroup>
-        {error != null && !hasFieldError(error, "email") && (
+        {error != null && (emailFixed || !hasFieldError(error, "email")) && (
           <Alert variant="destructive">
             <AlertDescription>{errorMessage(error)}</AlertDescription>
           </Alert>
         )}
-        <form.Field name="email">
-          {(field) => (
-            <EmailField
-              email={field.state.value}
-              onChange={(value) => {
-                field.handleChange(value);
-                onEmailChange(value);
-              }}
-              disabled={pending}
-              invalid={field.state.meta.errors.length > 0 || hasFieldError(error, "email")}
-            />
-          )}
-        </form.Field>
+        {emailFixed ? (
+          <p className="font-medium break-all">{email}</p>
+        ) : (
+          <form.Field name="email">
+            {(field) => (
+              <EmailField
+                email={field.state.value}
+                onChange={(value) => {
+                  field.handleChange(value);
+                  onEmailChange(value);
+                }}
+                disabled={pending}
+                invalid={field.state.meta.errors.length > 0 || hasFieldError(error, "email")}
+              />
+            )}
+          </form.Field>
+        )}
         {success && <output>{instructionsMessage}</output>}
         <FieldDescription>
           Check your inbox and spam folder. Wait at least a minute before requesting again. Only the
@@ -111,7 +118,7 @@ export function EmailInstructions({
 }
 
 function RequestAgain({ pending, label }: { pending: boolean; label: string }) {
-  const coolingDown = useCoolingDown(1);
+  const coolingDown = useCooldownSeconds(1) > 0;
   return (
     <Button type="submit" disabled={pending || coolingDown}>
       {label}
@@ -119,13 +126,22 @@ function RequestAgain({ pending, label }: { pending: boolean; label: string }) {
   );
 }
 
+const cooldownSeconds = 60;
+
 // users-and-access R43: one send per 60 seconds. `sends` counts successful sends; each restarts the wait.
-export function useCoolingDown(sends: number) {
-  const [cooledFor, setCooledFor] = useState(0);
+// Returns the seconds left before the next send; 0 means it can go out.
+export function useCooldownSeconds(sends: number) {
+  const [tick, setTick] = useState({ sends: 0, left: 0 });
   useEffect(() => {
     if (sends === 0) return;
-    const timer = window.setTimeout(() => setCooledFor(sends), 60_000);
-    return () => window.clearTimeout(timer);
+    const end = Date.now() + cooldownSeconds * 1000;
+    const timer = window.setInterval(() => {
+      const left = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+      setTick({ sends, left });
+      if (left === 0) window.clearInterval(timer);
+    }, 1000);
+    return () => window.clearInterval(timer);
   }, [sends]);
-  return sends > 0 && cooledFor !== sends;
+  if (sends === 0) return 0;
+  return tick.sends === sends ? tick.left : cooldownSeconds;
 }

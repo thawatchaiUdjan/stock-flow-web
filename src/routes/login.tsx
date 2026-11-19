@@ -182,7 +182,9 @@ function LoginPage() {
                     <div className="flex items-center justify-between gap-2">
                       <FieldLabel htmlFor={field.name}>Password</FieldLabel>
                       <Button variant="link" size="sm" className="h-auto min-h-6 p-0" asChild>
-                        <Link to="/forgot-password">Forgot password?</Link>
+                        <Link to="/forgot-password" search={{ email: step.email }}>
+                          Forgot password?
+                        </Link>
                       </Button>
                     </div>
                     <Input

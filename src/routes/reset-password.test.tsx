@@ -128,3 +128,19 @@ it("maps API password validation beside the field", async () => {
   expect(await screen.findByText("Use at least 6 characters.")).toBeInTheDocument();
   expect(screen.getByLabelText("New password")).toHaveAttribute("aria-invalid", "true");
 });
+
+it("offers no other way out while a usable link asks for the new password", async () => {
+  renderApp("/reset-password#token=valid");
+  await screen.findByLabelText("New password");
+  expect(screen.queryByRole("link", { name: "Forgot password" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Back to Log in" })).not.toBeInTheDocument();
+});
+
+it("shows the minimum or the error, never both", async () => {
+  const { user } = renderApp("/reset-password#token=valid");
+  expect(await screen.findByText("At least 6 characters.")).toBeInTheDocument();
+  await user.type(screen.getByLabelText("New password"), "12345");
+  await user.click(screen.getByRole("button", { name: "Set password" }));
+  expect(await screen.findByText("Use at least 6 characters.")).toBeInTheDocument();
+  expect(screen.queryByText("At least 6 characters.")).not.toBeInTheDocument();
+});

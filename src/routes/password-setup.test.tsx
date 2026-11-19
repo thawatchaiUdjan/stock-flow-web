@@ -153,10 +153,14 @@ it("sends no code on load and allows a resend only after 60 seconds, with a neut
   );
   const resend = screen.getByRole("button", { name: "Resend code" });
   expect(resend).toBeDisabled();
-  await act(async () => vi.advanceTimersByTimeAsync(59_000));
+  expect(screen.getByText("You can resend in 60s.")).toBeInTheDocument();
+  await act(async () => vi.advanceTimersByTimeAsync(10_000));
+  expect(screen.getByText("You can resend in 50s.")).toBeInTheDocument();
+  await act(async () => vi.advanceTimersByTimeAsync(49_000));
   expect(resend).toBeDisabled();
   await act(async () => vi.advanceTimersByTimeAsync(1_000));
   await waitFor(() => expect(resend).toBeEnabled());
+  expect(screen.queryByText(/You can resend in/)).not.toBeInTheDocument();
   await user.click(resend);
   await waitFor(() => expect(sent).toHaveLength(2));
   expect(sent).toEqual([{ email: "STAFF@example.com" }, { email: "STAFF@example.com" }]);

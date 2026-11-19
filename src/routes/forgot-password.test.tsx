@@ -84,3 +84,25 @@ it("shows API email validation beside the field", async () => {
   expect(await screen.findByText("Enter a valid email address.")).toBeInTheDocument();
   expect(screen.getByLabelText("Email")).toHaveAttribute("aria-invalid", "true");
 });
+
+it("does not ask again for an email Login already has, and sends that email", async () => {
+  const sent: unknown[] = [];
+  server.use(
+    getRequestPasswordResetMockHandler202(async ({ request }) => {
+      sent.push(await request.json());
+      return { message: "If this email is eligible, we've sent instructions." };
+    }),
+  );
+  const { user } = renderApp("/forgot-password?email=nok%40example.com");
+  expect(await screen.findByText("nok@example.com")).toBeInTheDocument();
+  expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
+  expect(sent).toEqual([]);
+  await user.click(screen.getByRole("button", { name: "Send reset link" }));
+  expect(await screen.findByRole("status")).toHaveTextContent("If this email is eligible");
+  expect(sent).toEqual([{ email: "nok@example.com" }]);
+});
+
+it.each(["", "not-an-email"])("asks for the email when the link carries %j", async (email) => {
+  renderApp(`/forgot-password?email=${email}`);
+  expect(await screen.findByLabelText("Email")).toBeInTheDocument();
+});

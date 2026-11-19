@@ -68,13 +68,14 @@ export function EmailPasswordForm({
                   aria-invalid={invalid}
                   aria-describedby={invalid ? "password-error" : "password-hint"}
                 />
-                <FieldDescription id="password-hint">
-                  At least {setEmailPasswordBodyPasswordMin} characters.
-                </FieldDescription>
-                {invalid && (
+                {invalid ? (
                   <FieldError id="password-error">
                     Use at least {setEmailPasswordBodyPasswordMin} characters.
                   </FieldError>
+                ) : (
+                  <FieldDescription id="password-hint">
+                    At least {setEmailPasswordBodyPasswordMin} characters.
+                  </FieldDescription>
                 )}
               </Field>
             );
