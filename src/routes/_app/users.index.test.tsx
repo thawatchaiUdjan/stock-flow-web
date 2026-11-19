@@ -247,6 +247,18 @@ describe("the actions on the Users list", () => {
     expect(within(menu).queryByRole("menuitem", { name: "Delete" })).not.toBeInTheDocument();
   });
 
+  // docs/design.md, Row actions: an open menu leaves the page's scrollbar and scrolling alone, so
+  // the page doesn't jump sideways when it opens.
+  it("does not lock the page's scrolling while a row's menu is open", async () => {
+    mockApi.session = "live";
+    mockApi.users.push(mali);
+    const { user } = renderApp("/users");
+
+    await openRowMenu(user, await rowOf("Mali Chai"));
+
+    expect(document.body).not.toHaveAttribute("data-scroll-locked");
+  });
+
   it("opens the User form for the User whose Edit was chosen", async () => {
     mockApi.session = "live";
     mockApi.users.push(mali);

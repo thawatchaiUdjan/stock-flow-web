@@ -15,7 +15,7 @@ import {
 } from "@/api/generated/orders/orders";
 import { DeleteConfirmation } from "@/components/delete-confirmation";
 import { OrderStatusBadge } from "@/components/order-status";
-import { RowActions, rowActionItem } from "@/components/row-actions";
+import { RowActions, rowActionItem, rowActionsColumn } from "@/components/row-actions";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
   Table,
@@ -49,7 +49,7 @@ export function OrdersTable({ orders }: { orders: OrderSummary[] }) {
             <TableHead className="text-right">Total</TableHead>
             <TableHead>Status</TableHead>
             {canDelete && (
-              <TableHead>
+              <TableHead className={rowActionsColumn}>
                 <span className="sr-only">Actions</span>
               </TableHead>
             )}
@@ -91,7 +91,12 @@ export function OrdersTable({ orders }: { orders: OrderSummary[] }) {
                 <OrderStatusBadge status={order.status} />
               </TableCell>
               {canDelete && (
-                <TableCell className="max-shell:col-start-2 max-shell:row-start-4 max-shell:pt-0 max-shell:empty:hidden">
+                <TableCell
+                  className={cn(
+                    rowActionsColumn,
+                    "max-shell:col-start-2 max-shell:row-start-4 max-shell:pt-0 max-shell:text-right max-shell:empty:hidden",
+                  )}
+                >
                   <OrderActions order={order} />
                 </TableCell>
               )}

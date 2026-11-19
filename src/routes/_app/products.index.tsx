@@ -14,7 +14,7 @@ import {
 } from "@/api/generated/products/products";
 import { DeleteConfirmation } from "@/components/delete-confirmation";
 import { ListPaging } from "@/components/list-paging";
-import { RowActions, rowActionItem } from "@/components/row-actions";
+import { RowActions, rowActionItem, rowActionsColumn } from "@/components/row-actions";
 import { StockLevelBar, StockStateBadge, stockStateNames } from "@/components/stock-level";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -261,7 +261,7 @@ function ProductsTable({ products, canChange }: { products: Product[]; canChange
             <TableHead className="text-right">Stock</TableHead>
             <TableHead>State</TableHead>
             {canChange && (
-              <TableHead>
+              <TableHead className={rowActionsColumn}>
                 <span className="sr-only">Actions</span>
               </TableHead>
             )}
@@ -285,14 +285,19 @@ function ProductsTable({ products, canChange }: { products: Product[]; canChange
               <TableCell className={cn(secondary, "text-right whitespace-nowrap")}>
                 {formatBaht(product.price)}
               </TableCell>
-              <TableCell className="max-shell:row-span-2 max-shell:text-right shell:w-48">
+              <TableCell className="max-shell:col-start-2 max-shell:row-start-1 max-shell:text-right shell:w-48">
                 <StockFigure product={product} />
               </TableCell>
               <TableCell className="max-shell:col-start-1 max-shell:row-start-2 max-shell:pt-0">
                 <StockStateBadge state={product.stockState} />
               </TableCell>
               {canChange && (
-                <TableCell className="max-shell:col-span-2 max-shell:pt-0 max-shell:text-right">
+                <TableCell
+                  className={cn(
+                    rowActionsColumn,
+                    "max-shell:col-start-2 max-shell:row-start-2 max-shell:pt-0 max-shell:text-right",
+                  )}
+                >
                   <ProductActions product={product} />
                 </TableCell>
               )}

@@ -12,6 +12,8 @@ import {
 // docs/design.md, Row actions: one "more actions" menu per row. Radix gives the keyboard and
 // screen-reader behaviour (Enter, Space or ArrowDown opens it, arrows move, Escape closes and
 // returns focus to the trigger); the trigger and the items are 44 px on a phone.
+// Not modal: a modal menu locks the page's scrolling and hides its scrollbar, which makes the page
+// jump sideways each time the menu opens. Outside clicks and Escape still close it.
 export function RowActions({
   label,
   triggerRef,
@@ -24,7 +26,7 @@ export function RowActions({
   children: ReactNode;
 }) {
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           ref={triggerRef}
@@ -42,6 +44,10 @@ export function RowActions({
     </DropdownMenu>
   );
 }
+
+// The Actions column on desktop: as narrow as the button, flush right, so the button sits at the
+// table's edge on every list. On a phone the cell is a grid item and each table places it itself.
+export const rowActionsColumn = "shell:w-px shell:text-right";
 
 // Every item in the menu, so a phone's finger fits.
 export const rowActionItem = "max-shell:min-h-11";
