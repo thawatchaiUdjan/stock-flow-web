@@ -39,9 +39,11 @@ function ForgotPasswordPage() {
         pendingLabel="Sending reset link"
         emailFixed={known != null}
       />
-      <Button variant="link" size="sm" className="h-auto min-h-6 self-start p-0" asChild>
-        <Link to="/password-setup">Enter a first-time code</Link>
-      </Button>
+      {known == null && (
+        <Button variant="link" size="sm" className="h-auto min-h-6 self-start p-0" asChild>
+          <Link to="/password-setup">Enter a first-time code</Link>
+        </Button>
+      )}
       <Button variant="outline" asChild>
         <Link to="/login">Back to Log in</Link>
       </Button>

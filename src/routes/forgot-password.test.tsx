@@ -96,10 +96,14 @@ it("does not ask again for an email Login already has, and sends that email", as
   const { user } = renderApp("/forgot-password?email=nok%40example.com");
   expect(await screen.findByText("nok@example.com")).toBeInTheDocument();
   expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Enter a first-time code" })).not.toBeInTheDocument();
   expect(sent).toEqual([]);
   await user.click(screen.getByRole("button", { name: "Send reset link" }));
   expect(await screen.findByRole("status")).toHaveTextContent("If this email is eligible");
   expect(sent).toEqual([{ email: "nok@example.com" }]);
+  // The wait before sending again is shown, and the button keeps its name.
+  expect(screen.getByRole("button", { name: "Send reset link" })).toBeDisabled();
+  expect(screen.getByText("You can send again in 60s.")).toBeInTheDocument();
 });
 
 it.each(["", "not-an-email"])("asks for the email when the link carries %j", async (email) => {

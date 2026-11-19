@@ -118,11 +118,16 @@ export function EmailInstructions({
 }
 
 function RequestAgain({ pending, label }: { pending: boolean; label: string }) {
-  const coolingDown = useCooldownSeconds(1) > 0;
+  const secondsLeft = useCooldownSeconds(1);
   return (
-    <Button type="submit" disabled={pending || coolingDown}>
-      {label}
-    </Button>
+    <>
+      <Button type="submit" disabled={pending || secondsLeft > 0}>
+        {label}
+      </Button>
+      {secondsLeft > 0 && (
+        <FieldDescription>You can send again in {secondsLeft}s.</FieldDescription>
+      )}
+    </>
   );
 }
 
